@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getProfiles, getCompanies, inviteCustomer } from '../services/db';
+import { getProfiles, getCompanies, inviteCustomer, createCompany } from '../services/db';
 import { useAuth } from './AuthProvider';
 
 export default function CustomerManagement() {
@@ -11,6 +11,9 @@ export default function CustomerManagement() {
   // Form state
   const [email, setEmail] = useState('');
   const [selectedCompanyId, setSelectedCompanyId] = useState('');
+  const [isNewCompany, setIsNewCompany] = useState(false);
+  const [newCompanyId, setNewCompanyId] = useState('');
+  const [newCompanyName, setNewCompanyName] = useState('');
   const [inviteStatus, setInviteStatus] = useState({ loading: false, error: null, success: false });
 
   const { session } = useAuth();
@@ -36,16 +39,32 @@ export default function CustomerManagement() {
 
   const handleInvite = async (e) => {
     e.preventDefault();
-    if (!email || !selectedCompanyId) return;
+    if (!email) return;
+
+    let targetCompanyId = selectedCompanyId;
+
+    if (isNewCompany) {
+      if (!newCompanyId || !newCompanyName) return;
+      targetCompanyId = newCompanyId;
+    } else {
+      if (!selectedCompanyId) return;
+    }
 
     setInviteStatus({ loading: true, error: null, success: false });
     try {
+      if (isNewCompany) {
+        await createCompany(newCompanyId, newCompanyName);
+      }
+      
       // Pass the JWT token so the edge function can verify ADMIN status
-      await inviteCustomer(email, selectedCompanyId, session.access_token);
+      await inviteCustomer(email, targetCompanyId, session.access_token);
       setInviteStatus({ loading: false, error: null, success: true });
       setShowInviteModal(false);
       setEmail('');
       setSelectedCompanyId('');
+      setNewCompanyId('');
+      setNewCompanyName('');
+      setIsNewCompany(false);
       fetchData(); // Refresh list
     } catch (error) {
       setInviteStatus({ loading: false, error: error.message, success: false });
@@ -148,19 +167,58 @@ export default function CustomerManagement() {
               </div>
               
               <div>
-                <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-2">Assign to Company</label>
-                <select 
-                  required
-                  value={selectedCompanyId}
-                  onChange={e => setSelectedCompanyId(e.target.value)}
-                  className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors appearance-none"
-                >
-                  <option value="" disabled>Select a company...</option>
-                  {companies.map(c => (
-                    <option key={c.id} value={c.id}>{c.name} ({c.id})</option>
-                  ))}
-                </select>
-                <p className="text-xs text-surface-500 mt-1">Make sure the company has been created via data upload first.</p>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider">Company Assignment</label>
+                  <button 
+                    type="button" 
+                    onClick={() => setIsNewCompany(!isNewCompany)}
+                    className="text-xs text-brand-400 hover:text-brand-300 transition-colors"
+                  >
+                    {isNewCompany ? 'Select Existing Company' : '+ Add New Company'}
+                  </button>
+                </div>
+                
+                {isNewCompany ? (
+                  <div className="space-y-3 bg-surface-800/50 p-4 rounded-lg border border-surface-700/50">
+                    <div>
+                      <label className="block text-xs text-surface-400 mb-1">Company Name</label>
+                      <input 
+                        type="text" 
+                        required={isNewCompany}
+                        placeholder="e.g. Elite Smash Repairs"
+                        value={newCompanyName}
+                        onChange={e => setNewCompanyName(e.target.value)}
+                        className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs text-surface-400 mb-1">Company ID (Unique)</label>
+                      <input 
+                        type="text" 
+                        required={isNewCompany}
+                        placeholder="e.g. 1234.au"
+                        value={newCompanyId}
+                        onChange={e => setNewCompanyId(e.target.value)}
+                        className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <select 
+                      required={!isNewCompany}
+                      value={selectedCompanyId}
+                      onChange={e => setSelectedCompanyId(e.target.value)}
+                      className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors appearance-none"
+                    >
+                      <option value="" disabled>Select a company...</option>
+                      {companies.map(c => (
+                        <option key={c.id} value={c.id}>{c.name} ({c.id})</option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-surface-500 mt-1">Select from companies created via data upload.</p>
+                  </div>
+                )}
               </div>
 
               {inviteStatus.error && (

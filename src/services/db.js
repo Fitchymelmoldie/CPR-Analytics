@@ -184,3 +184,17 @@ export const inviteCustomer = async (email, companyId, token) => {
   if (error) throw error;
   return data;
 };
+
+/**
+ * Create a new company manually
+ */
+export const createCompany = async (id, name) => {
+  const { data, error } = await supabase
+    .from('companies')
+    .insert([{ id, name, state: '' }])
+    .select()
+    .single();
+    
+  if (error) throw error;
+  return data;
+};
