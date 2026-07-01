@@ -111,6 +111,7 @@ export const getAnalytics = async (companyId = null) => {
         name,
         state,
         painters_count,
+        panel_beaters_count,
         admin_count,
         estimators_count,
         managers_count,
@@ -137,6 +138,7 @@ export const getAnalytics = async (companyId = null) => {
     
     // Flatten shop profile counts for easy UI access
     uiRow['painters_count'] = dbRow.companies?.painters_count || 0;
+    uiRow['panel_beaters_count'] = dbRow.companies?.panel_beaters_count || 0;
     uiRow['admin_count'] = dbRow.companies?.admin_count || 0;
     uiRow['estimators_count'] = dbRow.companies?.estimators_count || 0;
     uiRow['managers_count'] = dbRow.companies?.managers_count || 0;
@@ -219,6 +221,7 @@ export const updateShopProfile = async (companyId, profileData) => {
     .from('companies')
     .update({
       painters_count: parseInt(profileData.painters_count) || 0,
+      panel_beaters_count: parseInt(profileData.panel_beaters_count) || 0,
       admin_count: parseInt(profileData.admin_count) || 0,
       estimators_count: parseInt(profileData.estimators_count) || 0,
       managers_count: parseInt(profileData.managers_count) || 0,

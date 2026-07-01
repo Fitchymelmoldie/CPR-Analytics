@@ -66,7 +66,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
       
       const [showShopProfileModal, setShowShopProfileModal] = useState(false);
       const [shopProfileForm, setShopProfileForm] = useState({
-        painters_count: 0, admin_count: 0, estimators_count: 0, managers_count: 0, booths_count: 0
+        painters_count: 0, panel_beaters_count: 0, admin_count: 0, estimators_count: 0, managers_count: 0, booths_count: 0
       });
 
       const handleEditShopProfile = useCallback(() => {
@@ -74,6 +74,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
         if (comp) {
           setShopProfileForm({
             painters_count: comp.painters_count || 0,
+            panel_beaters_count: comp.panel_beaters_count || 0,
             admin_count: comp.admin_count || 0,
             estimators_count: comp.estimators_count || 0,
             managers_count: comp.managers_count || 0,
@@ -742,7 +743,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               
               {/* Shop Profile Banner */}
               {(activeTab === 'dashboard' || activeTab === 'raw-data') && selectedCompany && (
-                <div className="bg-surface-800/80 backdrop-blur-md rounded-xl p-1.5 flex flex-wrap items-center border border-surface-700/50 shadow-lg animate-fade-in w-full sm:w-max">
+                <div className="glass rounded-xl p-1.5 flex items-center border border-surface-700/50 shadow-lg animate-fade-in w-max overflow-x-auto hide-scrollbar">
                   {(() => {
                     const comp = data.find(r => r['Company Id'] === selectedCompany);
                     if (!comp) return null;
@@ -759,6 +760,15 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                             <path d="M9 11l-2 9h4l2-9" />
                             <path d="M12 11s1 2 1 3" />
                             <path d="M9 20v2" />
+                          </svg>
+                        )
+                      },
+                      {
+                        label: 'Panel Beaters',
+                        value: comp.panel_beaters_count || 0,
+                        icon: (
+                          <svg className="w-4 h-4 text-brand-400 group-hover:text-brand-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
                           </svg>
                         )
                       },
@@ -817,21 +827,21 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                           </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-1 px-2">
+                        <div className="flex flex-nowrap items-center gap-1 px-2">
                           {stats.map((stat, idx) => (
-                            <div key={idx} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-surface-700/50 transition-all group cursor-default" title={stat.label}>
+                            <div key={idx} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-surface-700/50 transition-all group cursor-default" title={stat.label}>
                               <div className="text-brand-400 group-hover:scale-110 transition-transform duration-300">
                                 {stat.icon}
                               </div>
-                              <div className="flex items-baseline gap-1.5">
+                              <div className="flex items-baseline gap-1">
                                 <span className="text-sm font-bold text-white leading-none">{stat.value}</span>
-                                <span className="text-[10px] text-surface-400 uppercase font-semibold tracking-wider group-hover:text-surface-300 transition-colors hidden md:block">{stat.label}</span>
+                                <span className="text-[10px] text-surface-400 uppercase font-semibold tracking-wider group-hover:text-surface-300 transition-colors hidden md:block whitespace-nowrap">{stat.label}</span>
                               </div>
                             </div>
                           ))}
                         </div>
 
-                        <div className="pl-2 pr-1 py-1 border-l border-surface-700/50 ml-auto flex items-center justify-center">
+                        <div className="pl-1 pr-0.5 py-1 ml-auto flex items-center justify-center border-l border-surface-700/50">
                           <button onClick={handleEditShopProfile} className="flex items-center justify-center p-1.5 rounded-lg hover:bg-brand-600/20 text-surface-400 hover:text-brand-300 transition-colors group" title="Edit Profile">
                             <svg className="w-4 h-4 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                           </button>
@@ -1165,6 +1175,10 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                       <input type="number" min="0" required value={shopProfileForm.painters_count} onChange={e => setShopProfileForm({...shopProfileForm, painters_count: e.target.value})} className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors" />
                     </div>
                     <div>
+                      <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-1">Panel Beaters</label>
+                      <input type="number" min="0" required value={shopProfileForm.panel_beaters_count} onChange={e => setShopProfileForm({...shopProfileForm, panel_beaters_count: e.target.value})} className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors" />
+                    </div>
+                    <div>
                       <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-1">Booths</label>
                       <input type="number" min="0" required value={shopProfileForm.booths_count} onChange={e => setShopProfileForm({...shopProfileForm, booths_count: e.target.value})} className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors" />
                     </div>
@@ -1176,7 +1190,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                       <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-1">Prod. Managers</label>
                       <input type="number" min="0" required value={shopProfileForm.managers_count} onChange={e => setShopProfileForm({...shopProfileForm, managers_count: e.target.value})} className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors" />
                     </div>
-                    <div className="col-span-2">
+                    <div>
                       <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-1">Admin Staff</label>
                       <input type="number" min="0" required value={shopProfileForm.admin_count} onChange={e => setShopProfileForm({...shopProfileForm, admin_count: e.target.value})} className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors" />
                     </div>

@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS companies (
     name VARCHAR(255) NOT NULL,
     state VARCHAR(50),
     painters_count INTEGER DEFAULT 0,
+    panel_beaters_count INTEGER DEFAULT 0,
     admin_count INTEGER DEFAULT 0,
     estimators_count INTEGER DEFAULT 0,
     managers_count INTEGER DEFAULT 0,
