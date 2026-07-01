@@ -742,42 +742,100 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               
               {/* Shop Profile Banner */}
               {(activeTab === 'dashboard' || activeTab === 'raw-data') && selectedCompany && (
-                <div className="glass rounded-xl p-3 flex flex-wrap items-center gap-6 border border-surface-700/50 shadow-lg animate-fade-in w-max">
+                <div className="bg-surface-800/80 backdrop-blur-md rounded-xl p-1.5 flex flex-wrap items-center border border-surface-700/50 shadow-lg animate-fade-in w-full sm:w-max">
                   {(() => {
                     const comp = data.find(r => r['Company Id'] === selectedCompany);
                     if (!comp) return null;
+                    
+                    const stats = [
+                      {
+                        label: 'Painters',
+                        value: comp.painters_count || 0,
+                        icon: (
+                          <svg className="w-4 h-4 text-brand-400 group-hover:text-brand-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M15 7V3a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v4" />
+                            <rect x="5" y="7" width="14" height="4" rx="1" />
+                            <path d="M19 8h2a1 1 0 0 1 1 1v0a1 1 0 0 1-1 1h-2" />
+                            <path d="M9 11l-2 9h4l2-9" />
+                            <path d="M12 11s1 2 1 3" />
+                            <path d="M9 20v2" />
+                          </svg>
+                        )
+                      },
+                      {
+                        label: 'Booths',
+                        value: comp.booths_count || 0,
+                        icon: (
+                          <svg className="w-4 h-4 text-brand-400 group-hover:text-brand-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 9l9-6 9 6" />
+                            <path d="M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9" />
+                            <path d="M8 21v-7h8v7" />
+                            <path d="M8 17h8" />
+                          </svg>
+                        )
+                      },
+                      {
+                        label: 'Estimators',
+                        value: comp.estimators_count || 0,
+                        icon: (
+                          <svg className="w-4 h-4 text-brand-400 group-hover:text-brand-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                          </svg>
+                        )
+                      },
+                      {
+                        label: 'Prod. Mgrs',
+                        value: comp.managers_count || 0,
+                        icon: (
+                          <svg className="w-4 h-4 text-brand-400 group-hover:text-brand-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                          </svg>
+                        )
+                      },
+                      {
+                        label: 'Admin',
+                        value: comp.admin_count || 0,
+                        icon: (
+                          <svg className="w-4 h-4 text-brand-400 group-hover:text-brand-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                          </svg>
+                        )
+                      }
+                    ];
+
                     return (
                       <>
-                        <div className="flex items-center gap-2" title="Painters">
-                          <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4.28a2 2 0 011.897 1.368L12 7l1.823-2.632A2 2 0 0115.72 3H20a2 2 0 012 2v12a4 4 0 01-4 4H7z" /></svg>
-                          <span className="text-sm font-bold text-white">{comp.painters_count || 0}</span>
-                          <span className="text-xs text-surface-400 uppercase">Painters</span>
+                        <div className="flex items-center gap-2 px-3 py-1.5 border-r border-surface-700/50 hidden sm:flex">
+                          <div className="p-1.5 bg-surface-700/50 rounded-lg">
+                            <svg className="w-4 h-4 text-surface-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="text-xs font-bold text-white leading-tight">Shop Profile</h3>
+                            <p className="text-[9px] text-surface-400 uppercase tracking-wider">Facility & Staff</p>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2" title="Booths">
-                          <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                          <span className="text-sm font-bold text-white">{comp.booths_count || 0}</span>
-                          <span className="text-xs text-surface-400 uppercase">Booths</span>
+
+                        <div className="flex flex-wrap items-center gap-1 px-2">
+                          {stats.map((stat, idx) => (
+                            <div key={idx} className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-surface-700/50 transition-all group cursor-default" title={stat.label}>
+                              <div className="text-brand-400 group-hover:scale-110 transition-transform duration-300">
+                                {stat.icon}
+                              </div>
+                              <div className="flex items-baseline gap-1.5">
+                                <span className="text-sm font-bold text-white leading-none">{stat.value}</span>
+                                <span className="text-[10px] text-surface-400 uppercase font-semibold tracking-wider group-hover:text-surface-300 transition-colors hidden md:block">{stat.label}</span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
-                        <div className="flex items-center gap-2" title="Estimators">
-                          <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
-                          <span className="text-sm font-bold text-white">{comp.estimators_count || 0}</span>
-                          <span className="text-xs text-surface-400 uppercase">Est.</span>
+
+                        <div className="pl-2 pr-1 py-1 border-l border-surface-700/50 ml-auto flex items-center justify-center">
+                          <button onClick={handleEditShopProfile} className="flex items-center justify-center p-1.5 rounded-lg hover:bg-brand-600/20 text-surface-400 hover:text-brand-300 transition-colors group" title="Edit Profile">
+                            <svg className="w-4 h-4 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                          </button>
                         </div>
-                        <div className="flex items-center gap-2" title="Prod Managers">
-                          <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                          <span className="text-sm font-bold text-white">{comp.managers_count || 0}</span>
-                          <span className="text-xs text-surface-400 uppercase">Mgrs.</span>
-                        </div>
-                        <div className="flex items-center gap-2" title="Admin">
-                          <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                          <span className="text-sm font-bold text-white">{comp.admin_count || 0}</span>
-                          <span className="text-xs text-surface-400 uppercase">Admin</span>
-                        </div>
-                        <div className="h-6 w-px bg-surface-700/50 mx-1"></div>
-                        <button onClick={handleEditShopProfile} className="text-xs font-medium text-brand-400 hover:text-brand-300 transition-colors flex items-center gap-1">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                          Edit
-                        </button>
                       </>
                     );
                   })()}
