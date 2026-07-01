@@ -691,7 +691,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
             </section>
 
             {/* Navigation Tabs and Shop Profile */}
-            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-8">
+            <div className="flex flex-col xl:flex-row xl:items-stretch justify-between gap-4 mb-8">
               <div className="flex space-x-2 glass rounded-xl p-1.5 w-max">
               <button
                 onClick={() => setActiveTab('dashboard')}
@@ -743,7 +743,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               
               {/* Shop Profile Banner */}
               {(activeTab === 'dashboard' || activeTab === 'raw-data') && selectedCompany && (
-                <div className="glass rounded-xl p-1.5 flex items-center border border-surface-700/50 shadow-lg animate-fade-in w-max overflow-x-auto hide-scrollbar">
+                <div className="glass rounded-xl p-1.5 flex items-stretch border border-surface-700/50 shadow-lg animate-fade-in w-max hide-scrollbar">
                   {(() => {
                     const comp = data.find(r => r['Company Id'] === selectedCompany);
                     if (!comp) return null;
@@ -815,7 +815,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
                     return (
                       <>
-                        <div className="flex items-center gap-2 px-3 py-1.5 border-r border-surface-700/50 hidden sm:flex">
+                        <div className="flex items-center gap-2 px-3 py-1 border-r border-surface-700/50 hidden sm:flex">
                           <div className="p-1.5 bg-surface-700/50 rounded-lg">
                             <svg className="w-4 h-4 text-surface-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                               <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -827,9 +827,9 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                           </div>
                         </div>
 
-                        <div className="flex flex-nowrap items-center gap-1 px-2">
+                        <div className="grid grid-rows-2 grid-flow-col gap-x-4 gap-y-0.5 px-3 my-auto items-center justify-center">
                           {stats.map((stat, idx) => (
-                            <div key={idx} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg hover:bg-surface-700/50 transition-all group cursor-default" title={stat.label}>
+                            <div key={idx} className="flex items-center gap-1.5 px-1 py-0.5 rounded hover:bg-surface-700/50 transition-all group cursor-default" title={stat.label}>
                               <div className="text-brand-400 group-hover:scale-110 transition-transform duration-300">
                                 {stat.icon}
                               </div>
