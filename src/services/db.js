@@ -140,3 +140,47 @@ export const getAnalytics = async (companyId = null) => {
     return uiRow;
   });
 };
+
+/**
+ * Fetch all companies (Admin only)
+ */
+export const getCompanies = async () => {
+  const { data, error } = await supabase
+    .from('companies')
+    .select('*')
+    .order('name');
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Fetch all profiles with their associated company (Admin only)
+ */
+export const getProfiles = async () => {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select(`
+      *,
+      companies (
+        name
+      )
+    `)
+    .order('created_at', { ascending: false });
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Invoke the edge function to invite a new customer
+ */
+export const inviteCustomer = async (email, companyId, token) => {
+  const { data, error } = await supabase.functions.invoke('invite-user', {
+    body: { email, companyId },
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (error) throw error;
+  return data;
+};
