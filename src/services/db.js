@@ -109,7 +109,12 @@ export const getAnalytics = async (companyId = null) => {
       *,
       companies (
         name,
-        state
+        state,
+        painters_count,
+        admin_count,
+        estimators_count,
+        managers_count,
+        booths_count
       )
     `)
     .order('year', { ascending: true })
@@ -129,6 +134,13 @@ export const getAnalytics = async (companyId = null) => {
     // Flatten normalized company details
     uiRow['Company Name'] = dbRow.companies?.name || dbRow.company_id;
     uiRow['State'] = dbRow.companies?.state || '';
+    
+    // Flatten shop profile counts for easy UI access
+    uiRow['painters_count'] = dbRow.companies?.painters_count || 0;
+    uiRow['admin_count'] = dbRow.companies?.admin_count || 0;
+    uiRow['estimators_count'] = dbRow.companies?.estimators_count || 0;
+    uiRow['managers_count'] = dbRow.companies?.managers_count || 0;
+    uiRow['booths_count'] = dbRow.companies?.booths_count || 0;
     
     for (const [key, value] of Object.entries(dbRow)) {
       if (key === 'companies') continue; // Ignore the joined object
@@ -195,6 +207,27 @@ export const createCompany = async (id, name) => {
     .select()
     .single();
     
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Update the Shop Profile details for a company
+ */
+export const updateShopProfile = async (companyId, profileData) => {
+  const { data, error } = await supabase
+    .from('companies')
+    .update({
+      painters_count: parseInt(profileData.painters_count) || 0,
+      admin_count: parseInt(profileData.admin_count) || 0,
+      estimators_count: parseInt(profileData.estimators_count) || 0,
+      managers_count: parseInt(profileData.managers_count) || 0,
+      booths_count: parseInt(profileData.booths_count) || 0
+    })
+    .eq('id', companyId)
+    .select()
+    .single();
+
   if (error) throw error;
   return data;
 };

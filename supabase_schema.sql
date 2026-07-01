@@ -6,6 +6,11 @@ CREATE TABLE IF NOT EXISTS companies (
     id VARCHAR(50) PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     state VARCHAR(50),
+    painters_count INTEGER DEFAULT 0,
+    admin_count INTEGER DEFAULT 0,
+    estimators_count INTEGER DEFAULT 0,
+    managers_count INTEGER DEFAULT 0,
+    booths_count INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -88,6 +93,10 @@ WITH CHECK ((SELECT role FROM profiles WHERE id = auth.uid()) = 'ADMIN');
 CREATE POLICY "Admins can update companies" 
 ON companies FOR UPDATE 
 USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'ADMIN');
+
+CREATE POLICY "Users can update own company" 
+ON companies FOR UPDATE 
+USING (id = (SELECT company_id FROM profiles WHERE id = auth.uid()));
 
 -- RLS Policies for `analytics_data`
 CREATE POLICY "Users can view own company analytics or all if admin" 

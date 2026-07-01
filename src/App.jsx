@@ -9,7 +9,7 @@ import Header from './components/Header';
 import LoginScreen from './components/LoginScreen';
 import CustomerManagement from './components/CustomerManagement';
 import { useAuth } from './components/AuthProvider';
-import { uploadAnalytics, getAnalytics } from './services/db';
+import { uploadAnalytics, getAnalytics, updateShopProfile } from './services/db';
 
 const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
@@ -63,6 +63,37 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
         return saved ? JSON.parse(saved) : [];
       });
       const [groupNameInput, setGroupNameInput] = useState('');
+      
+      const [showShopProfileModal, setShowShopProfileModal] = useState(false);
+      const [shopProfileForm, setShopProfileForm] = useState({
+        painters_count: 0, admin_count: 0, estimators_count: 0, managers_count: 0, booths_count: 0
+      });
+
+      const handleEditShopProfile = useCallback(() => {
+        const comp = data.find(r => r['Company Id'] === selectedCompany);
+        if (comp) {
+          setShopProfileForm({
+            painters_count: comp.painters_count || 0,
+            admin_count: comp.admin_count || 0,
+            estimators_count: comp.estimators_count || 0,
+            managers_count: comp.managers_count || 0,
+            booths_count: comp.booths_count || 0
+          });
+        }
+        setShowShopProfileModal(true);
+      }, [data, selectedCompany]);
+
+      const handleSaveShopProfile = async (e) => {
+        e.preventDefault();
+        try {
+          await updateShopProfile(selectedCompany, shopProfileForm);
+          setData(prev => prev.map(r => r['Company Id'] === selectedCompany ? { ...r, ...shopProfileForm } : r));
+          setShowShopProfileModal(false);
+        } catch (err) {
+          console.error(err);
+          window.alert("Failed to save profile: " + err.message);
+        }
+      };
       
       const [savedReviews, setSavedReviews] = useState(() => {
         const saved = localStorage.getItem('cpr_reviews');
@@ -658,8 +689,9 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               </div>
             </section>
 
-            {/* Navigation Tabs */}
-            <div className="flex space-x-2 glass rounded-xl p-1.5 mb-8 w-max">
+            {/* Navigation Tabs and Shop Profile */}
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-8">
+              <div className="flex space-x-2 glass rounded-xl p-1.5 w-max">
               <button
                 onClick={() => setActiveTab('dashboard')}
                 className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
@@ -705,6 +737,51 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                 >
                   Customer Management
                 </button>
+              )}
+              </div>
+              
+              {/* Shop Profile Banner */}
+              {(activeTab === 'dashboard' || activeTab === 'raw-data') && selectedCompany && (
+                <div className="glass rounded-xl p-3 flex flex-wrap items-center gap-6 border border-surface-700/50 shadow-lg animate-fade-in w-max">
+                  {(() => {
+                    const comp = data.find(r => r['Company Id'] === selectedCompany);
+                    if (!comp) return null;
+                    return (
+                      <>
+                        <div className="flex items-center gap-2" title="Painters">
+                          <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4.28a2 2 0 011.897 1.368L12 7l1.823-2.632A2 2 0 0115.72 3H20a2 2 0 012 2v12a4 4 0 01-4 4H7z" /></svg>
+                          <span className="text-sm font-bold text-white">{comp.painters_count || 0}</span>
+                          <span className="text-xs text-surface-400 uppercase">Painters</span>
+                        </div>
+                        <div className="flex items-center gap-2" title="Booths">
+                          <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                          <span className="text-sm font-bold text-white">{comp.booths_count || 0}</span>
+                          <span className="text-xs text-surface-400 uppercase">Booths</span>
+                        </div>
+                        <div className="flex items-center gap-2" title="Estimators">
+                          <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+                          <span className="text-sm font-bold text-white">{comp.estimators_count || 0}</span>
+                          <span className="text-xs text-surface-400 uppercase">Est.</span>
+                        </div>
+                        <div className="flex items-center gap-2" title="Prod Managers">
+                          <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                          <span className="text-sm font-bold text-white">{comp.managers_count || 0}</span>
+                          <span className="text-xs text-surface-400 uppercase">Mgrs.</span>
+                        </div>
+                        <div className="flex items-center gap-2" title="Admin">
+                          <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                          <span className="text-sm font-bold text-white">{comp.admin_count || 0}</span>
+                          <span className="text-xs text-surface-400 uppercase">Admin</span>
+                        </div>
+                        <div className="h-6 w-px bg-surface-700/50 mx-1"></div>
+                        <button onClick={handleEditShopProfile} className="text-xs font-medium text-brand-400 hover:text-brand-300 transition-colors flex items-center gap-1">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                          Edit
+                        </button>
+                      </>
+                    );
+                  })()}
+                </div>
               )}
             </div>
 
@@ -1007,9 +1084,57 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
           <footer className="border-t border-surface-800 py-6 text-center text-xs text-surface-500">
             <p>CPR Analytics Â· Automotive Refinishing Consultancy Dashboard</p>
           </footer>
+          
+          {/* Shop Profile Modal */}
+          {showShopProfileModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+              <div className="glass rounded-2xl w-full max-w-md p-6 border border-surface-700 shadow-2xl relative animate-scale-in">
+                <button 
+                  onClick={() => setShowShopProfileModal(false)}
+                  className="absolute top-4 right-4 text-surface-400 hover:text-white"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <h3 className="text-xl font-bold text-white mb-2">Edit Shop Profile</h3>
+                <p className="text-surface-400 text-sm mb-6">Update the staff and facility metrics for this location.</p>
+                
+                <form onSubmit={handleSaveShopProfile} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-1">Painters</label>
+                      <input type="number" min="0" required value={shopProfileForm.painters_count} onChange={e => setShopProfileForm({...shopProfileForm, painters_count: e.target.value})} className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-1">Booths</label>
+                      <input type="number" min="0" required value={shopProfileForm.booths_count} onChange={e => setShopProfileForm({...shopProfileForm, booths_count: e.target.value})} className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-1">Estimators</label>
+                      <input type="number" min="0" required value={shopProfileForm.estimators_count} onChange={e => setShopProfileForm({...shopProfileForm, estimators_count: e.target.value})} className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors" />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-1">Prod. Managers</label>
+                      <input type="number" min="0" required value={shopProfileForm.managers_count} onChange={e => setShopProfileForm({...shopProfileForm, managers_count: e.target.value})} className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors" />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-1">Admin Staff</label>
+                      <input type="number" min="0" required value={shopProfileForm.admin_count} onChange={e => setShopProfileForm({...shopProfileForm, admin_count: e.target.value})} className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors" />
+                    </div>
+                  </div>
+                  
+                  <div className="pt-4 flex justify-end gap-3">
+                    <button type="button" onClick={() => setShowShopProfileModal(false)} className="px-4 py-2 rounded-lg text-sm font-medium text-surface-300 hover:text-white transition-colors">Cancel</button>
+                    <button type="submit" className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg text-sm font-medium shadow-[0_0_15px_rgba(0,168,150,0.3)] transition-all">Save Profile</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
       );
     }
 
-    // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• Mount â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+    // â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â•  Mount â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
   export default App;
