@@ -1,0 +1,32 @@
+# Changelog
+
+All notable changes to the CPR Analytics Dashboard prototype will be documented in this file.
+
+## [Unreleased]
+
+### Added
+- **Consultant Review Notification System**
+  - Interactive Bell Notification icon added to the global Header.
+  - Interactive Modal for Consultant Reviews.
+  - "Historical Log" tab added to the modal to view an infinite vertical timeline of past reviews.
+  - Text cards in Historical Log automatically scale to fit long paragraphs without truncation.
+- **Login / Authentication Screen**
+  - Created a mock login screen with "Admin" and "Customer" role selection.
+  - Admin users have full edit access to Consultant Reviews.
+  - Customer users have read-only access to Consultant Reviews.
+- **Bodyshop Selector & History**
+  - Added ability to reset dashboard and re-upload files.
+  - Unified color scheme dynamically driving metrics based on target vs. actuals.
+
+### Changed
+- **Logo Update**
+  - Completely replaced the buggy 3D WebGL (Three.js) interactive logo.
+  - Implemented a clean, crisp, native SVG heartbeat logo matching the Login screen.
+  - Drastically reduced JavaScript bundle size by uninstalling `three.js`.
+- **Layout Adjustments**
+  - Removed the bulky inline Consultant Review section from the bottom of the dashboard.
+  - Freed up significant screen real estate.
+  - Improved color consistency across Daily Target vs Actual Daily Revenue cards.
+
+### Removed
+- `three.js` dependency uninstalled.
