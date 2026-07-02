@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 
 // Capture the hash before Supabase auth clears it!
-const initialHash = typeof window !== 'undefined' ? window.location.hash : '';
+const initialHash = typeof window !== 'undefined' ? (window.__INITIAL_HASH__ || window.location.hash) : '';
 const isInviteOrRecovery = initialHash.includes('type=invite') || initialHash.includes('type=recovery');
 
 const AuthContext = createContext({});
