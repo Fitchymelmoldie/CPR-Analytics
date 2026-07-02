@@ -1,6 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 
+// Capture the hash before Supabase auth clears it!
+const initialHash = typeof window !== 'undefined' ? window.location.hash : '';
+const isInviteOrRecovery = initialHash.includes('type=invite') || initialHash.includes('type=recovery');
+
 const AuthContext = createContext({});
 
 export const AuthProvider = ({ children }) => {
@@ -8,7 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [requirePasswordSet, setRequirePasswordSet] = useState(false);
+  const [requirePasswordSet, setRequirePasswordSet] = useState(isInviteOrRecovery);
 
   useEffect(() => {
     // Get active session
@@ -36,11 +40,6 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
       }
     });
-
-    // Check if URL indicates an invite or recovery before Supabase clears it
-    if (window.location.hash.includes('type=invite') || window.location.hash.includes('type=recovery')) {
-      setRequirePasswordSet(true);
-    }
 
     return () => subscription.unsubscribe();
   }, []);
