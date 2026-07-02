@@ -234,3 +234,31 @@ export const updateShopProfile = async (companyId, profileData) => {
   if (error) throw error;
   return data;
 };
+
+/**
+ * Delete a company and all its cascaded data
+ */
+export const deleteCompany = async (companyId) => {
+  const { data, error } = await supabase
+    .from('companies')
+    .delete()
+    .eq('id', companyId);
+    
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Delete a specific analytics period for a company
+ */
+export const deleteAnalyticsPeriod = async (companyId, year, month) => {
+  const { data, error } = await supabase
+    .from('analytics_data')
+    .delete()
+    .eq('company_id', companyId)
+    .eq('year', parseInt(year))
+    .eq('month', parseInt(month));
+    
+  if (error) throw error;
+  return data;
+};

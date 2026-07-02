@@ -9,7 +9,7 @@ import Header from './components/Header';
 import LoginScreen from './components/LoginScreen';
 import CustomerManagement from './components/CustomerManagement';
 import { useAuth } from './components/AuthProvider';
-import { uploadAnalytics, getAnalytics, updateShopProfile } from './services/db';
+import { uploadAnalytics, getAnalytics, updateShopProfile, deleteAnalyticsPeriod } from './services/db';
 
 const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
@@ -96,6 +96,25 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
         }
       };
       
+      const [deleteConfirmPeriod, setDeleteConfirmPeriod] = useState(null);
+      const [deletePeriodStatus, setDeletePeriodStatus] = useState({ loading: false, error: null });
+
+      const executeDeletePeriod = async () => {
+        if (!deleteConfirmPeriod || !selectedCompany) return;
+        setDeletePeriodStatus({ loading: true, error: null });
+        try {
+          const [year, month] = deleteConfirmPeriod.split('-');
+          await deleteAnalyticsPeriod(selectedCompany, year, month);
+          setDeleteConfirmPeriod(null);
+          setSelectedPeriod('');
+          // refresh data
+          const fetched = await getAnalytics(currentUser.role === 'CUSTOMER' ? currentUser.companyId : null);
+          setData(fetched);
+        } catch (err) {
+          setDeletePeriodStatus({ loading: false, error: err.message });
+        }
+      };
+
       const [savedReviews, setSavedReviews] = useState(() => {
         const saved = localStorage.getItem('cpr_reviews');
         return saved ? JSON.parse(saved) : {};
@@ -644,6 +663,46 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
             onSaveReview={handleSaveReview}
           />
 
+          {/* Delete Period Confirmation Modal */}
+          {deleteConfirmPeriod && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+              <div className="glass rounded-2xl w-full max-w-md p-6 border border-danger-500/30 shadow-2xl relative animate-scale-in">
+                <div className="w-12 h-12 mx-auto rounded-full bg-danger-500/20 flex items-center justify-center mb-4 text-danger-400">
+                  <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2 text-center">Delete Period?</h3>
+                <p className="text-surface-300 text-sm mb-6 text-center">
+                  Are you absolutely sure you want to delete all data for <strong className="text-white">{MONTH_NAMES[parseInt(deleteConfirmPeriod.split('-')[1])]} {deleteConfirmPeriod.split('-')[0]}</strong>? 
+                  This action cannot be undone.
+                </p>
+                
+                {deletePeriodStatus.error && (
+                  <div className="bg-danger-500/10 border border-danger-500/20 text-danger-400 text-sm p-3 rounded-lg mb-6">
+                    {deletePeriodStatus.error}
+                  </div>
+                )}
+
+                <div className="flex justify-center gap-3">
+                  <button 
+                    onClick={() => setDeleteConfirmPeriod(null)}
+                    className="px-5 py-2.5 rounded-lg text-sm font-medium text-surface-300 hover:text-white transition-colors border border-surface-700 hover:bg-surface-800"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={executeDeletePeriod}
+                    disabled={deletePeriodStatus.loading}
+                    className="bg-danger-600 hover:bg-danger-500 text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {deletePeriodStatus.loading ? 'Deleting...' : 'Yes, Delete Period'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-16">
             {/* Filters */}
             <section className="flex flex-wrap items-center gap-4 my-6 animate-float-in" id="filters">
@@ -1041,10 +1100,18 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                   </div>
                   <h3 className="text-base font-semibold text-white">Manual Data Entry <span className="text-surface-400 font-normal text-sm ml-2">({selectedPeriod ? (MONTH_NAMES[parseInt(selectedPeriod.split('-')[1])] + ' ' + selectedPeriod.split('-')[0]) : 'None'})</span></h3>
                 </div>
-                <button onClick={handleCreatePeriod} className="px-3 py-1.5 bg-brand-600/20 hover:bg-brand-600/40 text-brand-300 border border-brand-500/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                  Add New Period
-                </button>
+                <div className="flex items-center gap-2">
+                  {selectedPeriod && (
+                    <button onClick={() => setDeleteConfirmPeriod(selectedPeriod)} className="px-3 py-1.5 bg-danger-500/10 hover:bg-danger-500/20 text-danger-400 border border-danger-500/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5" title="Delete current period">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      Delete Period
+                    </button>
+                  )}
+                  <button onClick={handleCreatePeriod} className="px-3 py-1.5 bg-brand-600/20 hover:bg-brand-600/40 text-brand-300 border border-brand-500/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                    Add New Period
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-5">
                 {currentRow && Object.keys(currentRow).filter(k => !['Company Id', 'Company Name', 'State', 'Year', 'Month'].includes(k)).map(key => (
