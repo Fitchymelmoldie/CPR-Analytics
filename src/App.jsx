@@ -576,7 +576,50 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
             <Header currentUser={currentUser} onLogout={handleLogout} onExport={handleExport} showExport={false} />
             <div className="flex-1 flex items-center justify-center px-4 py-16">
               <div className="w-full max-w-2xl animate-float-in">
+                <div className="glass rounded-2xl p-16 text-center border border-white/10 shadow-xl">
+                  <div className="w-16 h-16 mx-auto rounded-2xl bg-surface-800 flex items-center justify-center mb-6">
+                    <svg className="w-8 h-8 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-bold text-white mb-3">Awaiting Data</h2>
+                  <p className="text-surface-400 text-sm max-w-md mx-auto">
+                    Your consultancy dashboard is currently empty. Please wait for an administrator to upload the latest performance report for {currentUser.companyId}.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
       }
+
+      const UploadUI = (
+        <div className="flex-1 flex items-center justify-center px-4 py-16 w-full animate-float-in">
+          <div className="w-full max-w-2xl">
+            <div
+              className={"relative border-2 border-dashed rounded-3xl p-16 text-center transition-all duration-300 cursor-pointer " +
+                (dragOver ? 'drag-over border-brand-500' : 'border-surface-700 hover:border-surface-500')}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={onDrop}
+              onClick={() => fileInputRef.current?.click()}
+              id="upload-zone"
+            >
+              <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={onFileSelect} id="file-input" />
+              <div className={"text-brand-400 mb-5 flex justify-center " + (dragOver ? '' : 'upload-pulse')}>
+                <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-white mb-2">{dragOver ? 'Drop your CSV here' : 'Upload Performance Data'}</h2>
+              <p className="text-surface-400 text-sm max-w-md mx-auto">
+                Drag and drop your bodyshop CSV file here, or click to browse.
+              </p>
+              <p className="text-surface-500 text-xs mt-2">Supports single-month and historical multi-month data.</p>
+            </div>
+          </div>
+        </div>
+      );
 
       // â”€â”€â”€â”€â”€â”€ Render: Dashboard â”€â”€â”€â”€â”€â”€
       return (
