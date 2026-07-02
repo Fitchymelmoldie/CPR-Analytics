@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [requirePasswordSet, setRequirePasswordSet] = useState(false);
 
   useEffect(() => {
     // Get active session
@@ -22,7 +23,10 @@ export const AuthProvider = ({ children }) => {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setRequirePasswordSet(true);
+      }
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -32,6 +36,11 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
       }
     });
+
+    // Check if URL indicates an invite or recovery before Supabase clears it
+    if (window.location.hash.includes('type=invite') || window.location.hash.includes('type=recovery')) {
+      setRequirePasswordSet(true);
+    }
 
     return () => subscription.unsubscribe();
   }, []);
@@ -63,7 +72,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, loading, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, profile, loading, requirePasswordSet, setRequirePasswordSet, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

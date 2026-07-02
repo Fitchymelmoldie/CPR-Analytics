@@ -7,6 +7,7 @@ import KpiCard from './components/KpiCard';
 import FilterSelect from './components/FilterSelect';
 import Header from './components/Header';
 import LoginScreen from './components/LoginScreen';
+import SetPasswordScreen from './components/SetPasswordScreen';
 import CustomerManagement from './components/CustomerManagement';
 import { useAuth } from './components/AuthProvider';
 import { uploadAnalytics, getAnalytics, updateShopProfile, deleteAnalyticsPeriod } from './services/db';
@@ -15,7 +16,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
 // === Main App ===
     function App() {
-      const { user, profile, loading, signOut } = useAuth();
+      const { user, profile, loading, requirePasswordSet, setRequirePasswordSet, signOut } = useAuth();
       
       const currentUser = useMemo(() => {
         if (!user || !profile) return null;
@@ -575,13 +576,17 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
         return avg.toFixed(1);
       }, [ranks, selectedKpi]);
 
-      // â”€â”€â”€â”€â”€â”€ Render: Auth â”€â”€â”€â”€â”€â”€
+      // Render Logic
       if (loading) {
         return (
           <div className="min-h-screen bg-surface-900 flex items-center justify-center">
-            <div className="animate-spin h-8 w-8 border-4 border-brand-500 border-t-transparent rounded-full"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-500"></div>
           </div>
         );
+      }
+
+      if (requirePasswordSet) {
+        return <SetPasswordScreen onComplete={() => setRequirePasswordSet(false)} />;
       }
 
       if (!currentUser) {
