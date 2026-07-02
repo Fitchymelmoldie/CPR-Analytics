@@ -705,36 +705,38 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
           <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-16">
             {/* Filters */}
-            <section className="flex flex-wrap items-center gap-4 my-6 animate-float-in" id="filters">
-              {currentUser.role === 'ADMIN' && (
-                <FilterSelect id="filter-company" label="Company" value={selectedCompany}
-                  onChange={(v) => { setSelectedCompany(v); setSelectedPeriod(''); }} options={companies} 
-                  formatLabel={(compId) => {
-                    const row = data.find(r => r['Company Id'] === compId);
-                    return row ? `${row['Company Id']} - ${row['Company Name']}` : compId;
-                  }} />
-              )}
-              <FilterSelect id="filter-period" label="Period" value={selectedPeriod}
-                onChange={setSelectedPeriod} options={uniquePeriods}
-                formatLabel={(p) => { const parts = p.split('-'); return MONTH_NAMES[parseInt(parts[1])] + ' ' + parts[0]; }} />
-              <div className="ml-auto flex items-center gap-4 text-sm text-surface-400">
+            {data.length > 0 && (
+              <section className="flex flex-wrap items-center gap-4 my-6 animate-float-in" id="filters">
                 {currentUser.role === 'ADMIN' && (
-                  <div className="flex items-center gap-1.5" title="Total customers on the platform">
-                    <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
-                    </svg>
-                    <span><strong className="text-white">{companies.length}</strong> Customers</span>
-                  </div>
+                  <FilterSelect id="filter-company" label="Company" value={selectedCompany}
+                    onChange={(v) => { setSelectedCompany(v); setSelectedPeriod(''); }} options={companies} 
+                    formatLabel={(compId) => {
+                      const row = data.find(r => r['Company Id'] === compId);
+                      return row ? `${row['Company Id']} - ${row['Company Name']}` : compId;
+                    }} />
                 )}
-                <div className="flex flex-col items-end gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="inline-block w-2 h-2 rounded-full bg-success-500 animate-pulse"></span>
-                    {isMultiMonth ? uniquePeriods.length + ' months loaded' : 'Single month loaded'}
+                <FilterSelect id="filter-period" label="Period" value={selectedPeriod}
+                  onChange={setSelectedPeriod} options={uniquePeriods}
+                  formatLabel={(p) => { const parts = p.split('-'); return MONTH_NAMES[parseInt(parts[1])] + ' ' + parts[0]; }} />
+                <div className="ml-auto flex items-center gap-4 text-sm text-surface-400">
+                  {currentUser.role === 'ADMIN' && (
+                    <div className="flex items-center gap-1.5" title="Total customers on the platform">
+                      <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                      </svg>
+                      <span><strong className="text-white">{companies.length}</strong> Customers</span>
+                    </div>
+                  )}
+                  <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-block w-2 h-2 rounded-full bg-success-500 animate-pulse"></span>
+                      {isMultiMonth ? uniquePeriods.length + ' months loaded' : 'Single month loaded'}
+                    </div>
+                    <span className="text-[10px] text-surface-500 uppercase tracking-wider font-medium">All comparisons vs prev month</span>
                   </div>
-                  <span className="text-[10px] text-surface-500 uppercase tracking-wider font-medium">All comparisons vs prev month</span>
                 </div>
-              </div>
-            </section>
+              </section>
+            )}
 
             {/* Navigation Tabs and Shop Profile */}
             <div className="flex flex-col xl:flex-row xl:items-stretch justify-between gap-4 mb-8">
