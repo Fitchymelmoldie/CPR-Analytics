@@ -716,7 +716,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
             )}
             
             {/* Filters */}
-            {data.length > 0 && (
+            {true && (
               <section className="flex flex-wrap items-center gap-4 my-6 animate-float-in" id="filters">
                 {currentUser.role === 'ADMIN' && (
                   <FilterSelect id="filter-company" label="Company" value={selectedCompany}
@@ -925,7 +925,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                </div>
             )}
 
-            {activeTab === 'dashboard' && data.length > 0 && (
+            {activeTab === 'dashboard' && (
               <>
                 {/* Daily Budget Reminder Banner */}
                 {kpis && (
