@@ -24,7 +24,8 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
           id: user.id,
           email: user.email,
           role: profile.role,
-          companyId: profile.company_id
+          companyId: profile.company_id,
+          companyName: profile.companies?.name || profile.company_id
         };
       }, [user, profile]);
 
