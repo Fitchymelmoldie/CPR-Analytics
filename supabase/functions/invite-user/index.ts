@@ -40,7 +40,7 @@ serve(async (req) => {
     }
 
     // Parse request body
-    const { email, companyId, redirectTo } = await req.json();
+    const { email, companyId } = await req.json();
 
     if (!email || !companyId) {
       throw new Error('Missing required fields: email or companyId');
@@ -48,9 +48,7 @@ serve(async (req) => {
 
     // Invite the user
     // This sends an invite email and creates the auth.users record
-    const { data: invitedUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      redirectTo: redirectTo || 'https://bodyshop-dashboard-jg8jz6dll-cpr-analytics.vercel.app'
-    });
+    const { data: invitedUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
 
     if (inviteError) {
       throw inviteError;

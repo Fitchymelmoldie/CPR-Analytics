@@ -11,6 +11,11 @@
   </head>
   <body class="bg-surface-900 text-white min-h-screen antialiased">
     <script>
+      // Automatically sanitize corrupted Supabase error hashes to prevent infinite login loops
+      if (window.location.hash.includes('error=access_denied')) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+      
       // Capture the hash before any React or Supabase modules load and strip it!
       window.__INITIAL_HASH__ = window.location.hash;
     </script>

@@ -189,7 +189,7 @@ export const getProfiles = async () => {
  */
 export const inviteCustomer = async (email, companyId, token) => {
   const { data, error } = await supabase.functions.invoke('invite-user', {
-    body: { email, companyId, redirectTo: `${window.location.origin}/?firstLogin=true` },
+    body: { email, companyId },
     headers: {
       Authorization: `Bearer ${token}`
     }
