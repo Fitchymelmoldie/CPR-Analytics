@@ -74,9 +74,19 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE analytics_data ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies for `profiles`
+CREATE OR REPLACE FUNCTION is_admin() RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'ADMIN');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 CREATE POLICY "Users can view own profile" 
 ON profiles FOR SELECT 
 USING (auth.uid() = id);
+
+CREATE POLICY "Admins can view all profiles" 
+ON profiles FOR SELECT 
+USING (is_admin());
 
 -- RLS Policies for `companies`
 CREATE POLICY "Users can view own company or all if admin" 

@@ -15,6 +15,10 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Secured the KPI hook calculations to gracefully fallback to `0` when data is missing to prevent React crashes.
 
 ### Fixed
+- **Customer Management Profile Visibility**
+  - Fixed a bug where administrators could not see invited users in the Customer Management table due to overly restrictive Row Level Security (RLS) on the `profiles` table.
+- **Invite Email Delivery**
+  - Updated the `invite-user` Edge Function to use `inviteUserByEmail` instead of `generateLink`, ensuring customers actually receive an email invitation to set their password.
 - **Supabase Auth Routing Bug**
   - Fixed a critical issue where customers clicking an email invite link were not being directed to the "Set Password" screen.
   - Enhanced URL hash detection (`#access_token=` and `?code=`) to strictly identify email-based invites before Supabase aggressively strips the URL parameters.

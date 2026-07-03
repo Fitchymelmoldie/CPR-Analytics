@@ -298,24 +298,8 @@ export default function CustomerManagement() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <div>
-                    <h4 className="font-semibold text-sm mb-1">Customer created successfully!</h4>
-                    <p className="text-xs text-brand-300/80 mb-3">Copy this secure, one-time link and send it directly to the customer so they can set their password:</p>
-                    
-                    <div className="bg-surface-900 border border-brand-500/30 rounded flex items-center p-2 relative">
-                      <input 
-                        type="text" 
-                        readOnly 
-                        value={inviteStatus.inviteLink}
-                        className="bg-transparent text-xs text-surface-300 w-full outline-none truncate pr-16"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => navigator.clipboard.writeText(inviteStatus.inviteLink)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 bg-brand-600 hover:bg-brand-500 text-white text-[10px] font-bold px-2 py-1 rounded transition-colors"
-                      >
-                        COPY
-                      </button>
-                    </div>
+                    <h4 className="font-semibold text-sm mb-1">Invitation sent successfully!</h4>
+                    <p className="text-xs text-brand-300/80 mb-3">An email has been dispatched to the customer containing a secure link to set their password.</p>
                   </div>
                 </div>
               </div>

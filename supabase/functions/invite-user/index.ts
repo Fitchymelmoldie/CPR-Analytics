@@ -48,10 +48,8 @@ serve(async (req) => {
 
     const origin = req.headers.get('origin') || 'https://bodyshop-dashboard.vercel.app';
 
-    // Generate the invite link (this creates the user but does NOT send an email, bypassing rate limits!)
-    const { data: linkData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
-      type: 'invite',
-      email: email,
+    // Send the actual invite email via Supabase
+    const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
       redirectTo: `${origin}/?firstLogin=true`
     });
 
@@ -59,8 +57,7 @@ serve(async (req) => {
       throw inviteError;
     }
 
-    const invitedUser = linkData.user;
-    const inviteLink = linkData.properties.action_link;
+    const invitedUser = inviteData.user;
 
     // Note: The profile row might be auto-created by a Postgres trigger on auth.users if you have one.
     // If not, we should insert it here. But since we need to set companyId, we will upsert it.
@@ -79,8 +76,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         message: 'User invited successfully', 
-        user: invitedUser,
-        inviteLink: inviteLink
+        user: invitedUser
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
