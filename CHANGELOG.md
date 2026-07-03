@@ -5,6 +5,10 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 ## [Unreleased]
 
 ### Added
+- **Customer Empty State Overlay**
+  - Replaced the plain "Awaiting Data" block with a premium glassmorphic overlay for customers who log in without assigned data.
+  - Allowed the background dashboard skeleton to remain visible underneath the overlay (soft blur and reduced opacity) for improved visual anticipation.
+  - Secured the KPI hook calculations to gracefully fallback to `0` when data is missing to prevent React crashes.
 - **Consultant Review Notification System**
   - Interactive Bell Notification icon added to the global Header.
   - Interactive Modal for Consultant Reviews.
