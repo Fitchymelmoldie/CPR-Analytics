@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import ThreeLogo from './ThreeLogo';
 export default     function Header({ onReset, showReset, onLogout, currentUser, onExport, showExport, hasNotification, onNotificationClick }) {
       return (
@@ -18,7 +18,7 @@ export default     function Header({ onReset, showReset, onLogout, currentUser, 
                 <div className="hidden sm:flex items-center gap-2 mr-2">
                   <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
                   <span className="text-xs font-medium text-surface-300">
-                    {currentUser.role} {currentUser.role === 'CUSTOMER' ? `(${currentUser.companyName})` : ''}
+                    {currentUser.role} {currentUser.role === 'CUSTOMER' ? `(${currentUser.email})` : ''}
                   </span>
                 </div>
               )}
