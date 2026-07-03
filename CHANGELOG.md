@@ -5,6 +5,10 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 ## [Unreleased]
 
 ### Added
+- **Delete User Functionality**
+  - Added a "Delete User" trash can button directly into the Customer Management UI table for Administrators.
+  - Implemented a secure `delete-user` Supabase Edge Function to safely bypass Row Level Security and permanently delete credentials from `auth.users` using an Admin Key.
+  - Users cannot accidentally delete their own accounts.
 - **Customer Empty State Overlay**
   - Replaced the plain "Awaiting Data" block with a premium glassmorphic overlay for customers who log in without assigned data.
   - Allowed the background dashboard skeleton to remain visible underneath the overlay (soft blur and reduced opacity) for improved visual anticipation.

@@ -201,6 +201,22 @@ export const inviteCustomer = async (email, companyId, token) => {
 };
 
 /**
+ * Invoke the edge function to securely delete a customer
+ */
+export const deleteCustomer = async (userId, token) => {
+  const { data, error } = await supabase.functions.invoke('delete-user', {
+    body: { userId },
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+
+  if (error) throw error;
+  if (data && data.error) throw new Error(data.error);
+  return data;
+};
+
+/**
  * Create a new company manually
  */
 export const createCompany = async (id, name) => {

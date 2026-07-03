@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getProfiles, getCompanies, inviteCustomer, createCompany, deleteCompany } from '../services/db';
+import { getProfiles, getCompanies, inviteCustomer, createCompany, deleteCompany, deleteCustomer } from '../services/db';
 import { useAuth } from './AuthProvider';
 
 export default function CustomerManagement() {
@@ -19,6 +19,10 @@ export default function CustomerManagement() {
   // Delete state
   const [deleteConfirmCompany, setDeleteConfirmCompany] = useState(null);
   const [deleteStatus, setDeleteStatus] = useState({ loading: false, error: null });
+
+  // User Delete state
+  const [deleteConfirmUser, setDeleteConfirmUser] = useState(null);
+  const [deleteUserStatus, setDeleteUserStatus] = useState({ loading: false, error: null });
 
   const { session } = useAuth();
 
@@ -96,6 +100,18 @@ export default function CustomerManagement() {
     }
   };
 
+  const executeDeleteUser = async () => {
+    if (!deleteConfirmUser) return;
+    setDeleteUserStatus({ loading: true, error: null });
+    try {
+      await deleteCustomer(deleteConfirmUser.id, session.access_token);
+      setDeleteConfirmUser(null);
+      fetchData(); // refresh list
+    } catch (err) {
+      setDeleteUserStatus({ loading: false, error: err.message });
+    }
+  };
+
   return (
     <div className="animate-fade-in p-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
@@ -134,12 +150,21 @@ export default function CustomerManagement() {
                     <td className="px-6 py-4 font-mono text-xs truncate max-w-[150px]" title={profile.id}>
                       {profile.id}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 flex items-center justify-between group">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         profile.role === 'ADMIN' ? 'bg-danger-500/20 text-danger-400' : 'bg-brand-500/20 text-brand-400'
                       }`}>
                         {profile.role}
                       </span>
+                      {profile.id !== session?.user?.id && (
+                        <button 
+                          onClick={() => setDeleteConfirmUser({ id: profile.id })} 
+                          className="opacity-0 group-hover:opacity-100 text-surface-500 hover:text-danger-400 transition-all p-1.5 rounded hover:bg-danger-500/10" 
+                          title="Delete User Account"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                        </button>
+                      )}
                     </td>
                     <td className="px-6 py-4 flex items-center justify-between group">
                       <span>{profile.companies?.name || profile.company_id || 'Unassigned'}</span>
@@ -170,6 +195,46 @@ export default function CustomerManagement() {
           </div>
         )}
       </div>
+
+      {/* Delete User Confirmation Modal */}
+      {deleteConfirmUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="glass rounded-2xl w-full max-w-md p-6 border border-danger-500/30 shadow-2xl relative animate-scale-in">
+            <div className="w-12 h-12 mx-auto rounded-full bg-danger-500/20 flex items-center justify-center mb-4 text-danger-400">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-white mb-2 text-center">Delete User Account?</h3>
+            <p className="text-surface-300 text-sm mb-6 text-center">
+              Are you absolutely sure you want to delete the user <strong className="text-white font-mono">{deleteConfirmUser.id}</strong>? 
+              This will permanently revoke their access.
+            </p>
+            
+            {deleteUserStatus.error && (
+              <div className="bg-danger-500/10 border border-danger-500/20 text-danger-400 text-sm p-3 rounded-lg mb-6 break-words">
+                {deleteUserStatus.error}
+              </div>
+            )}
+
+            <div className="flex justify-center gap-3">
+              <button 
+                onClick={() => setDeleteConfirmUser(null)}
+                className="px-5 py-2.5 rounded-lg text-sm font-medium text-surface-300 hover:text-white transition-colors border border-surface-700 hover:bg-surface-800"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={executeDeleteUser}
+                disabled={deleteUserStatus.loading}
+                className="bg-danger-600 hover:bg-danger-500 text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow-lg transition-all flex items-center gap-2 disabled:opacity-50"
+              >
+                {deleteUserStatus.loading ? 'Deleting...' : 'Yes, Delete User'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmCompany && (
