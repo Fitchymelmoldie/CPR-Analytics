@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 
-// Capture the hash before Supabase auth clears it!
-const initialHash = typeof window !== 'undefined' ? (window.__INITIAL_HASH__ || window.location.hash) : '';
-const initialSearch = typeof window !== 'undefined' ? window.location.search : '';
-const isInviteOrRecovery = initialHash.includes('type=invite') || initialHash.includes('type=recovery') || initialSearch.includes('firstLogin=true');
+const rawHash = typeof window !== 'undefined' ? (window.__INITIAL_HASH__ || window.location.hash) : '';
+const rawHref = typeof window !== 'undefined' ? window.location.href : '';
+const isInviteOrRecovery = rawHash.includes('type=invite') || rawHash.includes('type=recovery') || rawHref.includes('firstLogin=true') || rawHref.includes('type=invite');
 
 const AuthContext = createContext({});
 
