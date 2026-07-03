@@ -15,6 +15,8 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Secured the KPI hook calculations to gracefully fallback to `0` when data is missing to prevent React crashes.
 
 ### Fixed
+- **HTML Title Encoding Bug**
+  - Replaced a garbled em-dash character (`â€"`) in the `index.html` `<title>` tag with a standard hyphen to ensure correct rendering across all browsers.
 - **Customer Management Table Alignment & Email Column**
   - Fixed a CSS bug where the `flex` property was applied directly to a table cell, causing the "Company" and "Joined" columns to misalign and collapse.
   - Added a new `email` column to the `profiles` table and updated the Customer Management UI to proudly display customer email addresses alongside their roles.
