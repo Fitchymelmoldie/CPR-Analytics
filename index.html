@@ -16,8 +16,9 @@
         window.history.replaceState(null, '', window.location.pathname + window.location.search);
       }
       
-      // Capture the hash before any React or Supabase modules load and strip it!
+      // Capture the hash and search before any React or Supabase modules load and strip it!
       window.__INITIAL_HASH__ = window.location.hash;
+      window.__INITIAL_SEARCH__ = window.location.search;
     </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

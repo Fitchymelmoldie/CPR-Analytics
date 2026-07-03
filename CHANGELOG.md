@@ -9,6 +9,11 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Replaced the plain "Awaiting Data" block with a premium glassmorphic overlay for customers who log in without assigned data.
   - Allowed the background dashboard skeleton to remain visible underneath the overlay (soft blur and reduced opacity) for improved visual anticipation.
   - Secured the KPI hook calculations to gracefully fallback to `0` when data is missing to prevent React crashes.
+
+### Fixed
+- **Supabase Auth Routing Bug**
+  - Fixed a critical issue where customers clicking an email invite link were not being directed to the "Set Password" screen.
+  - Enhanced URL hash detection (`#access_token=` and `?code=`) to strictly identify email-based invites before Supabase aggressively strips the URL parameters.
 - **Consultant Review Notification System**
   - Interactive Bell Notification icon added to the global Header.
   - Interactive Modal for Consultant Reviews.

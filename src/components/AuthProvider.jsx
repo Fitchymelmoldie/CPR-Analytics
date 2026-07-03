@@ -2,8 +2,16 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 
 const rawHash = typeof window !== 'undefined' ? (window.__INITIAL_HASH__ || window.location.hash) : '';
+const rawSearch = typeof window !== 'undefined' ? (window.__INITIAL_SEARCH__ || window.location.search) : '';
 const rawHref = typeof window !== 'undefined' ? window.location.href : '';
-const isInviteOrRecovery = rawHash.includes('type=invite') || rawHash.includes('type=recovery') || rawHref.includes('firstLogin=true') || rawHref.includes('type=invite');
+
+const isInviteOrRecovery = 
+  rawHash.includes('type=invite') || 
+  rawHash.includes('type=recovery') || 
+  rawHash.includes('access_token=') ||
+  rawSearch.includes('code=') ||
+  rawHref.includes('firstLogin=true') || 
+  rawHref.includes('type=invite');
 
 const AuthContext = createContext({});
 
