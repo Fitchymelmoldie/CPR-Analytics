@@ -433,7 +433,18 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
       // KPIs
       const kpis = useMemo(() => {
-        if (!currentRow) return null;
+        if (!currentRow) {
+          return {
+            paintSales: 0,
+            paintLabourCosts: 0,
+            completedRO: 0,
+            returnOnLabour: 0,
+            paintRevPerVehicle: 0,
+            actualDailyRevenue: 0,
+            dailyBudget: 0,
+            rollingMonths: 0
+          };
+        }
         const paintSales = parseNum(currentRow['Paint Sales']);
         const paintLabourCosts = parseNum(currentRow['Paint Labour Costs']);
 
@@ -594,30 +605,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
         return <LoginScreen />;
       }
 
-      // ────── Render: Empty State for Customers ──────
-      if (data.length === 0 && currentUser.role === 'CUSTOMER') {
-        return (
-          <div className="min-h-screen flex flex-col">
-            <Header currentUser={currentUser} onLogout={handleLogout} onExport={handleExport} showExport={false} />
-            <div className="flex-1 flex items-center justify-center px-4 py-16">
-              <div className="w-full max-w-2xl animate-float-in">
-                <div className="glass rounded-2xl p-16 text-center border border-white/10 shadow-xl">
-                  <div className="w-16 h-16 mx-auto rounded-2xl bg-surface-800 flex items-center justify-center mb-6">
-                    <svg className="w-8 h-8 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                  </div>
-                  <h2 className="text-2xl font-bold text-white mb-3">Awaiting Data</h2>
-                  <p className="text-surface-400 text-sm max-w-md mx-auto">
-                    Your consultancy dashboard is currently empty. Please wait for an administrator to upload the latest performance report for {currentUser.companyId}.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
+      // The empty state early return has been removed, replaced by an overlay in the main layout.
       const UploadUI = (
         <div className="flex-1 flex items-center justify-center px-4 py-16 w-full animate-float-in">
           <div className="w-full max-w-2xl">
@@ -709,7 +697,24 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
             </div>
           )}
 
-          <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-16">
+          <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-16 relative">
+            {/* ────── Render: Empty State Overlay for Customers ────── */}
+            {data.length === 0 && currentUser.role === 'CUSTOMER' && (
+              <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-surface-900/40 backdrop-blur-md rounded-2xl mb-16 mt-6 border border-white/5 pointer-events-auto">
+                <div className="glass rounded-2xl p-12 text-center border border-white/10 shadow-2xl max-w-lg w-full animate-float-in">
+                  <div className="w-16 h-16 mx-auto rounded-2xl bg-surface-800 flex items-center justify-center mb-6">
+                    <svg className="w-8 h-8 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-bold text-white mb-3">Awaiting Data</h2>
+                  <p className="text-surface-400 text-sm max-w-md mx-auto">
+                    Your consultancy dashboard is currently empty. Please wait for an administrator to upload the latest performance report for {currentUser.companyId}.
+                  </p>
+                </div>
+              </div>
+            )}
+            
             {/* Filters */}
             {data.length > 0 && (
               <section className="flex flex-wrap items-center gap-4 my-6 animate-float-in" id="filters">
