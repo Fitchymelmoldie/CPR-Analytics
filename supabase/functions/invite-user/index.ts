@@ -46,20 +46,25 @@ serve(async (req) => {
       throw new Error('Missing required fields: email or companyId');
     }
 
-    // Invite the user
-    // This sends an invite email and creates the auth.users record
-    const { data: invitedUser, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email);
+    // Generate the invite link (this creates the user but does NOT send an email, bypassing rate limits!)
+    const { data: linkData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'invite',
+      email: email,
+    });
 
     if (inviteError) {
       throw inviteError;
     }
+
+    const invitedUser = linkData.user;
+    const inviteLink = linkData.properties.action_link;
 
     // Note: The profile row might be auto-created by a Postgres trigger on auth.users if you have one.
     // If not, we should insert it here. But since we need to set companyId, we will upsert it.
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .upsert({
-        id: invitedUser.user.id,
+        id: invitedUser.id,
         company_id: companyId,
         role: 'CUSTOMER',
       });
@@ -69,7 +74,11 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ message: 'User invited successfully', user: invitedUser.user }),
+      JSON.stringify({ 
+        message: 'User invited successfully', 
+        user: invitedUser,
+        inviteLink: inviteLink
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200,
