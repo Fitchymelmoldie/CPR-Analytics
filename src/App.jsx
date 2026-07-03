@@ -700,7 +700,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
           <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-16 relative">
             {/* ────── Render: Empty State Overlay for Customers ────── */}
             {data.length === 0 && currentUser.role === 'CUSTOMER' && (
-              <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-surface-900/40 backdrop-blur-md rounded-2xl mb-16 mt-6 border border-white/5 pointer-events-auto">
+              <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-surface-900/20 backdrop-blur-sm rounded-2xl mb-16 mt-6 border border-white/5 pointer-events-auto">
                 <div className="glass rounded-2xl p-12 text-center border border-white/10 shadow-2xl max-w-lg w-full animate-float-in">
                   <div className="w-16 h-16 mx-auto rounded-2xl bg-surface-800 flex items-center justify-center mb-6">
                     <svg className="w-8 h-8 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
