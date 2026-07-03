@@ -46,10 +46,13 @@ serve(async (req) => {
       throw new Error('Missing required fields: email or companyId');
     }
 
+    const origin = req.headers.get('origin') || 'https://bodyshop-dashboard.vercel.app';
+
     // Generate the invite link (this creates the user but does NOT send an email, bypassing rate limits!)
     const { data: linkData, error: inviteError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'invite',
       email: email,
+      redirectTo: `${origin}/?firstLogin=true`
     });
 
     if (inviteError) {
