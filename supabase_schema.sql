@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     company_id VARCHAR(50) REFERENCES companies(id) ON DELETE SET NULL,
     role VARCHAR(50) DEFAULT 'CUSTOMER',
+    email VARCHAR(255),
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

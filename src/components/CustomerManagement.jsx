@@ -139,6 +139,7 @@ export default function CustomerManagement() {
               <thead className="bg-surface-800/50 text-xs uppercase text-surface-400 font-semibold border-b border-surface-700/50">
                 <tr>
                   <th className="px-6 py-4">User ID</th>
+                  <th className="px-6 py-4">Email</th>
                   <th className="px-6 py-4">Role</th>
                   <th className="px-6 py-4">Company</th>
                   <th className="px-6 py-4">Joined</th>
@@ -150,33 +151,40 @@ export default function CustomerManagement() {
                     <td className="px-6 py-4 font-mono text-xs truncate max-w-[150px]" title={profile.id}>
                       {profile.id}
                     </td>
-                    <td className="px-6 py-4 flex items-center justify-between group">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        profile.role === 'ADMIN' ? 'bg-danger-500/20 text-danger-400' : 'bg-brand-500/20 text-brand-400'
-                      }`}>
-                        {profile.role}
-                      </span>
-                      {profile.id !== session?.user?.id && (
-                        <button 
-                          onClick={() => setDeleteConfirmUser({ id: profile.id })} 
-                          className="opacity-0 group-hover:opacity-100 text-surface-500 hover:text-danger-400 transition-all p-1.5 rounded hover:bg-danger-500/10" 
-                          title="Delete User Account"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
-                      )}
+                    <td className="px-6 py-4 text-surface-300">
+                      {profile.email || <span className="text-surface-600 italic">No email</span>}
                     </td>
-                    <td className="px-6 py-4 flex items-center justify-between group">
-                      <span>{profile.companies?.name || profile.company_id || 'Unassigned'}</span>
-                      {profile.company_id && profile.role !== 'ADMIN' && (
-                        <button 
-                          onClick={() => setDeleteConfirmCompany({ id: profile.company_id, name: profile.companies?.name || profile.company_id })} 
-                          className="opacity-0 group-hover:opacity-100 text-surface-500 hover:text-danger-400 transition-all p-1.5 rounded hover:bg-danger-500/10" 
-                          title="Delete Company & Data"
-                        >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                        </button>
-                      )}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-between group">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          profile.role === 'ADMIN' ? 'bg-danger-500/20 text-danger-400' : 'bg-brand-500/20 text-brand-400'
+                        }`}>
+                          {profile.role}
+                        </span>
+                        {profile.id !== session?.user?.id && (
+                          <button 
+                            onClick={() => setDeleteConfirmUser({ id: profile.id })} 
+                            className="opacity-0 group-hover:opacity-100 text-surface-500 hover:text-danger-400 transition-all p-1.5 rounded hover:bg-danger-500/10" 
+                            title="Delete User Account"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-between group">
+                        <span>{profile.role === 'ADMIN' ? 'System Administrator' : (profile.companies?.name || profile.company_id || 'Unassigned')}</span>
+                        {profile.company_id && profile.role !== 'ADMIN' && (
+                          <button 
+                            onClick={() => setDeleteConfirmCompany({ id: profile.company_id, name: profile.companies?.name || profile.company_id })} 
+                            className="opacity-0 group-hover:opacity-100 text-surface-500 hover:text-danger-400 transition-all p-1.5 rounded hover:bg-danger-500/10" 
+                            title="Delete Company & Data"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-surface-500">
                       {new Date(profile.created_at).toLocaleDateString()}
@@ -185,7 +193,7 @@ export default function CustomerManagement() {
                 ))}
                 {profiles.length === 0 && (
                   <tr>
-                    <td colSpan="4" className="px-6 py-8 text-center text-surface-500">
+                    <td colSpan="5" className="px-6 py-8 text-center text-surface-500">
                       No users found.
                     </td>
                   </tr>

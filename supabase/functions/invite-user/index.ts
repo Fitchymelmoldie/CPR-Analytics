@@ -65,6 +65,7 @@ serve(async (req) => {
       .from('profiles')
       .upsert({
         id: invitedUser.id,
+        email: invitedUser.email,
         company_id: companyId,
         role: 'CUSTOMER',
       });

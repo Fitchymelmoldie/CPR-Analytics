@@ -15,6 +15,10 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Secured the KPI hook calculations to gracefully fallback to `0` when data is missing to prevent React crashes.
 
 ### Fixed
+- **Customer Management Table Alignment & Email Column**
+  - Fixed a CSS bug where the `flex` property was applied directly to a table cell, causing the "Company" and "Joined" columns to misalign and collapse.
+  - Added a new `email` column to the `profiles` table and updated the Customer Management UI to proudly display customer email addresses alongside their roles.
+  - Updated the Admin "Unassigned" placeholder to proudly display "System Administrator".
 - **Customer Management Profile Visibility**
   - Fixed a bug where administrators could not see invited users in the Customer Management table due to overly restrictive Row Level Security (RLS) on the `profiles` table.
 - **Invite Email Delivery**
