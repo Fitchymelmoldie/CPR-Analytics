@@ -73,7 +73,13 @@ export default function CustomerManagement() {
       // Refresh list
       fetchData();
     } catch (error) {
-      setInviteStatus({ loading: false, error: error.message, success: false });
+      console.error("Invite error:", error);
+      // Try to extract more details if it's a generic error
+      let errMsg = error.message;
+      if (errMsg === 'Edge Function returned a non-2xx status code' && error.context) {
+        errMsg = `Edge function error: ${JSON.stringify(error.context)}`;
+      }
+      setInviteStatus({ loading: false, error: errMsg, success: false });
     }
   };
 

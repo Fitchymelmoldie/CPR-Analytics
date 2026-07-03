@@ -196,6 +196,7 @@ export const inviteCustomer = async (email, companyId, token) => {
   });
 
   if (error) throw error;
+  if (data && data.error) throw new Error(data.error);
   return data;
 };
 
