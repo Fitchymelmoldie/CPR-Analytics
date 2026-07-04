@@ -21,6 +21,8 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Added a real-time search and filter input to the Customer Management UI for instantly finding bodyshops by email, role, or company name.
 
 ### Fixed
+- **Trend Graph Independence**
+  - Decoupled the Trend Visualization chart from the globally selected month. The trend graph will now always calculate its timeframe (YTD, 3M, 6M, etc.) backwards from the *latest* available data month, allowing users to view full historical trends without changing the month currently being analyzed by the KPI cards above it.
 - **Empty State Period Indicator**
   - Updated the top right period indicator to correctly display "No data loaded" with a static grey dot when a company is selected but has zero historical uploads, rather than incorrectly stating "Single month loaded".
 - **KPI Empty State Consistency**
