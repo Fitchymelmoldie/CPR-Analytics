@@ -15,6 +15,9 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Secured the KPI hook calculations to gracefully fallback to `0` when data is missing to prevent React crashes.
 
 ### Fixed
+- **Global Customer Count Metric UX**
+  - Updated the global dashboard header so the "Customers" counter reads directly from the Supabase database (reflecting total onboarded bodyshops) rather than only counting customers who have uploaded CSV data.
+  - Ensured this metric is exclusively visible to Administrators to provide a business pulse-check, hiding it from standard customers.
 - **HTML Title Encoding Bug**
   - Replaced a garbled em-dash character (`â€"`) in the `index.html` `<title>` tag with a standard hyphen to ensure correct rendering across all browsers.
 - **Customer Management Table Alignment & Email Column**
