@@ -380,9 +380,11 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
 
       const trendChartData = useMemo(() => {
-        if (!selectedPeriod || !isMultiMonth) return null;
+        if (!isMultiMonth || uniquePeriods.length === 0) return null;
         
-        const parts = selectedPeriod.split('-');
+        // Always anchor the trend graph to the LATEST available data, independent of the KPI selectedPeriod
+        const latestPeriod = uniquePeriods[uniquePeriods.length - 1];
+        const parts = latestPeriod.split('-');
         const targetYear = parseInt(parts[0]);
         const targetMonth = parseInt(parts[1]);
         const targetTotalMonths = targetYear * 12 + targetMonth;
@@ -392,8 +394,6 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
           const py = parseInt(pParts[0]);
           const pm = parseInt(pParts[1]);
           const pTotalMonths = py * 12 + pm;
-          
-          if (pTotalMonths > targetTotalMonths) return false;
           
           if (chartTimeframe === 'YTD') {
             return py === targetYear;
