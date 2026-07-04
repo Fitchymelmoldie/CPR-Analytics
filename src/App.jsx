@@ -1042,13 +1042,24 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                          {/* Target Daily Budget */}
                          <div className="flex flex-col items-center sm:items-start text-center sm:text-left flex-1 pl-0 sm:pl-6">
                            <p className="text-surface-400 text-xs font-semibold uppercase tracking-wider mb-1">3.3x Daily Target</p>
-                           <div className="flex items-baseline gap-2">
-                             <p className="text-3xl font-bold text-white tracking-tight">
-                               ${kpis.dailyBudget.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}
-                             </p>
-                             <p className="text-sm font-medium text-brand-400">/ day</p>
-                           </div>
-                           <p className="text-xs text-brand-400/80 mt-1 max-w-[200px]">Based on rolling quarterly average 3.3x profitability benchmark.</p>
+                           {kpis.rollingMonths >= 3 ? (
+                             <>
+                               <div className="flex items-baseline gap-2">
+                                 <p className="text-3xl font-bold text-white tracking-tight">
+                                   ${kpis.dailyBudget.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}
+                                 </p>
+                                 <p className="text-sm font-medium text-brand-400">/ day</p>
+                               </div>
+                               <p className="text-xs text-brand-400/80 mt-1 max-w-[200px]">Based on rolling quarterly average 3.3x profitability benchmark.</p>
+                             </>
+                           ) : (
+                             <>
+                               <div className="flex items-center gap-2 h-[40px]">
+                                 <span className="text-sm italic text-surface-400">Calculating Target...</span>
+                               </div>
+                               <p className="text-[11px] text-surface-500 mt-1 max-w-[200px]">Requires a full quarter (3 months) of historical data to generate benchmark.</p>
+                             </>
+                           )}
                          </div>
                        </div>
                      </div>
