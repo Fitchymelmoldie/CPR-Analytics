@@ -24,6 +24,8 @@ export default function CustomerManagement() {
   const [deleteConfirmUser, setDeleteConfirmUser] = useState(null);
   const [deleteUserStatus, setDeleteUserStatus] = useState({ loading: false, error: null });
 
+  const [searchQuery, setSearchQuery] = useState('');
+
   const { session } = useAuth();
 
   useEffect(() => {
@@ -112,6 +114,14 @@ export default function CustomerManagement() {
     }
   };
 
+  const filteredProfiles = profiles.filter(p => {
+    const search = searchQuery.toLowerCase();
+    const email = (p.email || '').toLowerCase();
+    const role = (p.role || '').toLowerCase();
+    const company = (p.companies?.name || p.company_id || '').toLowerCase();
+    return email.includes(search) || role.includes(search) || company.includes(search);
+  });
+
   return (
     <div className="animate-fade-in p-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
@@ -130,6 +140,21 @@ export default function CustomerManagement() {
         </button>
       </div>
 
+      <div className="mb-6 relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <svg className="h-5 w-5 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+        <input
+          type="text"
+          placeholder="Search by email, role, or company..."
+          className="bg-surface-800 border border-surface-700 text-white text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block w-full sm:w-96 pl-10 p-2.5 transition-colors"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
       <div className="glass rounded-xl border border-surface-700/50 overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-surface-400">Loading customers...</div>
@@ -146,7 +171,7 @@ export default function CustomerManagement() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-700/50">
-                {profiles.map((profile) => (
+                {filteredProfiles.map((profile) => (
                   <tr key={profile.id} className="hover:bg-surface-800/30 transition-colors">
                     <td className="px-6 py-4 font-mono text-xs truncate max-w-[150px]" title={profile.id}>
                       {profile.id}
@@ -191,10 +216,10 @@ export default function CustomerManagement() {
                     </td>
                   </tr>
                 ))}
-                {profiles.length === 0 && (
+                {filteredProfiles.length === 0 && (
                   <tr>
                     <td colSpan="5" className="px-6 py-8 text-center text-surface-500">
-                      No users found.
+                      {profiles.length === 0 ? 'No users found.' : 'No users match your search.'}
                     </td>
                   </tr>
                 )}

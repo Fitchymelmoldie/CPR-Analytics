@@ -14,7 +14,17 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Allowed the background dashboard skeleton to remain visible underneath the overlay (soft blur and reduced opacity) for improved visual anticipation.
   - Secured the KPI hook calculations to gracefully fallback to `0` when data is missing to prevent React crashes.
 
+### Added
+- **Customer Empty State**
+  - Designed a premium "Awaiting Data Upload" empty state for customers so their dashboard feels intentional rather than broken when data is missing.
+- **Customer Management Search**
+  - Added a real-time search and filter input to the Customer Management UI for instantly finding bodyshops by email, role, or company name.
+
 ### Fixed
+- **Login Error UX**
+  - Mapped raw Supabase database error codes (like `Invalid login credentials`) into friendly, human-readable error messages on the login screen.
+- **Dashboard Navigation Aesthetics**
+  - Upgraded the main dashboard tab navigation with modern SVG icons for a more premium enterprise feel.
 - **Global Customer Count Metric UX**
   - Updated the global dashboard header so the "Customers" counter reads directly from the Supabase database (reflecting total onboarded bodyshops) rather than only counting customers who have uploaded CSV data.
   - Ensured this metric is exclusively visible to Administrators to provide a business pulse-check, hiding it from standard customers.

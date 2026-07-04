@@ -763,47 +763,51 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               <div className="flex space-x-2 glass rounded-xl p-1.5 w-max">
               <button
                 onClick={() => setActiveTab('dashboard')}
-                className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   activeTab === 'dashboard'
                     ? 'bg-brand-600/30 text-white shadow-lg border border-brand-500/50'
                     : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/80 border border-transparent'
                 }`}
               >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
                 Visual Dashboard
               </button>
               {currentUser.role === 'ADMIN' && (
                 <button
                   onClick={() => setActiveTab('raw-data')}
-                  className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     activeTab === 'raw-data'
                       ? 'bg-brand-600/30 text-white shadow-lg border border-brand-500/50'
                       : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/80 border border-transparent'
                   }`}
                 >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
                   Raw Data Adjustment
                 </button>
               )}
               {currentUser.role === 'ADMIN' && (
                 <button
                   onClick={() => setActiveTab('leaderboards')}
-                  className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     activeTab === 'leaderboards'
                       ? 'bg-brand-600/30 text-white shadow-lg border border-brand-500/50'
                       : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/80 border border-transparent'
                   }`}
                 >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                   Gamified Leaderboards
                 </button>
               )}
               {currentUser.role === 'ADMIN' && (
                 <button
                   onClick={() => setActiveTab('customers')}
-                  className={`px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     activeTab === 'customers'
                       ? 'bg-brand-600/30 text-white shadow-lg border border-brand-500/50'
                       : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/80 border border-transparent'
                   }`}
                 >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                   Customer Management
                 </button>
               )}
@@ -926,6 +930,21 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
             )}
 
             {(activeTab === 'dashboard' || activeTab === 'raw-data') && data.length === 0 && currentUser.role === 'ADMIN' && UploadUI}
+
+            {(activeTab === 'dashboard' || activeTab === 'raw-data') && data.length === 0 && currentUser.role === 'CUSTOMER' && (
+              <div className="flex flex-col items-center justify-center py-24 animate-fade-in glass border border-surface-700/50 rounded-2xl max-w-3xl mx-auto shadow-2xl">
+                <div className="w-20 h-20 bg-surface-800/80 rounded-full flex items-center justify-center border border-surface-700/50 mb-6 relative">
+                  <div className="absolute inset-0 border border-brand-500/30 rounded-full animate-ping opacity-75"></div>
+                  <svg className="w-10 h-10 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">Awaiting Data Upload</h3>
+                <p className="text-surface-400 text-center max-w-md text-sm leading-relaxed">
+                  Your dashboard is ready, but we are currently waiting for your latest analytics data to be processed and uploaded by CPR Analytics.
+                </p>
+              </div>
+            )}
 
             {activeTab === 'leaderboards' && data.length === 0 && currentUser.role === 'ADMIN' && (
                <div className="glass rounded-2xl p-16 text-center border border-white/10 shadow-xl max-w-2xl mx-auto mt-8 animate-float-in">

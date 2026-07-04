@@ -16,7 +16,13 @@ export default function LoginScreen() {
     const { error: signInError } = await signIn(email, password);
     
     if (signInError) {
-      setError(signInError.message);
+      let friendlyMsg = signInError.message;
+      if (friendlyMsg.toLowerCase().includes('invalid login credentials')) {
+        friendlyMsg = 'The email or password you entered is incorrect. Please try again.';
+      } else if (friendlyMsg.toLowerCase().includes('email not confirmed')) {
+        friendlyMsg = 'Please verify your email address before logging in.';
+      }
+      setError(friendlyMsg);
     }
     
     setLoading(false);
