@@ -173,8 +173,8 @@ export default function CustomerManagement() {
               <tbody className="divide-y divide-surface-700/50">
                 {filteredProfiles.map((profile) => (
                   <tr key={profile.id} className="hover:bg-surface-800/30 transition-colors">
-                    <td className="px-6 py-4 font-mono text-xs truncate max-w-[150px]" title={profile.id}>
-                      {profile.id}
+                    <td className="px-6 py-4 font-mono text-xs whitespace-nowrap" title={profile.id}>
+                      {profile.id.substring(0, 8)}...{profile.id.substring(profile.id.length - 4)}
                     </td>
                     <td className="px-6 py-4 text-surface-300">
                       {profile.email || <span className="text-surface-600 italic">No email</span>}
@@ -211,8 +211,8 @@ export default function CustomerManagement() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-surface-500">
-                      {new Date(profile.created_at).toLocaleDateString()}
+                    <td className="px-6 py-4 text-surface-500 whitespace-nowrap">
+                      {new Date(profile.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </td>
                   </tr>
                 ))}
@@ -400,7 +400,7 @@ export default function CustomerManagement() {
                         <option key={c.id} value={c.id}>{c.name} ({c.id})</option>
                       ))}
                     </select>
-                    <p className="text-xs text-surface-500 mt-1">Select from companies created via data upload.</p>
+                    <p className="text-xs text-surface-500 mt-1">Select an existing company from the database.</p>
                   </div>
                 )}
               </div>

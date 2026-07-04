@@ -55,7 +55,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
       const [allCompanies, setAllCompanies] = useState([]);
       useEffect(() => {
-        if (currentUser?.role === 'ADMIN') {
+        if (currentUser) {
           getCompanies()
             .then(comps => setAllCompanies(comps))
             .catch(err => console.error("Company fetch error:", err));
@@ -81,7 +81,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
       });
 
       const handleEditShopProfile = useCallback(() => {
-        const comp = data.find(r => r['Company Id'] === selectedCompany);
+        const comp = allCompanies.find(c => c.id === selectedCompany);
         if (comp) {
           setShopProfileForm({
             painters_count: comp.painters_count || 0,
@@ -93,13 +93,14 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
           });
         }
         setShowShopProfileModal(true);
-      }, [data, selectedCompany]);
+      }, [allCompanies, selectedCompany]);
 
       const handleSaveShopProfile = async (e) => {
         e.preventDefault();
         try {
           await updateShopProfile(selectedCompany, shopProfileForm);
           setData(prev => prev.map(r => r['Company Id'] === selectedCompany ? { ...r, ...shopProfileForm } : r));
+          setAllCompanies(prev => prev.map(c => c.id === selectedCompany ? { ...c, ...shopProfileForm } : c));
           setShowShopProfileModal(false);
         } catch (err) {
           console.error(err);
@@ -825,10 +826,10 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               </div>
               
               {/* Shop Profile Banner */}
-              {(activeTab === 'dashboard' || activeTab === 'raw-data') && selectedCompany && data.some(r => r['Company Id'] === selectedCompany) && (
+              {(activeTab === 'dashboard' || activeTab === 'raw-data') && selectedCompany && allCompanies.some(c => c.id === selectedCompany) && (
                 <div className="glass rounded-xl p-1.5 flex items-stretch border border-surface-700/50 shadow-lg animate-fade-in w-max hide-scrollbar">
                   {(() => {
-                    const comp = data.find(r => r['Company Id'] === selectedCompany);
+                    const comp = allCompanies.find(c => c.id === selectedCompany);
                     
                     const stats = [
                       {

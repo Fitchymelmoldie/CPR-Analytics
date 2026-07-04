@@ -21,6 +21,11 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Added a real-time search and filter input to the Customer Management UI for instantly finding bodyshops by email, role, or company name.
 
 ### Fixed
+- **Pre-Launch UX Polish**
+  - Formatted the "Joined" date in the Customer Management table to a more readable `DD MMM YYYY` format (e.g., 03 Jul 2026).
+  - Implemented smart UUID truncation for the User ID column to prevent awkward CSS cut-offs and improve table readability.
+  - Updated the "Invite Customer" modal help text to accurately reflect the ability to add new companies manually without a data upload.
+  - Decoupled the Shop Profile Summary banner from raw CSV data. It now connects directly to the master company registry, allowing administrators to edit a company's profile (number of painters, booths, etc.) even before the first data upload.
 - **Dashboard KPI Consistency**
   - Fixed a bug where some KPI cards showed `$0` while others were entirely blank when no analytics data was loaded. All cards now consistently display a zero state.
 - **Login Error UX**
