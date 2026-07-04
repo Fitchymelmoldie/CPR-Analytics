@@ -464,8 +464,8 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
             rollingMonths: 0
           };
         }
-        const paintSales = parseNum(currentRow['Paint Sales']);
-        const paintLabourCosts = parseNum(currentRow['Paint Labour Costs']);
+        const paintSales = parseNum(currentRow['Paint Sales']) || 0;
+        const paintLabourCosts = parseNum(currentRow['Paint Labour Costs']) || 0;
 
         // Calculate Rolling Quarter for Daily Budget & Actual Revenue
         let rollingPaintSales = 0;
@@ -479,8 +479,8 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
           companyData.forEach(r => {
             const rowTotalMonths = parseNum(r['Year']) * 12 + parseNum(r['Month']);
             if (rowTotalMonths <= targetTotalMonths && rowTotalMonths > targetTotalMonths - 3) {
-              rollingPaintSales += parseNum(r['Paint Sales']);
-              rollingPaintLabourCosts += parseNum(r['Paint Labour Costs']);
+              rollingPaintSales += parseNum(r['Paint Sales']) || 0;
+              rollingPaintLabourCosts += parseNum(r['Paint Labour Costs']) || 0;
               monthsFound++;
             }
           });
@@ -493,16 +493,16 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
         }
 
         return {
-          totalSales: parseNum(currentRow['Total Sales']),
-          completedRO: parseNum(currentRow['Completed RO']),
+          totalSales: parseNum(currentRow['Total Sales']) || 0,
+          completedRO: parseNum(currentRow['Completed RO']) || 0,
           paintSales: paintSales,
-          paintCostPerRO: parseNum(currentRow['Paint Cost per RO']),
-          paintCostToTotalSales: parseNum(currentRow['Paint Cost to Total Sales']),
-          vpdPerBooth: parseNum(currentRow['Vehicles per Day per Booth']),
-          boothCycleTime: parseNum(currentRow['Booth Cycle Time']),
+          paintCostPerRO: parseNum(currentRow['Paint Cost per RO']) || 0,
+          paintCostToTotalSales: parseNum(currentRow['Paint Cost to Total Sales']) || 0,
+          vpdPerBooth: parseNum(currentRow['Vehicles per Day per Booth']) || 0,
+          boothCycleTime: parseNum(currentRow['Booth Cycle Time']) || 0,
           returnOnPaintLabour: paintLabourCosts > 0 ? (paintSales / paintLabourCosts) : 0,
-          liquidCostRatio: parseNum(currentRow['Liquid Cost to Refinish Labour Sales']),
-          paintRevPerVehicle: parseNum(currentRow['Completed RO']) > 0 ? paintSales / parseNum(currentRow['Completed RO']) : 0,
+          liquidCostRatio: parseNum(currentRow['Liquid Cost to Refinish Labour Sales']) || 0,
+          paintRevPerVehicle: parseNum(currentRow['Completed RO']) > 0 ? paintSales / (parseNum(currentRow['Completed RO']) || 1) : 0,
           dailyBudget: (rollingPaintLabourCosts * 3.3) / (monthsFound * 19.33),
           actualDailyRevenue: rollingPaintSales / (monthsFound * 19.33),
           rollingMonths: monthsFound
