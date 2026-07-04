@@ -22,6 +22,7 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ### Fixed
 - **UI Layout Stability**
+  - Added strict `whitespace-nowrap` rules to navigation tab buttons to prevent text wrapping on smaller screens or tight flex layouts, ensuring uniform tab sizing across all views.
   - Ensured the "Shop Profile" banner remains visible across all navigation tabs (including Gamified Leaderboards and Customer Management). This prevents the entire UI and navigation tabs from jumping/shifting layout when switching between views.
 - **Production Readiness**
   - Removed the "Load Mock Historical Data" button from the empty trend visualization state, preparing the platform for live customer use.
