@@ -21,6 +21,10 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Added a real-time search and filter input to the Customer Management UI for instantly finding bodyshops by email, role, or company name.
 
 ### Fixed
+- **UI Layout Stability**
+  - Ensured the "Shop Profile" banner remains visible across all navigation tabs (including Gamified Leaderboards and Customer Management). This prevents the entire UI and navigation tabs from jumping/shifting layout when switching between views.
+- **Production Readiness**
+  - Removed the "Load Mock Historical Data" button from the empty trend visualization state, preparing the platform for live customer use.
 - **Pre-Launch UX Polish**
   - Formatted the "Joined" date in the Customer Management table to a more readable `DD MMM YYYY` format (e.g., 03 Jul 2026).
   - Implemented smart UUID truncation for the User ID column to prevent awkward CSS cut-offs and improve table readability.
