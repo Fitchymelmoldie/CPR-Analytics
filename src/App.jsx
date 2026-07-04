@@ -825,11 +825,10 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               </div>
               
               {/* Shop Profile Banner */}
-              {(activeTab === 'dashboard' || activeTab === 'raw-data') && selectedCompany && (
+              {(activeTab === 'dashboard' || activeTab === 'raw-data') && selectedCompany && data.some(r => r['Company Id'] === selectedCompany) && (
                 <div className="glass rounded-xl p-1.5 flex items-stretch border border-surface-700/50 shadow-lg animate-fade-in w-max hide-scrollbar">
                   {(() => {
                     const comp = data.find(r => r['Company Id'] === selectedCompany);
-                    if (!comp) return null;
                     
                     const stats = [
                       {
