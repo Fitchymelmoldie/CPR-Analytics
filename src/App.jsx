@@ -444,10 +444,16 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
       const kpis = useMemo(() => {
         if (!currentRow) {
           return {
+            totalSales: 0,
             paintSales: 0,
             paintLabourCosts: 0,
             completedRO: 0,
+            paintCostPerRO: 0,
+            paintCostToTotalSales: 0,
+            vpdPerBooth: 0,
+            boothCycleTime: 0,
             returnOnLabour: 0,
+            liquidCostToRefinish: 0,
             paintRevPerVehicle: 0,
             actualDailyRevenue: 0,
             dailyBudget: 0,

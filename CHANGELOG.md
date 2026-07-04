@@ -21,6 +21,8 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Added a real-time search and filter input to the Customer Management UI for instantly finding bodyshops by email, role, or company name.
 
 ### Fixed
+- **Dashboard KPI Consistency**
+  - Fixed a bug where some KPI cards showed `$0` while others were entirely blank when no analytics data was loaded. All cards now consistently display a zero state.
 - **Login Error UX**
   - Mapped raw Supabase database error codes (like `Invalid login credentials`) into friendly, human-readable error messages on the login screen.
 - **Dashboard Navigation Aesthetics**
