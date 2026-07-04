@@ -775,7 +775,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               <div className="flex space-x-2 glass rounded-xl p-1.5 w-max">
               <button
                 onClick={() => setActiveTab('dashboard')}
-                className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                   activeTab === 'dashboard'
                     ? 'bg-brand-600/30 text-white shadow-lg border border-brand-500/50'
                     : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/80 border border-transparent'
@@ -787,7 +787,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               {currentUser.role === 'ADMIN' && (
                 <button
                   onClick={() => setActiveTab('raw-data')}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                     activeTab === 'raw-data'
                       ? 'bg-brand-600/30 text-white shadow-lg border border-brand-500/50'
                       : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/80 border border-transparent'
@@ -800,7 +800,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               {currentUser.role === 'ADMIN' && (
                 <button
                   onClick={() => setActiveTab('leaderboards')}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                     activeTab === 'leaderboards'
                       ? 'bg-brand-600/30 text-white shadow-lg border border-brand-500/50'
                       : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/80 border border-transparent'
@@ -813,7 +813,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               {currentUser.role === 'ADMIN' && (
                 <button
                   onClick={() => setActiveTab('customers')}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                     activeTab === 'customers'
                       ? 'bg-brand-600/30 text-white shadow-lg border border-brand-500/50'
                       : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/80 border border-transparent'
@@ -826,7 +826,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               </div>
               
               {/* Shop Profile Banner */}
-              {(activeTab === 'dashboard' || activeTab === 'raw-data') && selectedCompany && allCompanies.some(c => c.id === selectedCompany) && (
+              {selectedCompany && allCompanies.some(c => c.id === selectedCompany) && (
                 <div className="glass rounded-xl p-1.5 flex items-stretch border border-surface-700/50 shadow-lg animate-fade-in w-max hide-scrollbar">
                   {(() => {
                     const comp = allCompanies.find(c => c.id === selectedCompany);
