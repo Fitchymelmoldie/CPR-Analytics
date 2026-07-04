@@ -10,6 +10,9 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 - **Percentage KPI Formatting**
   - Updated the global formatting utility to enforce 2 decimal places for all percentage metrics, ensuring precision for derived values like Liquid Cost to Refinish (e.g. 25.21% instead of rounding to 25.0%).
   - Dynamically derived `Paint Cost / Total Sales` and `Liquid Cost to Refinish` from their underlying raw components (Paint Cost per RO, Completed RO, Paint Sales) rather than relying on stale hardcoded values from uploaded CSVs.
+- **Daily Budget & Actual Revenue**
+  - Updated the "Current Daily Actual" and "3.3x Daily Target" banners to explicitly state they are based on a "rolling quarterly average" calculation rather than a dynamic "X-month rolling" label, improving client clarity.
+  - Refactored the math inside the KPI hook to explicitly calculate the average monthly paint sales and labor costs first before dividing by standard working days, solidifying the calculation as a true quarterly average.
 
 ### Added
 - **Delete User Functionality**

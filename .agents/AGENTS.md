@@ -5,3 +5,4 @@
 - Always use conventional commit messages (e.g., feat:, fix:, docs:, ui:) when committing code to GitHub so our project history remains clean and easy to read.
 - Never write code that destructively deletes customer data without implementing a double-confirmation modal in the UI first.
 - When rendering large lists of data (like the Gamified Leaderboards or Raw Data tables), always implement pagination or virtualized scrolling to prevent browser lag.
+- Always commit and push all code changes to GitHub to deploy to production immediately after finishing your work. Do not wait for the user to prompt you to do this. 

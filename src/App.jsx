@@ -519,6 +519,9 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
           monthsFound = 1;
         }
 
+        const avgMonthlyPaintSales = rollingPaintSales / monthsFound;
+        const avgMonthlyLabourCosts = rollingPaintLabourCosts / monthsFound;
+
         return {
           totalSales: parseNum(currentRow['Total Sales']) || 0,
           completedRO: parseNum(currentRow['Completed RO']) || 0,
@@ -530,8 +533,8 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
           returnOnPaintLabour: paintLabourCosts > 0 ? (paintSales / paintLabourCosts) : 0,
           liquidCostRatio: paintSales > 0 ? ((parseNum(currentRow['Paint Cost per RO']) || 0) * (parseNum(currentRow['Completed RO']) || 0)) / paintSales : 0,
           paintRevPerVehicle: parseNum(currentRow['Completed RO']) > 0 ? paintSales / (parseNum(currentRow['Completed RO']) || 1) : 0,
-          dailyBudget: (rollingPaintLabourCosts * 3.3) / (monthsFound * 19.33),
-          actualDailyRevenue: rollingPaintSales / (monthsFound * 19.33),
+          dailyBudget: (avgMonthlyLabourCosts * 3.3) / 19.33,
+          actualDailyRevenue: avgMonthlyPaintSales / 19.33,
           rollingMonths: monthsFound
         };
       }, [currentRow, companyData, selectedPeriod]);
@@ -1025,7 +1028,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                              </p>
                              <p className={`text-sm font-medium ${kpis.actualDailyRevenue >= kpis.dailyBudget ? 'text-success-400' : 'text-danger-400'}`}>/ day</p>
                            </div>
-                           <p className={`text-xs mt-1 max-w-[200px] ${kpis.actualDailyRevenue >= kpis.dailyBudget ? 'text-success-400/80' : 'text-danger-400/80'}`}>Based on {kpis.rollingMonths}-month rolling paint sales.</p>
+                           <p className={`text-xs mt-1 max-w-[200px] ${kpis.actualDailyRevenue >= kpis.dailyBudget ? 'text-success-400/80' : 'text-danger-400/80'}`}>Based on rolling quarterly average paint sales.</p>
                          </div>
                          
                          {/* Separator */}
@@ -1040,7 +1043,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                              </p>
                              <p className="text-sm font-medium text-brand-400">/ day</p>
                            </div>
-                           <p className="text-xs text-brand-400/80 mt-1 max-w-[200px]">Based on {kpis.rollingMonths}-month rolling 3.3x profitability benchmark.</p>
+                           <p className="text-xs text-brand-400/80 mt-1 max-w-[200px]">Based on rolling quarterly average 3.3x profitability benchmark.</p>
                          </div>
                        </div>
                      </div>
