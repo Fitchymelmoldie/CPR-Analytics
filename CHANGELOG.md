@@ -21,6 +21,8 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Added a real-time search and filter input to the Customer Management UI for instantly finding bodyshops by email, role, or company name.
 
 ### Fixed
+- **KPI Variance Color Logic**
+  - Fixed a logic bug where KPI variance pills were naively treating all negative percentage changes as "bad/red". The UI now correctly cross-references the benchmark type (min vs max) so that metrics where a lower number is better (e.g. Paint Cost / RO) will correctly display negative drops as a positive, green indicator.
 - **Trend Graph Independence**
   - Decoupled the Trend Visualization chart from the globally selected month. The trend graph will now always calculate its timeframe (YTD, 3M, 6M, etc.) backwards from the *latest* available data month, allowing users to view full historical trends without changing the month currently being analyzed by the KPI cards above it.
 - **Empty State Period Indicator**
