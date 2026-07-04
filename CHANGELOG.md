@@ -21,6 +21,8 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Added a real-time search and filter input to the Customer Management UI for instantly finding bodyshops by email, role, or company name.
 
 ### Fixed
+- **KPI Empty State Consistency**
+  - Fixed a bug where KPI cards would display completely blank (instead of $0 or 0%) when a month period was selected but no data had been uploaded for that specific metric yet. All cards will now consistently fallback to zero.
 - **UI Layout Stability**
   - Added strict `whitespace-nowrap` rules to navigation tab buttons to prevent text wrapping on smaller screens or tight flex layouts, ensuring uniform tab sizing across all views.
   - Ensured the "Shop Profile" banner remains visible across all navigation tabs (including Gamified Leaderboards and Customer Management). This prevents the entire UI and navigation tabs from jumping/shifting layout when switching between views.
