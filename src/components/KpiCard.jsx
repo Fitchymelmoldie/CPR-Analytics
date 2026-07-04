@@ -12,7 +12,7 @@ export default     function KpiCard({ title, value, format, variance, iconPath, 
         : fmt(value);
 
       const hasVariance = variance !== null && variance !== undefined;
-      const isPositive = hasVariance && variance >= 0;
+      const isPositive = hasVariance && (benchmarkType === 'max' ? variance <= 0 : variance >= 0);
       
       const activeStyle = isActive 
         ? "border-brand-500 shadow-[0_0_15px_rgba(0,168,150,0.3)] bg-brand-900/10 scale-[1.02]" 
