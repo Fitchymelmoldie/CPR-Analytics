@@ -761,10 +761,12 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                   )}
                   <div className="flex flex-col items-end gap-1">
                     <div className="flex items-center gap-2">
-                      <span className="inline-block w-2 h-2 rounded-full bg-success-500 animate-pulse"></span>
-                      {isMultiMonth ? uniquePeriods.length + ' months loaded' : 'Single month loaded'}
+                      <span className={`inline-block w-2 h-2 rounded-full ${uniquePeriods.length === 0 ? 'bg-surface-500' : 'bg-success-500 animate-pulse'}`}></span>
+                      {uniquePeriods.length === 0 ? 'No data loaded' : (isMultiMonth ? uniquePeriods.length + ' months loaded' : 'Single month loaded')}
                     </div>
-                    <span className="text-[10px] text-surface-500 uppercase tracking-wider font-medium">All comparisons vs prev month</span>
+                    {uniquePeriods.length > 0 && (
+                      <span className="text-[10px] text-surface-500 uppercase tracking-wider font-medium">All comparisons vs prev month</span>
+                    )}
                   </div>
                 </div>
               </section>
