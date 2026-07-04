@@ -499,13 +499,18 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
         let rollingPaintLabourCosts = 0;
         let monthsFound = 0;
         
-        if (selectedPeriod && companyData.length > 0) {
-          const parts = selectedPeriod.split('-');
-          const targetTotalMonths = parseInt(parts[0]) * 12 + parseInt(parts[1]);
+        if (companyData.length > 0) {
+          let maxTotalMonths = 0;
+          companyData.forEach(r => {
+            const rowTotalMonths = parseNum(r['Year']) * 12 + parseNum(r['Month']);
+            if (rowTotalMonths > maxTotalMonths) {
+              maxTotalMonths = rowTotalMonths;
+            }
+          });
           
           companyData.forEach(r => {
             const rowTotalMonths = parseNum(r['Year']) * 12 + parseNum(r['Month']);
-            if (rowTotalMonths <= targetTotalMonths && rowTotalMonths > targetTotalMonths - 3) {
+            if (rowTotalMonths <= maxTotalMonths && rowTotalMonths > maxTotalMonths - 3) {
               rollingPaintSales += parseNum(r['Paint Sales']) || 0;
               rollingPaintLabourCosts += parseNum(r['Paint Labour Costs']) || 0;
               monthsFound++;

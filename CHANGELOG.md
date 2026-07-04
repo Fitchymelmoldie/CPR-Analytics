@@ -13,6 +13,7 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 - **Daily Budget & Actual Revenue**
   - Updated the "Current Daily Actual" and "3.3x Daily Target" banners to explicitly state they are based on a "rolling quarterly average" calculation rather than a dynamic "X-month rolling" label, improving client clarity.
   - Refactored the math inside the KPI hook to explicitly calculate the average monthly paint sales and labor costs first before dividing by standard working days, solidifying the calculation as a true quarterly average.
+  - Locked the calculation for the top banner metrics to always anchor to the *latest available quarter* for the selected company, ensuring that the company's "Current Velocity" Target doesn't wildly fluctuate or degrade when reviewing historical months that lack 3 months of preceding historical data.
 
 ### Changed
 - **Shop Profile Redesign**
