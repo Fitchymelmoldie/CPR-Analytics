@@ -21,6 +21,8 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Added a real-time search and filter input to the Customer Management UI for instantly finding bodyshops by email, role, or company name.
 
 ### Fixed
+- **Empty State Period Indicator**
+  - Updated the top right period indicator to correctly display "No data loaded" with a static grey dot when a company is selected but has zero historical uploads, rather than incorrectly stating "Single month loaded".
 - **KPI Empty State Consistency**
   - Fixed a bug where KPI cards would display completely blank (instead of $0 or 0%) when a month period was selected but no data had been uploaded for that specific metric yet. All cards will now consistently fallback to zero.
 - **UI Layout Stability**
