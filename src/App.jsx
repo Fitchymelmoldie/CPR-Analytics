@@ -814,9 +814,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
             {/* Premium Shop Profile Banner */}
             {selectedCompany && allCompanies.some(c => c.id === selectedCompany) && (
-              <div className="glass border border-brand-500/20 rounded-2xl p-4 mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 animate-fade-in shadow-[0_0_20px_rgba(0,168,150,0.05)] relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
-                
+              <div className="glass border border-surface-700/50 rounded-xl px-4 py-2 mb-6 flex flex-col xl:flex-row xl:items-center justify-between gap-4 animate-fade-in shadow-sm w-full">
                 {(() => {
                   const comp = allCompanies.find(c => c.id === selectedCompany);
                   
@@ -825,7 +823,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                       label: 'Painters',
                       value: comp.painters_count || 0,
                       icon: (
-                        <svg className="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                           <path d="M15 7V3a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v4" />
                           <rect x="5" y="7" width="14" height="4" rx="1" />
                           <path d="M19 8h2a1 1 0 0 1 1 1v0a1 1 0 0 1-1 1h-2" />
@@ -839,7 +837,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                       label: 'Panel Beaters',
                       value: comp.panel_beaters_count || 0,
                       icon: (
-                        <svg className="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                           <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
                         </svg>
                       )
@@ -848,7 +846,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                       label: 'Booths',
                       value: comp.booths_count || 0,
                       icon: (
-                        <svg className="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                        <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
                           <path d="M3 9l9-6 9 6" />
                           <path d="M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9" />
                           <path d="M8 21v-7h8v7" />
@@ -860,7 +858,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                       label: 'Estimators',
                       value: comp.estimators_count || 0,
                       icon: (
-                        <svg className="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                         </svg>
                       )
@@ -869,7 +867,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                       label: 'Prod. Mgrs',
                       value: comp.managers_count || 0,
                       icon: (
-                        <svg className="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
                         </svg>
                       )
@@ -878,7 +876,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                       label: 'Admin',
                       value: comp.admin_count || 0,
                       icon: (
-                        <svg className="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                       )
@@ -887,34 +885,37 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
                   return (
                     <>
-                      <div className="flex items-center gap-4 relative z-10">
-                        <div className="w-12 h-12 bg-surface-800/80 rounded-xl flex items-center justify-center border border-surface-700/50 shadow-inner">
-                          <svg className="w-6 h-6 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      {/* Left: Title */}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-brand-500/10 rounded-lg flex items-center justify-center border border-brand-500/20">
+                          <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
                         </div>
-                        <div>
-                          <h3 className="text-sm font-bold text-white flex items-center gap-2">Facility & Staff Profile</h3>
-                          <p className="text-[11px] text-surface-400 font-medium">Operational capacity for {comp.name}</p>
+                        <div className="hidden sm:block">
+                          <h3 className="text-sm font-bold text-white leading-tight">Shop Profile</h3>
+                          <p className="text-[10px] text-surface-400 font-medium">Facility & Staff</p>
                         </div>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-4 md:gap-8 relative z-10">
+                      {/* Middle: Stats */}
+                      <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar flex-1 xl:justify-center">
                         {stats.map((stat, idx) => (
-                          <div key={idx} className="flex items-center gap-3 group">
-                            <div className="bg-brand-500/10 p-2 rounded-lg border border-brand-500/20 group-hover:bg-brand-500/20 group-hover:border-brand-500/40 transition-colors">
+                          <div key={idx} className="flex items-center gap-2 bg-surface-800/40 px-3 py-1.5 rounded-lg border border-surface-700/50 min-w-max group hover:border-brand-500/30 transition-colors">
+                            <div className="text-brand-400 group-hover:scale-110 transition-transform">
                               {stat.icon}
                             </div>
-                            <div className="flex flex-col">
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="text-sm font-bold text-white leading-none">{stat.value}</span>
                               <span className="text-[10px] text-surface-400 uppercase tracking-wider font-semibold group-hover:text-surface-300 transition-colors">{stat.label}</span>
-                              <span className="text-base font-bold text-white leading-none">{stat.value}</span>
                             </div>
                           </div>
                         ))}
                       </div>
 
-                      <button onClick={handleEditShopProfile} className="relative z-10 px-4 py-2 lg:ml-auto bg-surface-800/80 hover:bg-brand-600/20 text-brand-300 hover:text-brand-200 border border-surface-700 hover:border-brand-500/50 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap shadow-sm">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                      {/* Right: Edit Button */}
+                      <button onClick={handleEditShopProfile} className="px-3 py-1.5 bg-surface-800/80 hover:bg-brand-600/20 text-surface-300 hover:text-brand-300 border border-surface-700 hover:border-brand-500/50 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all flex items-center gap-1.5 whitespace-nowrap shadow-sm ml-auto xl:ml-0">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                         Edit Profile
                       </button>
                     </>

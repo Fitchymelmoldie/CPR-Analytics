@@ -16,9 +16,9 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ### Changed
 - **Shop Profile Redesign**
-  - Completely redesigned the "Shop Profile" (Facility & Staff) widget. Extracted it from the cramped navigation tab bar and upgraded it into a premium, full-width glassmorphic banner sitting directly beneath the Company/Period filters.
-  - Replaced the tiny grid text with large, legible typography, prominent teal brand icons with hover effects, and a spacious layout to match the aesthetics of the main KPI cards.
-  - Upgraded the "Edit Profile" button to be more prominent and easily accessible.
+  - Completely redesigned the "Shop Profile" (Facility & Staff) widget into a compact, single-row glassmorphic toolbar sitting directly beneath the Company/Period filters.
+  - Eliminated vertical dead space by aligning all 6 stats, the title, and the "Edit Profile" button onto a single horizontal axis with horizontal scroll overflow for smaller screens.
+  - Improved aesthetics with pill-shaped metrics and distinct hover effects, matching the sleek look of the dashboard navigation without occupying excessive screen real estate.
 
 ### Added
 - **Delete User Functionality**
