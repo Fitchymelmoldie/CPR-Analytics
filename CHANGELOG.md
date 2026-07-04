@@ -14,6 +14,12 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Updated the "Current Daily Actual" and "3.3x Daily Target" banners to explicitly state they are based on a "rolling quarterly average" calculation rather than a dynamic "X-month rolling" label, improving client clarity.
   - Refactored the math inside the KPI hook to explicitly calculate the average monthly paint sales and labor costs first before dividing by standard working days, solidifying the calculation as a true quarterly average.
 
+### Changed
+- **Shop Profile Redesign**
+  - Completely redesigned the "Shop Profile" (Facility & Staff) widget. Extracted it from the cramped navigation tab bar and upgraded it into a premium, full-width glassmorphic banner sitting directly beneath the Company/Period filters.
+  - Replaced the tiny grid text with large, legible typography, prominent teal brand icons with hover effects, and a spacious layout to match the aesthetics of the main KPI cards.
+  - Upgraded the "Edit Profile" button to be more prominent and easily accessible.
+
 ### Added
 - **Delete User Functionality**
   - Added a "Delete User" trash can button directly into the Customer Management UI table for Administrators.

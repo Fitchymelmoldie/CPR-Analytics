@@ -812,9 +812,119 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               </section>
             )}
 
-            {/* Navigation Tabs and Shop Profile */}
-            <div className="flex flex-col xl:flex-row xl:items-stretch justify-between gap-4 mb-8">
-              <div className="flex space-x-2 glass rounded-xl p-1.5 w-max">
+            {/* Premium Shop Profile Banner */}
+            {selectedCompany && allCompanies.some(c => c.id === selectedCompany) && (
+              <div className="glass border border-brand-500/20 rounded-2xl p-4 mb-6 flex flex-col lg:flex-row lg:items-center justify-between gap-6 animate-fade-in shadow-[0_0_20px_rgba(0,168,150,0.05)] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full blur-3xl -mr-20 -mt-20 pointer-events-none"></div>
+                
+                {(() => {
+                  const comp = allCompanies.find(c => c.id === selectedCompany);
+                  
+                  const stats = [
+                    {
+                      label: 'Painters',
+                      value: comp.painters_count || 0,
+                      icon: (
+                        <svg className="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M15 7V3a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v4" />
+                          <rect x="5" y="7" width="14" height="4" rx="1" />
+                          <path d="M19 8h2a1 1 0 0 1 1 1v0a1 1 0 0 1-1 1h-2" />
+                          <path d="M9 11l-2 9h4l2-9" />
+                          <path d="M12 11s1 2 1 3" />
+                          <path d="M9 20v2" />
+                        </svg>
+                      )
+                    },
+                    {
+                      label: 'Panel Beaters',
+                      value: comp.panel_beaters_count || 0,
+                      icon: (
+                        <svg className="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                        </svg>
+                      )
+                    },
+                    {
+                      label: 'Booths',
+                      value: comp.booths_count || 0,
+                      icon: (
+                        <svg className="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M3 9l9-6 9 6" />
+                          <path d="M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9" />
+                          <path d="M8 21v-7h8v7" />
+                          <path d="M8 17h8" />
+                        </svg>
+                      )
+                    },
+                    {
+                      label: 'Estimators',
+                      value: comp.estimators_count || 0,
+                      icon: (
+                        <svg className="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                      )
+                    },
+                    {
+                      label: 'Prod. Mgrs',
+                      value: comp.managers_count || 0,
+                      icon: (
+                        <svg className="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                        </svg>
+                      )
+                    },
+                    {
+                      label: 'Admin',
+                      value: comp.admin_count || 0,
+                      icon: (
+                        <svg className="w-5 h-5 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      )
+                    }
+                  ];
+
+                  return (
+                    <>
+                      <div className="flex items-center gap-4 relative z-10">
+                        <div className="w-12 h-12 bg-surface-800/80 rounded-xl flex items-center justify-center border border-surface-700/50 shadow-inner">
+                          <svg className="w-6 h-6 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold text-white flex items-center gap-2">Facility & Staff Profile</h3>
+                          <p className="text-[11px] text-surface-400 font-medium">Operational capacity for {comp.name}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-4 md:gap-8 relative z-10">
+                        {stats.map((stat, idx) => (
+                          <div key={idx} className="flex items-center gap-3 group">
+                            <div className="bg-brand-500/10 p-2 rounded-lg border border-brand-500/20 group-hover:bg-brand-500/20 group-hover:border-brand-500/40 transition-colors">
+                              {stat.icon}
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-[10px] text-surface-400 uppercase tracking-wider font-semibold group-hover:text-surface-300 transition-colors">{stat.label}</span>
+                              <span className="text-base font-bold text-white leading-none">{stat.value}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <button onClick={handleEditShopProfile} className="relative z-10 px-4 py-2 lg:ml-auto bg-surface-800/80 hover:bg-brand-600/20 text-brand-300 hover:text-brand-200 border border-surface-700 hover:border-brand-500/50 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 whitespace-nowrap shadow-sm">
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                        Edit Profile
+                      </button>
+                    </>
+                  );
+                })()}
+              </div>
+            )}
+
+            {/* Navigation Tabs */}
+            <div className="flex space-x-2 glass rounded-xl p-1.5 w-max mb-8">
               <button
                 onClick={() => setActiveTab('dashboard')}
                 className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
@@ -866,117 +976,6 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                 </button>
               )}
               </div>
-              
-              {/* Shop Profile Banner */}
-              {selectedCompany && allCompanies.some(c => c.id === selectedCompany) && (
-                <div className="glass rounded-xl p-1.5 flex items-stretch border border-surface-700/50 shadow-lg animate-fade-in w-max hide-scrollbar">
-                  {(() => {
-                    const comp = allCompanies.find(c => c.id === selectedCompany);
-                    
-                    const stats = [
-                      {
-                        label: 'Painters',
-                        value: comp.painters_count || 0,
-                        icon: (
-                          <svg className="w-4 h-4 text-brand-400 group-hover:text-brand-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M15 7V3a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v4" />
-                            <rect x="5" y="7" width="14" height="4" rx="1" />
-                            <path d="M19 8h2a1 1 0 0 1 1 1v0a1 1 0 0 1-1 1h-2" />
-                            <path d="M9 11l-2 9h4l2-9" />
-                            <path d="M12 11s1 2 1 3" />
-                            <path d="M9 20v2" />
-                          </svg>
-                        )
-                      },
-                      {
-                        label: 'Panel Beaters',
-                        value: comp.panel_beaters_count || 0,
-                        icon: (
-                          <svg className="w-4 h-4 text-brand-400 group-hover:text-brand-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-                          </svg>
-                        )
-                      },
-                      {
-                        label: 'Booths',
-                        value: comp.booths_count || 0,
-                        icon: (
-                          <svg className="w-4 h-4 text-brand-400 group-hover:text-brand-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M3 9l9-6 9 6" />
-                            <path d="M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9" />
-                            <path d="M8 21v-7h8v7" />
-                            <path d="M8 17h8" />
-                          </svg>
-                        )
-                      },
-                      {
-                        label: 'Estimators',
-                        value: comp.estimators_count || 0,
-                        icon: (
-                          <svg className="w-4 h-4 text-brand-400 group-hover:text-brand-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                          </svg>
-                        )
-                      },
-                      {
-                        label: 'Prod. Mgrs',
-                        value: comp.managers_count || 0,
-                        icon: (
-                          <svg className="w-4 h-4 text-brand-400 group-hover:text-brand-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                          </svg>
-                        )
-                      },
-                      {
-                        label: 'Admin',
-                        value: comp.admin_count || 0,
-                        icon: (
-                          <svg className="w-4 h-4 text-brand-400 group-hover:text-brand-300 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                        )
-                      }
-                    ];
-
-                    return (
-                      <>
-                        <div className="flex items-center gap-2 px-3 py-1 border-r border-surface-700/50 hidden sm:flex">
-                          <div className="p-1.5 bg-surface-700/50 rounded-lg">
-                            <svg className="w-4 h-4 text-surface-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                          </div>
-                          <div>
-                            <h3 className="text-xs font-bold text-white leading-tight">Shop Profile</h3>
-                            <p className="text-[9px] text-surface-400 uppercase tracking-wider">Facility & Staff</p>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-rows-2 grid-flow-col gap-x-4 gap-y-0.5 px-3 my-auto items-center justify-center">
-                          {stats.map((stat, idx) => (
-                            <div key={idx} className="flex items-center gap-1.5 px-1 py-0.5 rounded hover:bg-surface-700/50 transition-all group cursor-default" title={stat.label}>
-                              <div className="text-brand-400 group-hover:scale-110 transition-transform duration-300">
-                                {stat.icon}
-                              </div>
-                              <div className="flex items-baseline gap-1">
-                                <span className="text-sm font-bold text-white leading-none">{stat.value}</span>
-                                <span className="text-[10px] text-surface-400 uppercase font-semibold tracking-wider group-hover:text-surface-300 transition-colors hidden md:block whitespace-nowrap">{stat.label}</span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="pl-1 pr-0.5 py-1 ml-auto flex items-center justify-center border-l border-surface-700/50">
-                          <button onClick={handleEditShopProfile} className="flex items-center justify-center p-1.5 rounded-lg hover:bg-brand-600/20 text-surface-400 hover:text-brand-300 transition-colors group" title="Edit Profile">
-                            <svg className="w-4 h-4 group-hover:rotate-12 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                          </button>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-              )}
-            </div>
 
             {activeTab === 'customers' && currentUser.role === 'ADMIN' && (
               <CustomerManagement />
