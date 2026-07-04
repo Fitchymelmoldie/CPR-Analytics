@@ -4,6 +4,13 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Manual Data Entry**
+  - Added a "Save Changes" button to manually persist row edits to the database.
+  - Implemented an "unsaved changes" visual state (button turns bright green and displays an asterisk) to prevent accidental data loss when modifying raw values.
+- **Percentage KPI Formatting**
+  - Updated the global formatting utility to enforce 2 decimal places for all percentage metrics, ensuring precision for derived values like Liquid Cost to Refinish (e.g. 25.21% instead of rounding to 25.0%).
+  - Dynamically derived `Paint Cost / Total Sales` and `Liquid Cost to Refinish` from their underlying raw components (Paint Cost per RO, Completed RO, Paint Sales) rather than relying on stale hardcoded values from uploaded CSVs.
+
 ### Added
 - **Delete User Functionality**
   - Added a "Delete User" trash can button directly into the Customer Management UI table for Administrators.

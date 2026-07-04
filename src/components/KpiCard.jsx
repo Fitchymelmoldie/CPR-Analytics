@@ -12,7 +12,8 @@ export default     function KpiCard({ title, value, format, variance, iconPath, 
         : fmt(value);
 
       const hasVariance = variance !== null && variance !== undefined;
-      const isPositive = hasVariance && (benchmarkType === 'max' ? variance <= 0 : variance >= 0);
+      const isGood = hasVariance && (benchmarkType === 'max' ? variance <= 0 : variance >= 0);
+      const isUp = hasVariance && variance > 0;
       
       const activeStyle = isActive 
         ? "border-brand-500 shadow-[0_0_15px_rgba(0,168,150,0.3)] bg-brand-900/10 scale-[1.02]" 
@@ -58,10 +59,10 @@ export default     function KpiCard({ title, value, format, variance, iconPath, 
               {hasVariance && (
                 <div className="flex items-center gap-2 mt-1">
                   <div className={"flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold " +
-                    (isPositive ? 'bg-success-500/15 text-success-400' : 'bg-danger-500/15 text-danger-400')}>
+                    (isGood ? 'bg-success-500/15 text-success-400' : 'bg-danger-500/15 text-danger-400')}>
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round"
-                        d={isPositive ? "M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" : "M19.5 4.5l-15 15m0 0h11.25M4.5 19.5V8.25"} />
+                        d={isUp ? "M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" : "M19.5 4.5l-15 15m0 0h11.25M4.5 19.5V8.25"} />
                     </svg>
                     <span>{Math.abs(variance).toFixed(1)}%</span>
                   </div>

@@ -12,7 +12,7 @@ export function fmt(v, type) {
   if (v === null || v === undefined) return '';
   const n = Number(v);
   if (type === 'currency') return '$' + n.toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-  if (type === 'percent') return (n * 100).toFixed(1) + '%';
+  if (type === 'percent') return (n * 100).toFixed(2) + '%';
   return n.toLocaleString('en-AU', { maximumFractionDigits: 1 });
 }
 
@@ -57,7 +57,11 @@ export const KPI_CONFIG = {
   },
   'Paint Cost / Total Sales': {
     format: 'percent',
-    getValue: (row) => parseNum(row['Paint Cost to Total Sales']),
+    getValue: (row) => {
+      const paintCost = (parseNum(row['Paint Cost per RO']) || 0) * (parseNum(row['Completed RO']) || 0);
+      const totalSales = parseNum(row['Total Sales']) || 0;
+      return totalSales > 0 ? (paintCost / totalSales) : 0;
+    },
     benchmarkType: 'max',
     description: 'Ratio of paint costs to total business revenue'
   },
@@ -75,7 +79,11 @@ export const KPI_CONFIG = {
   },
   'Liquid Cost to Refinish': {
     format: 'percent',
-    getValue: (row) => parseNum(row['Liquid Cost to Refinish Labour Sales']),
+    getValue: (row) => {
+      const paintCost = (parseNum(row['Paint Cost per RO']) || 0) * (parseNum(row['Completed RO']) || 0);
+      const paintSales = parseNum(row['Paint Sales']) || 0;
+      return paintSales > 0 ? (paintCost / paintSales) : 0;
+    },
     benchmarkType: 'max',
     description: 'Cost of paint liquids relative to refinish labour sales'
   },

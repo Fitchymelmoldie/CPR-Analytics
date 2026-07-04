@@ -63,6 +63,8 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
       }, [currentUser]);
       const [selectedCompany, setSelectedCompany] = useState('');
       const [selectedPeriod, setSelectedPeriod] = useState('');
+      const [isSavingRow, setIsSavingRow] = useState(false);
+      const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
       const [activeTab, setActiveTab] = useState('dashboard');
       const [selectedKpi, setSelectedKpi] = useState('Completed RO');
       const [chartTimeframe, setChartTimeframe] = useState('YTD');
@@ -310,11 +312,26 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
       const handleDataEdit = (key, val) => {
         if (!currentRow) return;
+        setHasUnsavedChanges(true);
         setData(prev => prev.map(row => 
           (row['Company Id'] === currentRow['Company Id'] && parseNum(row['Year']) === parseNum(currentRow['Year']) && parseNum(row['Month']) === parseNum(currentRow['Month']))
             ? { ...row, [key]: val }
             : row
         ));
+      };
+
+      const handleSaveChanges = async () => {
+        if (!currentRow) return;
+        setIsSavingRow(true);
+        try {
+          await uploadAnalytics([currentRow]);
+          setHasUnsavedChanges(false);
+          window.alert('Changes saved successfully!');
+        } catch (err) {
+          window.alert('Failed to save changes: ' + err.message);
+        } finally {
+          setIsSavingRow(false);
+        }
       };
 
       const handleCreatePeriod = useCallback(() => {
@@ -366,6 +383,16 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
           } else if (derivedType === 'dailyBudget') {
             curr = (parseNum(currentRow['Paint Labour Costs']) * 3.3) / 19.33;
             prev = (parseNum(prevRow['Paint Labour Costs']) * 3.3) / 19.33;
+          } else if (derivedType === 'paintCostToTotalSales') {
+            const cPaintCost = (parseNum(currentRow['Paint Cost per RO']) || 0) * (parseNum(currentRow['Completed RO']) || 0);
+            curr = parseNum(currentRow['Total Sales']) > 0 ? cPaintCost / parseNum(currentRow['Total Sales']) : 0;
+            const pPaintCost = (parseNum(prevRow['Paint Cost per RO']) || 0) * (parseNum(prevRow['Completed RO']) || 0);
+            prev = parseNum(prevRow['Total Sales']) > 0 ? pPaintCost / parseNum(prevRow['Total Sales']) : 0;
+          } else if (derivedType === 'liquidCostRatio') {
+            const cPaintCost = (parseNum(currentRow['Paint Cost per RO']) || 0) * (parseNum(currentRow['Completed RO']) || 0);
+            curr = parseNum(currentRow['Paint Sales']) > 0 ? cPaintCost / parseNum(currentRow['Paint Sales']) : 0;
+            const pPaintCost = (parseNum(prevRow['Paint Cost per RO']) || 0) * (parseNum(prevRow['Completed RO']) || 0);
+            prev = parseNum(prevRow['Paint Sales']) > 0 ? pPaintCost / parseNum(prevRow['Paint Sales']) : 0;
           } else {
             return null;
           }
@@ -497,11 +524,11 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
           completedRO: parseNum(currentRow['Completed RO']) || 0,
           paintSales: paintSales,
           paintCostPerRO: parseNum(currentRow['Paint Cost per RO']) || 0,
-          paintCostToTotalSales: parseNum(currentRow['Paint Cost to Total Sales']) || 0,
+          paintCostToTotalSales: (parseNum(currentRow['Total Sales']) || 0) > 0 ? ((parseNum(currentRow['Paint Cost per RO']) || 0) * (parseNum(currentRow['Completed RO']) || 0)) / (parseNum(currentRow['Total Sales']) || 0) : 0,
           vpdPerBooth: parseNum(currentRow['Vehicles per Day per Booth']) || 0,
           boothCycleTime: parseNum(currentRow['Booth Cycle Time']) || 0,
           returnOnPaintLabour: paintLabourCosts > 0 ? (paintSales / paintLabourCosts) : 0,
-          liquidCostRatio: parseNum(currentRow['Liquid Cost to Refinish Labour Sales']) || 0,
+          liquidCostRatio: paintSales > 0 ? ((parseNum(currentRow['Paint Cost per RO']) || 0) * (parseNum(currentRow['Completed RO']) || 0)) / paintSales : 0,
           paintRevPerVehicle: parseNum(currentRow['Completed RO']) > 0 ? paintSales / (parseNum(currentRow['Completed RO']) || 1) : 0,
           dailyBudget: (rollingPaintLabourCosts * 3.3) / (monthsFound * 19.33),
           actualDailyRevenue: rollingPaintSales / (monthsFound * 19.33),
@@ -554,6 +581,16 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
              const sumRO = compData.reduce((sum, r) => sum + parseNum(r['Completed RO']), 0);
              return sumRO > 0 ? (sumSales / sumRO) : 0;
           }
+          if (kpi === 'Paint Cost to Total Sales' || kpi === 'Paint Cost / Total Sales') {
+             const sumCosts = compData.reduce((sum, r) => sum + ((parseNum(r['Paint Cost per RO']) || 0) * (parseNum(r['Completed RO']) || 0)), 0);
+             const sumSales = compData.reduce((sum, r) => sum + (parseNum(r['Total Sales']) || 0), 0);
+             return sumSales > 0 ? (sumCosts / sumSales) : 0;
+          }
+          if (kpi === 'Liquid Cost to Refinish Labour Sales' || kpi === 'Liquid Cost to Refinish') {
+             const sumCosts = compData.reduce((sum, r) => sum + ((parseNum(r['Paint Cost per RO']) || 0) * (parseNum(r['Completed RO']) || 0)), 0);
+             const sumSales = compData.reduce((sum, r) => sum + (parseNum(r['Paint Sales']) || 0), 0);
+             return sumSales > 0 ? (sumCosts / sumSales) : 0;
+          }
           const sum = compData.reduce((acc, r) => acc + parseNum(r[kpi]), 0);
           return sum / compData.length;
         };
@@ -603,7 +640,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
         }
         if (avg === null || avg === undefined) return null;
         if (format === 'currency') return '$' + avg.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
-        if (format === 'percent') return avg.toFixed(1) + '%';
+        if (format === 'percent') return avg.toFixed(2) + '%';
         return avg.toFixed(1);
       }, [ranks, selectedKpi]);
 
@@ -1037,7 +1074,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                   rank={ranks?.paintCostPerRO} cohortSize={ranks?.cohortSize}
                   iconPath="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z" />
                 <KpiCard title="Paint Cost / Total Sales" value={kpis.paintCostToTotalSales} format="percent"
-                  variance={calcVariance('Paint Cost to Total Sales')} delayClass="card-appear-4"
+                  variance={calcVariance(null, true, 'paintCostToTotalSales')} delayClass="card-appear-4"
                   isActive={selectedKpi === 'Paint Cost / Total Sales'} onClick={() => setSelectedKpi('Paint Cost / Total Sales')}
                   benchmark={benchmarks['Paint Cost / Total Sales']?.target} benchmarkType="max" onSetBenchmark={handleSetBenchmark} isAdmin={currentUser?.role === 'ADMIN'}
                   rank={ranks?.paintCostToTotalSales} cohortSize={ranks?.cohortSize}
@@ -1061,7 +1098,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                   rank={ranks?.returnOnPaintLabour} cohortSize={ranks?.cohortSize}
                   iconPath="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
                 <KpiCard title="Liquid Cost to Refinish" value={kpis.liquidCostRatio} format="percent"
-                  variance={calcVariance('Liquid Cost to Refinish Labour Sales')} delayClass="card-appear-4"
+                  variance={calcVariance(null, true, 'liquidCostRatio')} delayClass="card-appear-4"
                   isActive={selectedKpi === 'Liquid Cost to Refinish'} onClick={() => setSelectedKpi('Liquid Cost to Refinish')}
                   benchmark={benchmarks['Liquid Cost to Refinish']?.target} benchmarkType="max" onSetBenchmark={handleSetBenchmark} isAdmin={currentUser?.role === 'ADMIN'}
                   rank={ranks?.liquidCostRatio} cohortSize={ranks?.cohortSize}
@@ -1161,6 +1198,16 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                     Add New Period
                   </button>
+                  {selectedPeriod && (
+                    <button onClick={handleSaveChanges} disabled={isSavingRow || !hasUnsavedChanges} className={`px-3 py-1.5 border rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 disabled:opacity-50 ${hasUnsavedChanges ? 'bg-success-500/20 hover:bg-success-500/40 text-success-300 border-success-500/30' : 'bg-surface-800 text-surface-400 border-surface-700'}`}>
+                      {isSavingRow ? (
+                        <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                      ) : (
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                      )}
+                      {hasUnsavedChanges ? 'Save Changes *' : 'Saved'}
+                    </button>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-5">
