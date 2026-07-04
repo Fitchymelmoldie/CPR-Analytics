@@ -1133,10 +1133,6 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                     Upload historical data to unlock trend visualization.
                   </p>
                   <p className="text-surface-500 text-xs mt-1">Charts will show revenue trends, profitability, and efficiency comparisons over time.</p>
-                  <button onClick={() => loadMock('historical')}
-                    className="mt-6 px-5 py-2.5 bg-brand-600/30 hover:bg-brand-600/50 text-brand-300 rounded-xl text-sm font-medium transition-all duration-200 border border-brand-600/30 hover:border-brand-500/50">
-                    Load Mock Historical Data to Preview
-                  </button>
                 </div>
               )}
             </section>
