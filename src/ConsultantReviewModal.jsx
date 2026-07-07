@@ -74,16 +74,21 @@ export default function ConsultantReviewModal({
               <h2 className="text-xl font-bold text-white tracking-tight">Consultant Review</h2>
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-sm text-surface-400">{selectedCompany} • </p>
-                {currentUser.role === 'ADMIN' && availablePeriods?.length > 0 ? (
-                  <select 
-                    value={localPeriod || ''} 
-                    onChange={e => setLocalPeriod(e.target.value)}
-                    className="bg-surface-800 border border-surface-700 rounded-md px-2 py-0.5 text-sm text-brand-400 focus:outline-none focus:border-brand-500 cursor-pointer"
-                  >
-                    {availablePeriods.map(p => (
-                      <option key={p} value={p}>{formatPeriod(p)}</option>
-                    ))}
-                  </select>
+                {currentUser.role === 'ADMIN' ? (
+                  <input
+                    type="month"
+                    value={localPeriod ? `${localPeriod.split('-')[0]}-${String(parseInt(localPeriod.split('-')[1]) + 1).padStart(2, '0')}` : ''}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        const [y, m] = e.target.value.split('-');
+                        setLocalPeriod(`${y}-${String(parseInt(m) - 1).padStart(2, '0')}`);
+                      } else {
+                        setLocalPeriod('');
+                      }
+                    }}
+                    className="bg-surface-800 border border-surface-700 rounded-md px-2 py-1 text-sm text-brand-400 focus:outline-none focus:border-brand-500 cursor-pointer"
+                    style={{ colorScheme: 'dark' }}
+                  />
                 ) : (
                   <p className="text-sm text-surface-400">{formatPeriod(localPeriod)}</p>
                 )}
