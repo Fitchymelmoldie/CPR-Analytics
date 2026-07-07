@@ -10,7 +10,7 @@ import LoginScreen from './components/LoginScreen';
 import SetPasswordScreen from './components/SetPasswordScreen';
 import CustomerManagement from './components/CustomerManagement';
 import { useAuth } from './components/AuthProvider';
-import { uploadAnalytics, getAnalytics, updateShopProfile, deleteAnalyticsPeriod, getCompanies } from './services/db';
+import { uploadAnalytics, getAnalytics, updateShopProfile, deleteAnalyticsPeriod, getCompanies, getConsultantReviews, saveConsultantReview } from './services/db';
 
 const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
@@ -129,30 +129,49 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
         }
       };
 
-      const [savedReviews, setSavedReviews] = useState(() => {
-        const saved = localStorage.getItem('cpr_reviews');
-        return saved ? JSON.parse(saved) : {};
-      });
+      const [savedReviews, setSavedReviews] = useState({});
       const [showReviewModal, setShowReviewModal] = useState(false);
 
       useEffect(() => {
         localStorage.setItem('bodyshop_saved_groups', JSON.stringify(savedGroups));
       }, [savedGroups]);
       
-      
+      // Load reviews from Supabase when selectedCompany changes
       useEffect(() => {
-        localStorage.setItem('cpr_reviews', JSON.stringify(savedReviews));
-      }, [savedReviews]);
+        if (!selectedCompany) return;
+        getConsultantReviews(selectedCompany).then(reviews => {
+          const formattedReviews = {};
+          reviews.forEach(r => {
+            formattedReviews[r.period] = {
+              trendAnalysis: r.trend_analysis,
+              improvements: r.improvements,
+              timestamp: r.created_at
+            };
+          });
+          setSavedReviews(prev => ({
+            ...prev,
+            [selectedCompany]: formattedReviews
+          }));
+        }).catch(err => {
+          console.error("Failed to load reviews:", err);
+        });
+      }, [selectedCompany]);
       
-      const handleSaveReview = (period, trendAnalysis, improvements) => {
+      const handleSaveReview = async (period, trendAnalysis, improvements) => {
         if (!selectedCompany || !period) return;
-        setSavedReviews(prev => ({
-          ...prev,
-          [selectedCompany]: {
-            ...prev[selectedCompany],
-            [period]: { trendAnalysis, improvements, timestamp: new Date().toISOString() }
-          }
-        }));
+        try {
+          const saved = await saveConsultantReview(selectedCompany, period, trendAnalysis, improvements);
+          setSavedReviews(prev => ({
+            ...prev,
+            [selectedCompany]: {
+              ...prev[selectedCompany],
+              [period]: { trendAnalysis: saved.trend_analysis, improvements: saved.improvements, timestamp: saved.created_at }
+            }
+          }));
+        } catch (err) {
+          console.error("Failed to save review:", err);
+          window.alert("Failed to save review: " + err.message);
+        }
       };
 
       const fileInputRef = useRef(null);

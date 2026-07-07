@@ -129,3 +129,32 @@ USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'ADMIN');
 CREATE POLICY "Admins can delete analytics data" 
 ON analytics_data FOR DELETE 
 USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'ADMIN');
+
+-- Create consultant_reviews table
+CREATE TABLE IF NOT EXISTS consultant_reviews (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    company_id VARCHAR(50) NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    period VARCHAR(7) NOT NULL,
+    trend_analysis TEXT,
+    improvements TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(company_id, period)
+);
+
+-- RLS Policies for `consultant_reviews`
+ALTER TABLE consultant_reviews ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own company reviews or all if admin" 
+ON consultant_reviews FOR SELECT 
+USING (
+    company_id = (SELECT company_id FROM profiles WHERE id = auth.uid()) OR 
+    (SELECT role FROM profiles WHERE id = auth.uid()) = 'ADMIN'
+);
+
+CREATE POLICY "Admins can insert consultant reviews" 
+ON consultant_reviews FOR INSERT 
+WITH CHECK ((SELECT role FROM profiles WHERE id = auth.uid()) = 'ADMIN');
+
+CREATE POLICY "Admins can update consultant reviews" 
+ON consultant_reviews FOR UPDATE 
+USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'ADMIN');

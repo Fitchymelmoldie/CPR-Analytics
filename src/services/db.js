@@ -279,3 +279,37 @@ export const deleteAnalyticsPeriod = async (companyId, year, month) => {
   if (error) throw error;
   return data;
 };
+
+/**
+ * Fetch all consultant reviews for a specific company
+ */
+export const getConsultantReviews = async (companyId) => {
+  if (!companyId) return [];
+  const { data, error } = await supabase
+    .from('consultant_reviews')
+    .select('*')
+    .eq('company_id', companyId);
+    
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Save (upsert) a consultant review for a specific company and period
+ */
+export const saveConsultantReview = async (companyId, period, trendAnalysis, improvements) => {
+  const { data, error } = await supabase
+    .from('consultant_reviews')
+    .upsert({
+      company_id: companyId,
+      period: period,
+      trend_analysis: trendAnalysis,
+      improvements: improvements,
+      created_at: new Date().toISOString()
+    }, { onConflict: 'company_id, period' })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
