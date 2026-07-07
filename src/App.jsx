@@ -740,6 +740,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
             currentUser={currentUser}
             selectedCompany={selectedCompany}
             selectedPeriod={selectedPeriod}
+            availablePeriods={uniquePeriods}
             companyReviews={savedReviews[selectedCompany] || {}}
             onSaveReview={handleSaveReview}
           />

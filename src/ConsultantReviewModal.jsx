@@ -8,27 +8,36 @@ export default function ConsultantReviewModal({
   currentUser, 
   selectedCompany, 
   selectedPeriod, 
+  availablePeriods,
   companyReviews, // Object mapping period -> { trendAnalysis, improvements, timestamp }
   onSaveReview
 }) {
   const [activeTab, setActiveTab] = useState('current'); // 'current' or 'history'
+  const [localPeriod, setLocalPeriod] = useState(selectedPeriod);
   const [trendAnalysis, setTrendAnalysis] = useState('');
   const [improvements, setImprovements] = useState('');
 
-  // Sync local state when period changes or modal opens
+  // Sync localPeriod with parent when modal opens
   useEffect(() => {
     if (isOpen && selectedPeriod) {
-      const currentReview = companyReviews?.[selectedPeriod];
+      setLocalPeriod(selectedPeriod);
+    }
+  }, [isOpen, selectedPeriod]);
+
+  // Load review data when localPeriod changes
+  useEffect(() => {
+    if (isOpen && localPeriod) {
+      const currentReview = companyReviews?.[localPeriod];
       setTrendAnalysis(currentReview?.trendAnalysis || '');
       setImprovements(currentReview?.improvements || '');
       setActiveTab('current');
     }
-  }, [isOpen, selectedPeriod, companyReviews]);
+  }, [isOpen, localPeriod, companyReviews]);
 
   if (!isOpen) return null;
 
   const handleSave = () => {
-    onSaveReview(selectedPeriod, trendAnalysis, improvements);
+    onSaveReview(localPeriod, trendAnalysis, improvements);
     onClose();
   };
 
@@ -63,9 +72,22 @@ export default function ConsultantReviewModal({
             </div>
             <div>
               <h2 className="text-xl font-bold text-white tracking-tight">Consultant Review</h2>
-              <p className="text-sm text-surface-400">
-                {selectedCompany} • {formatPeriod(selectedPeriod)}
-              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-sm text-surface-400">{selectedCompany} • </p>
+                {currentUser.role === 'ADMIN' && availablePeriods?.length > 0 ? (
+                  <select 
+                    value={localPeriod || ''} 
+                    onChange={e => setLocalPeriod(e.target.value)}
+                    className="bg-surface-800 border border-surface-700 rounded-md px-2 py-0.5 text-sm text-brand-400 focus:outline-none focus:border-brand-500 cursor-pointer"
+                  >
+                    {availablePeriods.map(p => (
+                      <option key={p} value={p}>{formatPeriod(p)}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-sm text-surface-400">{formatPeriod(localPeriod)}</p>
+                )}
+              </div>
             </div>
           </div>
           <button onClick={onClose} className="p-2 text-surface-400 hover:text-white hover:bg-surface-800 rounded-lg transition-colors">
