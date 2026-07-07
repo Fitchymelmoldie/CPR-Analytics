@@ -313,3 +313,49 @@ export const saveConsultantReview = async (companyId, period, trendAnalysis, imp
   if (error) throw error;
   return data;
 };
+
+/**
+ * Fetch all leaderboard groups for the current user
+ */
+export const getLeaderboardGroups = async (userId) => {
+  if (!userId) return [];
+  const { data, error } = await supabase
+    .from('leaderboard_groups')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: true });
+    
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Create a new leaderboard group
+ */
+export const createLeaderboardGroup = async (userId, name, shops) => {
+  const { data, error } = await supabase
+    .from('leaderboard_groups')
+    .insert([{
+      user_id: userId,
+      name,
+      shops
+    }])
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Delete a leaderboard group
+ */
+export const deleteLeaderboardGroup = async (groupId) => {
+  const { data, error } = await supabase
+    .from('leaderboard_groups')
+    .delete()
+    .eq('id', groupId);
+
+  if (error) throw error;
+  return data;
+};

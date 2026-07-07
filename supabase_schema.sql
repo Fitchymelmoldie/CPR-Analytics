@@ -158,3 +158,27 @@ WITH CHECK ((SELECT role FROM profiles WHERE id = auth.uid()) = 'ADMIN');
 CREATE POLICY "Admins can update consultant reviews" 
 ON consultant_reviews FOR UPDATE 
 USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'ADMIN');
+
+-- Create leaderboard_groups table
+CREATE TABLE IF NOT EXISTS leaderboard_groups (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    shops JSONB NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- RLS Policies for `leaderboard_groups`
+ALTER TABLE leaderboard_groups ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own leaderboard groups" 
+ON leaderboard_groups FOR SELECT 
+USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own leaderboard groups" 
+ON leaderboard_groups FOR INSERT 
+WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own leaderboard groups" 
+ON leaderboard_groups FOR DELETE 
+USING (auth.uid() = user_id);

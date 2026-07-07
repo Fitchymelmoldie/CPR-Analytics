@@ -10,7 +10,7 @@ import LoginScreen from './components/LoginScreen';
 import SetPasswordScreen from './components/SetPasswordScreen';
 import CustomerManagement from './components/CustomerManagement';
 import { useAuth } from './components/AuthProvider';
-import { uploadAnalytics, getAnalytics, updateShopProfile, deleteAnalyticsPeriod, getCompanies, getConsultantReviews, saveConsultantReview } from './services/db';
+import { uploadAnalytics, getAnalytics, updateShopProfile, deleteAnalyticsPeriod, getCompanies, getConsultantReviews, saveConsultantReview, getLeaderboardGroups, createLeaderboardGroup, deleteLeaderboardGroup } from './services/db';
 
 const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
@@ -71,10 +71,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
       const [dragOver, setDragOver] = useState(false);
       const [benchmarks, setBenchmarks] = useState({});
       const [leaderboardCohort, setLeaderboardCohort] = useState([]);
-      const [savedGroups, setSavedGroups] = useState(() => {
-        const saved = localStorage.getItem('bodyshop_saved_groups');
-        return saved ? JSON.parse(saved) : [];
-      });
+      const [savedGroups, setSavedGroups] = useState([]);
       const [groupNameInput, setGroupNameInput] = useState('');
       
       const [showShopProfileModal, setShowShopProfileModal] = useState(false);
@@ -132,10 +129,16 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
       const [savedReviews, setSavedReviews] = useState({});
       const [showReviewModal, setShowReviewModal] = useState(false);
 
+      // Load saved leaderboard groups from Supabase when user changes
       useEffect(() => {
-        localStorage.setItem('bodyshop_saved_groups', JSON.stringify(savedGroups));
-      }, [savedGroups]);
-      
+        if (currentUser && currentUser.id) {
+          getLeaderboardGroups(currentUser.id).then(groups => {
+            setSavedGroups(groups.map(g => ({ id: g.id, name: g.name, shops: g.shops })));
+          }).catch(err => {
+            console.error("Failed to load leaderboard groups:", err);
+          });
+        }
+      }, [currentUser]);
       // Load reviews from Supabase when selectedCompany changes
       useEffect(() => {
         if (!selectedCompany) return;
@@ -1280,9 +1283,15 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                         <div key={group.id} className="group relative flex items-center bg-surface-800/80 border border-surface-700 hover:border-brand-500/50 rounded-full pl-3 pr-1 py-1 transition-colors cursor-pointer"
                           onClick={() => setLeaderboardCohort(group.shops)}>
                           <span className="text-xs text-surface-200 mr-2 font-medium">{group.name} <span className="text-surface-500 font-normal">({group.shops.length})</span></span>
-                          <button onClick={(e) => {
+                          <button onClick={async (e) => {
                             e.stopPropagation();
-                            setSavedGroups(prev => prev.filter(g => g.id !== group.id));
+                            try {
+                              await deleteLeaderboardGroup(group.id);
+                              setSavedGroups(prev => prev.filter(g => g.id !== group.id));
+                            } catch (err) {
+                              console.error("Failed to delete group:", err);
+                              window.alert("Failed to delete group: " + err.message);
+                            }
                           }} className="w-5 h-5 rounded-full flex items-center justify-center text-surface-500 hover:bg-danger-500/20 hover:text-danger-400 transition-colors">
                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                           </button>
@@ -1333,10 +1342,17 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                   <input type="text" value={groupNameInput} onChange={(e) => setGroupNameInput(e.target.value)} placeholder="Enter group name (e.g. OEM Tier 1)"
                     className="bg-surface-800/80 border border-surface-700/60 rounded-md px-3 py-2 text-sm text-white focus:border-brand-500 focus:outline-none transition-colors w-full sm:w-64" />
                   <button 
-                    onClick={() => {
-                      if (!groupNameInput.trim() || leaderboardCohort.length === 0) return;
-                      setSavedGroups(prev => [...prev, { id: Date.now(), name: groupNameInput.trim(), shops: [...leaderboardCohort] }]);
-                      setGroupNameInput('');
+                    onClick={async () => {
+                      if (groupNameInput.trim() && leaderboardCohort.length > 0 && currentUser?.id) {
+                        try {
+                          const newGroup = await createLeaderboardGroup(currentUser.id, groupNameInput.trim(), leaderboardCohort);
+                          setSavedGroups(prev => [...prev, { id: newGroup.id, name: newGroup.name, shops: newGroup.shops }]);
+                          setGroupNameInput('');
+                        } catch (err) {
+                          console.error("Failed to create group:", err);
+                          window.alert("Failed to create group: " + err.message);
+                        }
+                      }
                     }}
                     disabled={!groupNameInput.trim() || leaderboardCohort.length === 0}
                     className="px-4 py-2 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:hover:bg-brand-600 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors flex-shrink-0">
