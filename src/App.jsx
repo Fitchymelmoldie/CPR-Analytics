@@ -1190,7 +1190,11 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                         grace: '5%'
                       },
                       _yFormat: (v) => {
-                        if (trendChartData.format === 'currency') return '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v);
+                        if (trendChartData.format === 'currency') {
+                          if (v >= 1000000) return '$' + (v / 1000000).toFixed(2) + 'M';
+                          if (v >= 1000) return '$' + (v / 1000).toFixed(1) + 'k';
+                          return '$' + v;
+                        }
                         if (trendChartData.format === 'percent') return (v * 100).toFixed(1) + '%';
                         return v;
                       },
