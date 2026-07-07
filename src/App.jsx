@@ -483,6 +483,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               backgroundColor: 'rgba(0, 168, 150, 0.12)',
               fill: true,
               tension: 0.35,
+              cubicInterpolationMode: 'monotone',
               pointRadius: 5,
               pointBackgroundColor: '#00a896',
               pointBorderWidth: 0,
