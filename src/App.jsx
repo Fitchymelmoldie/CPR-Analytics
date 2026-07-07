@@ -482,8 +482,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               borderColor: '#00a896',
               backgroundColor: 'rgba(0, 168, 150, 0.12)',
               fill: true,
-              tension: 0.35,
-              cubicInterpolationMode: 'monotone',
+              tension: 0,
               pointRadius: 5,
               pointBackgroundColor: '#00a896',
               pointBorderWidth: 0,
@@ -1186,6 +1185,9 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                   </div>
                   <ChartCanvas type="line" data={trendChartData}
                     options={{
+                      _yScale: {
+                        grace: '5%'
+                      },
                       _yFormat: (v) => {
                         if (trendChartData.format === 'currency') return '$' + (v >= 1000 ? (v / 1000).toFixed(1) + 'k' : v);
                         if (trendChartData.format === 'percent') return (v * 100).toFixed(1) + '%';
