@@ -1,4 +1,4 @@
-﻿import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Chart } from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import annotationPlugin from 'chartjs-plugin-annotation';
@@ -39,15 +39,8 @@ export default     function ChartCanvas({ type, data, options, height }) {
                 padding: { top: 4, bottom: 4, left: 8, right: 8 },
                 font: { family: 'Inter', weight: '600', size: 11 },
                 anchor: 'center',
-                align: (ctx) => {
-                  if (ctx.dataIndex === 0) return 'end';
-                  if (ctx.dataset.data.length > 1 && ctx.dataIndex === ctx.dataset.data.length - 1) return 'start';
-                  return 'top';
-                },
-                offset: (ctx) => {
-                  if (ctx.dataIndex === 0 || ctx.dataIndex === ctx.dataset.data.length - 1) return 10;
-                  return 8;
-                },
+                align: 'top',
+                offset: 10,
                 formatter: (value) => {
                   if (options && options._yFormat) return options._yFormat(value);
                   return value;
