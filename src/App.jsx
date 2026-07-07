@@ -1260,7 +1260,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                 </div>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-x-4 gap-y-5">
-                {currentRow && Object.keys(currentRow).filter(k => !['Company Id', 'Company Name', 'State', 'Year', 'Month'].includes(k)).map(key => (
+                {currentRow && Object.keys(currentRow).filter(k => !['Company Id', 'Company Name', 'State', 'Year', 'Month', 'painters_count', 'panel_beaters_count', 'admin_count', 'estimators_count', 'managers_count', 'booths_count'].includes(k)).map(key => (
                   <div key={key} className="flex flex-col">
                     <label className="text-[9px] text-surface-400 uppercase tracking-wider mb-1.5 truncate" title={key}>{key}</label>
                     <input type="text" value={currentRow[key]} onChange={(e) => handleDataEdit(key, e.target.value)}
