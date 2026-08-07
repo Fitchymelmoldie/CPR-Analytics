@@ -4,6 +4,8 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Supabase Auth Client Initialization**
+  - Consolidated browser data and authentication calls onto the shared Supabase client to prevent duplicate GoTrueClient instances and related session-storage/login instability.
 - **Manual Data Entry**
   - Added a "Save Changes" button to manually persist row edits to the database.
   - Implemented an "unsaved changes" visual state (button turns bright green and displays an asterisk) to prevent accidental data loss when modifying raw values.

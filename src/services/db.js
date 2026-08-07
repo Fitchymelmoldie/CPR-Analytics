@@ -1,9 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../utils/supabaseClient';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Keep this export for callers that historically imported the client from this
+// service module, while sharing the single browser client used by auth flows.
+export { supabase };
 
 const KEY_TO_DB = {
   'Company Id': 'company_id',
