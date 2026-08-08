@@ -4,6 +4,13 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Production Release - Workspace and Performance Pulse Redesign (9 August 2026)**
+  - Deployed the fully audited source release from commit `e0b4823` to `https://bodyshop-dashboard.vercel.app`.
+  - Recorded production deployment `dpl_BuJKH5jSBarFoMmrKuj71bncozdC`, built remotely by Vercel with production-scoped environment variables.
+  - Repeated all 38 automated tests, the production build, lint, dependency audit and Git whitespace checks immediately before release; every blocking check passed.
+  - Verified the authenticated administrator dashboard, real Supabase data, all drawer destinations, Consultant Reviews, KPI/timeframe controls, sidebar collapse/expand and the live production alias after deployment.
+  - Confirmed the production URL returns HTTP 200, Vercel reported no runtime errors or HTTP 500 responses, and the preview-only demonstration switch is disabled in production.
+  - No live save, upload, invitation, deletion or other customer-data mutation was performed during production verification.
 - **Pre-Production Regression Audit**
   - Expanded automated coverage from 20 to 38 tests across login, administrator and bodyshop permissions, every drawer destination, responsive navigation, KPI/chart controls, imports, manual edits, reporting periods, profile editing, consultant reviews, benchmarks, leaderboards, exports, invitations and confirmed deletion flows.
   - Fixed bodyshop profile and consultant-review workspaces so they remain usable before the first analytics upload.
@@ -13,7 +20,7 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Corrected the real application footer separator and released temporary export object URLs after CSV downloads.
   - Updated vulnerable transitive build packages (`postcss` and `nanoid`) to patched lockfile versions; `npm audit` now reports zero vulnerabilities.
   - Verified all pages at desktop and mobile widths, live Supabase RLS and Edge Function boundaries, preview-only environment scoping, and the final protected Vercel Preview with no application console errors.
-  - Published protected Preview deployment `dpl_FGU22rGnyM9QYGythN7fLnxmRoTq`; production remains unchanged pending explicit approval.
+  - Published protected Preview deployment `dpl_FGU22rGnyM9QYGythN7fLnxmRoTq`; the audited candidate was subsequently approved and released to production on 9 August 2026.
 - **Performance Pulse Dashboard Redesign**
   - Replaced the oversized summary and square KPI presentation with a compact, rounded performance workspace inspired by modern health and performance products.
   - Added an honest target pulse that summarizes configured KPI benchmarks without inventing a proprietary score, alongside daily actual and 3.3x target context.
@@ -21,7 +28,7 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Added responsive entrance, hover, selection, chart, and drawer motion with reduced-motion support for accessibility.
   - Preserved all existing calculations, filters, benchmark editing, ranking, imports, customer management, and administrator-only functionality.
   - Verified the redesign across desktop and mobile, including the mobile drawer, KPI selection, chart animation, overflow, and browser diagnostics.
-  - Published a protected non-production Vercel preview for design review; the production deployment remains unchanged pending final approval.
+  - Published a protected non-production Vercel preview for design review before the approved production release on 9 August 2026.
 - **Workspace Navigation Redesign**
   - Replaced the crowded top tab bar with a persistent left-hand workspace sidebar inspired by modern productivity tools.
   - Added a collapsible desktop sidebar and responsive mobile drawer while preserving the existing dashboard, imports, leaderboards, reviews, customer management, and profile functionality.
