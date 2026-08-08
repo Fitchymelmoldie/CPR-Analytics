@@ -74,20 +74,32 @@ ALTER TABLE companies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE analytics_data ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies for `profiles`
-CREATE OR REPLACE FUNCTION is_admin() RETURNS BOOLEAN AS $$
+-- Keep the admin helper outside the exposed `public` schema. It must remain
+-- SECURITY DEFINER because it is used by the profiles RLS policy itself.
+CREATE SCHEMA IF NOT EXISTS private;
+REVOKE ALL ON SCHEMA private FROM PUBLIC;
+GRANT USAGE ON SCHEMA private TO authenticated;
+
+CREATE OR REPLACE FUNCTION private.is_admin() RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
 BEGIN
-  RETURN EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'ADMIN');
+  RETURN EXISTS (SELECT 1 FROM public.profiles WHERE id = (SELECT auth.uid()) AND role = 'ADMIN');
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$;
+
+REVOKE ALL ON FUNCTION private.is_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION private.is_admin() TO authenticated;
 
 CREATE POLICY "Users can view own profile" 
-ON profiles FOR SELECT 
-USING (auth.uid() = id);
+ON profiles FOR SELECT TO authenticated
+USING ((SELECT auth.uid()) = id);
 
 CREATE POLICY "Admins can view all profiles" 
-ON profiles FOR SELECT 
-USING (is_admin());
+ON profiles FOR SELECT TO authenticated
+USING ((SELECT private.is_admin()));
 
 -- RLS Policies for `companies`
 CREATE POLICY "Users can view own company or all if admin" 
@@ -158,6 +170,41 @@ WITH CHECK ((SELECT role FROM profiles WHERE id = auth.uid()) = 'ADMIN');
 CREATE POLICY "Admins can update consultant reviews" 
 ON consultant_reviews FOR UPDATE 
 USING ((SELECT role FROM profiles WHERE id = auth.uid()) = 'ADMIN');
+
+-- Persisted KPI targets configured by admins for each body shop
+CREATE TABLE IF NOT EXISTS kpi_benchmarks (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    company_id VARCHAR(50) NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+    kpi_key VARCHAR(100) NOT NULL,
+    target NUMERIC NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE(company_id, kpi_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_kpi_benchmarks_company ON kpi_benchmarks(company_id);
+
+ALTER TABLE kpi_benchmarks ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own company benchmarks or all if admin"
+ON kpi_benchmarks FOR SELECT TO authenticated
+USING (
+    company_id = (SELECT company_id FROM profiles WHERE id = (SELECT auth.uid())) OR
+    (SELECT role FROM profiles WHERE id = (SELECT auth.uid())) = 'ADMIN'
+);
+
+CREATE POLICY "Admins can insert benchmarks"
+ON kpi_benchmarks FOR INSERT TO authenticated
+WITH CHECK ((SELECT role FROM profiles WHERE id = (SELECT auth.uid())) = 'ADMIN');
+
+CREATE POLICY "Admins can update benchmarks"
+ON kpi_benchmarks FOR UPDATE TO authenticated
+USING ((SELECT role FROM profiles WHERE id = (SELECT auth.uid())) = 'ADMIN')
+WITH CHECK ((SELECT role FROM profiles WHERE id = (SELECT auth.uid())) = 'ADMIN');
+
+CREATE POLICY "Admins can delete benchmarks"
+ON kpi_benchmarks FOR DELETE TO authenticated
+USING ((SELECT role FROM profiles WHERE id = (SELECT auth.uid())) = 'ADMIN');
 
 -- Create leaderboard_groups table
 CREATE TABLE IF NOT EXISTS leaderboard_groups (

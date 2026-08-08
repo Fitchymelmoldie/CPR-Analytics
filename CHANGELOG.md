@@ -4,6 +4,19 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Reliability and Security Hardening**
+  - Fixed CSV upload refreshes so they use the current authenticated user's company scope instead of a stale login snapshot.
+  - Persisted per-bodyshop KPI benchmarks in Supabase with customer read access and admin-only write access.
+  - Moved the admin role helper into a private schema, fixed its search path, and limited execution to signed-in users.
+  - Optimized the new benchmark and admin-profile RLS checks so authenticated identity lookups are evaluated once per query.
+  - Verified the remaining Auth advisor warning: leaked-password protection cannot be enabled on the current Free plan because Supabase requires Pro or higher for that feature.
+  - Updated upload test mocks and coverage; all automated tests pass.
+- **Dashboard Summary Banner**
+  - Rebalanced the Current Daily Actual and 3.3x Daily Target panels into a compact responsive layout that preserves both metrics and their explanatory text without a large central gap.
+- **Return on Paint Labour Formatting**
+  - Added a dedicated rounded whole-number percentage display for Return on Paint Labour (for example, `535%`) while leaving other percentage KPIs at two decimal places.
+- **Supabase Auth Client Initialization**
+  - Consolidated browser data and authentication calls onto the shared Supabase client to prevent duplicate GoTrueClient instances and related session-storage/login instability.
 - **Manual Data Entry**
   - Added a "Save Changes" button to manually persist row edits to the database.
   - Implemented an "unsaved changes" visual state (button turns bright green and displays an asterisk) to prevent accidental data loss when modifying raw values.

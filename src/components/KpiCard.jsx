@@ -9,6 +9,7 @@ export default     function KpiCard({ title, value, format, variance, iconPath, 
 
       const displayVal = format === 'currency' ? fmt(value, 'currency')
         : format === 'percent' ? fmt(value, 'percent')
+        : format === 'percentWhole' ? fmt(value, 'percentWhole')
         : fmt(value);
 
       const hasVariance = variance !== null && variance !== undefined;

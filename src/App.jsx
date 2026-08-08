@@ -10,7 +10,7 @@ import LoginScreen from './components/LoginScreen';
 import SetPasswordScreen from './components/SetPasswordScreen';
 import CustomerManagement from './components/CustomerManagement';
 import { useAuth } from './components/AuthProvider';
-import { uploadAnalytics, getAnalytics, updateShopProfile, deleteAnalyticsPeriod, getCompanies, getConsultantReviews, saveConsultantReview, getLeaderboardGroups, createLeaderboardGroup, deleteLeaderboardGroup } from './services/db';
+import { uploadAnalytics, getAnalytics, updateShopProfile, deleteAnalyticsPeriod, getCompanies, getConsultantReviews, saveConsultantReview, getLeaderboardGroups, createLeaderboardGroup, deleteLeaderboardGroup, getBenchmarks, upsertBenchmark, deleteBenchmark } from './services/db';
 
 const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
@@ -28,6 +28,9 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
           companyName: profile.companies?.name || profile.company_id
         };
       }, [user, profile]);
+
+      const currentUserRole = currentUser?.role;
+      const currentUserCompanyId = currentUser?.companyId;
 
       const handleLogout = async () => {
         await signOut();
@@ -179,19 +182,54 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
       const fileInputRef = useRef(null);
 
-      const handleSetBenchmark = (kpiTitle) => {
+      useEffect(() => {
+        if (!selectedCompany) {
+          setBenchmarks({});
+          return undefined;
+        }
+
+        let cancelled = false;
+        getBenchmarks(selectedCompany).then(rows => {
+          if (cancelled) return;
+          setBenchmarks(rows.reduce((acc, row) => {
+            acc[row.kpi_key] = { target: Number(row.target) };
+            return acc;
+          }, {}));
+        }).catch(err => {
+          if (!cancelled) console.error("Failed to load benchmarks:", err);
+        });
+
+        return () => { cancelled = true; };
+      }, [selectedCompany]);
+
+      const handleSetBenchmark = async (kpiTitle) => {
+        if (!selectedCompany || currentUserRole !== 'ADMIN') return;
         const currentVal = benchmarks[kpiTitle]?.target !== undefined ? benchmarks[kpiTitle].target : '';
         const input = window.prompt(`Set benchmark target for ${kpiTitle}:`, currentVal);
         if (input !== null) {
           const val = parseFloat(input);
           if (!isNaN(val)) {
-            setBenchmarks(prev => ({ ...prev, [kpiTitle]: { target: val } }));
+            try {
+              const saved = await upsertBenchmark(selectedCompany, kpiTitle, val);
+              setBenchmarks(prev => ({ ...prev, [kpiTitle]: { target: Number(saved.target) } }));
+            } catch (err) {
+              console.error("Failed to save benchmark:", err);
+              window.alert("Failed to save benchmark: " + err.message);
+            }
           } else if (input.trim() === '') {
-            setBenchmarks(prev => {
-              const next = { ...prev };
-              delete next[kpiTitle];
-              return next;
-            });
+            try {
+              await deleteBenchmark(selectedCompany, kpiTitle);
+              setBenchmarks(prev => {
+                const next = { ...prev };
+                delete next[kpiTitle];
+                return next;
+              });
+            } catch (err) {
+              console.error("Failed to delete benchmark:", err);
+              window.alert("Failed to delete benchmark: " + err.message);
+            }
+          } else {
+            window.alert('Please enter a valid number or leave the field blank to remove the target.');
           }
         }
       };
@@ -228,7 +266,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               }
 
               uploadAnalytics(results.data).then(() => {
-                 return getAnalytics(currentUser.role === 'CUSTOMER' ? currentUser.companyId : null);
+                  return getAnalytics(currentUserRole === 'CUSTOMER' ? currentUserCompanyId : null);
               }).then(fetchedData => {
                  setData(fetchedData);
               }).catch(err => {
@@ -238,7 +276,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
             }
           },
         });
-      }, []);
+      }, [currentUserRole, currentUserCompanyId]);
 
       const handleExport = useCallback(() => {
         if (!data || data.length === 0) return;
@@ -1039,52 +1077,52 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               <>
                 {/* Daily Budget Reminder Banner */}
                 {kpis && (
-                  <div className="bg-gradient-to-r from-surface-800 to-surface-800/50 border border-brand-500/30 rounded-2xl p-5 mb-6 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-lg animate-float-in">
-                     <div className="flex items-center gap-4 flex-1 w-full">
-                       <div className="p-4 bg-brand-500/10 rounded-xl text-brand-400 border border-brand-500/20 shadow-[0_0_15px_rgba(0,168,150,0.15)] hidden sm:block">
-                         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                           <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                         </svg>
-                       </div>
-                       
-                       <div className="flex flex-col sm:flex-row gap-6 w-full justify-around items-center">
-                         {/* Actual Daily Revenue */}
-                         <div className="flex flex-col items-center sm:items-start text-center sm:text-left flex-1">
-                           <p className="text-surface-400 text-xs font-semibold uppercase tracking-wider mb-1">Current Daily Actual</p>
-                           <div className="flex items-baseline gap-2">
-                             <p className={`text-3xl font-bold tracking-tight ${kpis.actualDailyRevenue >= kpis.dailyBudget ? 'text-success-400' : 'text-danger-400'}`}>
-                               ${kpis.actualDailyRevenue.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}
-                             </p>
-                             <p className={`text-sm font-medium ${kpis.actualDailyRevenue >= kpis.dailyBudget ? 'text-success-400' : 'text-danger-400'}`}>/ day</p>
-                           </div>
-                           <p className={`text-xs mt-1 max-w-[200px] ${kpis.actualDailyRevenue >= kpis.dailyBudget ? 'text-success-400/80' : 'text-danger-400/80'}`}>Based on rolling quarterly average paint sales.</p>
-                         </div>
-                         
-                         {/* Separator */}
-                         <div className="hidden sm:block w-px h-16 bg-surface-700/50"></div>
+                  <div className="bg-gradient-to-r from-surface-800 to-surface-800/50 border border-brand-500/30 rounded-2xl p-4 sm:p-5 mb-6 shadow-lg animate-float-in">
+                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+                        <div className="p-4 bg-brand-500/10 rounded-xl text-brand-400 border border-brand-500/20 shadow-[0_0_15px_rgba(0,168,150,0.15)] hidden sm:block">
+                          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+                          </svg>
+                        </div>
 
-                         {/* Target Daily Budget */}
-                         <div className="flex flex-col items-center sm:items-start text-center sm:text-left flex-1 pl-0 sm:pl-6">
-                           <p className="text-surface-400 text-xs font-semibold uppercase tracking-wider mb-1">3.3x Daily Target</p>
-                           {kpis.rollingMonths >= 3 ? (
-                             <>
-                               <div className="flex items-baseline gap-2">
-                                 <p className="text-3xl font-bold text-white tracking-tight">
-                                   ${kpis.dailyBudget.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}
-                                 </p>
-                                 <p className="text-sm font-medium text-brand-400">/ day</p>
-                               </div>
-                               <p className="text-xs text-brand-400/80 mt-1 max-w-[200px]">Based on rolling quarterly average 3.3x profitability benchmark.</p>
-                             </>
-                           ) : (
-                             <>
-                               <div className="flex items-center gap-2 h-[40px]">
-                                 <span className="text-sm italic text-surface-400">Calculating Target...</span>
-                               </div>
-                               <p className="text-[11px] text-surface-500 mt-1 max-w-[200px]">Requires a full quarter (3 months) of historical data to generate benchmark.</p>
-                             </>
-                           )}
-                         </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)] items-stretch gap-4 sm:gap-5 w-full max-w-4xl mx-auto">
+                          {/* Actual Daily Revenue */}
+                          <div className="min-w-0 rounded-xl bg-surface-900/30 border border-surface-700/40 px-4 py-3 text-center sm:text-left">
+                            <p className="text-surface-400 text-xs font-semibold uppercase tracking-wider mb-1">Current Daily Actual</p>
+                            <div className="flex items-baseline justify-center sm:justify-start gap-2">
+                              <p className={`text-3xl font-bold tracking-tight ${kpis.actualDailyRevenue >= kpis.dailyBudget ? 'text-success-400' : 'text-danger-400'}`}>
+                                ${kpis.actualDailyRevenue.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}
+                              </p>
+                              <p className={`text-sm font-medium ${kpis.actualDailyRevenue >= kpis.dailyBudget ? 'text-success-400' : 'text-danger-400'}`}>/ day</p>
+                            </div>
+                            <p className={`text-xs mt-1 max-w-[240px] mx-auto sm:mx-0 ${kpis.actualDailyRevenue >= kpis.dailyBudget ? 'text-success-400/80' : 'text-danger-400/80'}`}>Based on rolling quarterly average paint sales.</p>
+                          </div>
+
+                          {/* Separator */}
+                          <div className="hidden sm:block w-px bg-surface-700/60 self-stretch"></div>
+
+                          {/* Target Daily Budget */}
+                          <div className="min-w-0 rounded-xl bg-surface-900/30 border border-surface-700/40 px-4 py-3 text-center sm:text-left">
+                            <p className="text-surface-400 text-xs font-semibold uppercase tracking-wider mb-1">3.3x Daily Target</p>
+                            {kpis.rollingMonths >= 3 ? (
+                              <>
+                                <div className="flex items-baseline justify-center sm:justify-start gap-2">
+                                  <p className="text-3xl font-bold text-white tracking-tight">
+                                    ${kpis.dailyBudget.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}
+                                  </p>
+                                  <p className="text-sm font-medium text-brand-400">/ day</p>
+                                </div>
+                                <p className="text-xs text-brand-400/80 mt-1 max-w-[240px] mx-auto sm:mx-0">Based on rolling quarterly average 3.3x profitability benchmark.</p>
+                              </>
+                            ) : (
+                              <>
+                                <div className="flex items-center justify-center sm:justify-start gap-2 min-h-[40px]">
+                                  <span className="text-sm italic text-surface-400">Calculating Target...</span>
+                                </div>
+                                <p className="text-[11px] text-surface-500 mt-1 max-w-[240px] mx-auto sm:mx-0">Requires a full quarter (3 months) of historical data to generate benchmark.</p>
+                              </>
+                            )}
+                          </div>
                        </div>
                      </div>
                   </div>
@@ -1134,7 +1172,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                   benchmark={benchmarks['Booth Cycle Time']?.target} benchmarkType="max" onSetBenchmark={handleSetBenchmark} isAdmin={currentUser?.role === 'ADMIN'}
                   rank={ranks?.boothCycleTime} cohortSize={ranks?.cohortSize}
                   iconPath="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                <KpiCard title="Return on Paint Labour" value={kpis.returnOnPaintLabour} format="percent"
+                 <KpiCard title="Return on Paint Labour" value={kpis.returnOnPaintLabour} format="percentWhole"
                   variance={calcVariance(null, true, 'return')} delayClass="card-appear-3"
                   isActive={selectedKpi === 'Return on Paint Labour'} onClick={() => setSelectedKpi('Return on Paint Labour')}
                   benchmark={benchmarks['Return on Paint Labour']?.target} benchmarkType="min" onSetBenchmark={handleSetBenchmark} isAdmin={currentUser?.role === 'ADMIN'}

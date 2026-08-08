@@ -14,7 +14,18 @@ vi.mock('../AuthProvider', () => ({
 
 vi.mock('../../services/db', () => ({
   uploadAnalytics: vi.fn(),
-  getAnalytics: vi.fn()
+  getAnalytics: vi.fn(),
+  getCompanies: vi.fn(),
+  getConsultantReviews: vi.fn(),
+  saveConsultantReview: vi.fn(),
+  getLeaderboardGroups: vi.fn(),
+  createLeaderboardGroup: vi.fn(),
+  deleteLeaderboardGroup: vi.fn(),
+  getBenchmarks: vi.fn(),
+  upsertBenchmark: vi.fn(),
+  deleteBenchmark: vi.fn(),
+  updateShopProfile: vi.fn(),
+  deleteAnalyticsPeriod: vi.fn()
 }));
 
 // Mock ChartCanvas since ChartJS and ResizeObserver can be tricky in JSDOM
@@ -43,6 +54,10 @@ describe('Upload Pipeline Integration', () => {
     });
     
     dbServices.getAnalytics.mockResolvedValue([]); // Empty DB initially
+    dbServices.getCompanies.mockResolvedValue([]);
+    dbServices.getConsultantReviews.mockResolvedValue([]);
+    dbServices.getLeaderboardGroups.mockResolvedValue([]);
+    dbServices.getBenchmarks.mockResolvedValue([]);
   });
 
   it('renders upload zone for Admin when there is no data', async () => {

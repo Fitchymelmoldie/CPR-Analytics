@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseNum, fmt, KPI_CONFIG, MONTH_NAMES } from './metrics';
+import { parseNum, fmt, KPI_CONFIG } from './metrics';
 
 describe('metrics utils', () => {
   describe('parseNum', () => {
@@ -63,10 +63,16 @@ describe('metrics utils', () => {
       expect(fmt(1000, 'currency')).toBe('$1,000');
     });
 
-    it('formats percentages', () => {
-      expect(fmt(0.5, 'percent')).toBe('50.0%');
-      expect(fmt(0.055, 'percent')).toBe('5.5%');
-      expect(fmt(1, 'percent')).toBe('100.0%');
+    it('formats percentages to exactly two decimal places', () => {
+      expect(fmt(0.5, 'percent')).toBe('50.00%');
+      expect(fmt(0.055, 'percent')).toBe('5.50%');
+      expect(fmt(1, 'percent')).toBe('100.00%');
+      expect(fmt(5.073507, 'percent')).toBe('507.35%');
+    });
+
+    it('formats whole percentages for Return on Paint Labour', () => {
+      expect(fmt(5.35, 'percentWhole')).toBe('535%');
+      expect(fmt(5.354, 'percentWhole')).toBe('535%');
     });
 
     it('formats standard numbers', () => {

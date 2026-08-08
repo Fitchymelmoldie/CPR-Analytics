@@ -12,7 +12,9 @@ export function fmt(v, type) {
   if (v === null || v === undefined) return '';
   const n = Number(v);
   if (type === 'currency') return '$' + n.toLocaleString('en-AU', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  // KPI ratios are stored as decimals; standard percentage displays use two places.
   if (type === 'percent') return (n * 100).toFixed(2) + '%';
+  if (type === 'percentWhole') return (n * 100).toFixed(0) + '%';
   return n.toLocaleString('en-AU', { maximumFractionDigits: 1 });
 }
 

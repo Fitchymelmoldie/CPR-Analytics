@@ -1,9 +1,8 @@
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '../utils/supabaseClient';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Keep this export for callers that historically imported the client from this
+// service module, while sharing the single browser client used by auth flows.
+export { supabase };
 
 const KEY_TO_DB = {
   'Company Id': 'company_id',
@@ -163,6 +162,56 @@ export const getCompanies = async () => {
     .from('companies')
     .select('*')
     .order('name');
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Fetch KPI benchmarks for a company.
+ * Customers can read their own company's targets; admins can read any company.
+ */
+export const getBenchmarks = async (companyId) => {
+  if (!companyId) return [];
+
+  const { data, error } = await supabase
+    .from('kpi_benchmarks')
+    .select('kpi_key, target')
+    .eq('company_id', companyId)
+    .order('kpi_key');
+
+  if (error) throw error;
+  return data || [];
+};
+
+/**
+ * Save or update a KPI benchmark for a company.
+ */
+export const upsertBenchmark = async (companyId, kpiKey, target) => {
+  const { data, error } = await supabase
+    .from('kpi_benchmarks')
+    .upsert({
+      company_id: companyId,
+      kpi_key: kpiKey,
+      target: Number(target),
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'company_id, kpi_key' })
+    .select('kpi_key, target')
+    .single();
+
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Remove a KPI benchmark from a company.
+ */
+export const deleteBenchmark = async (companyId, kpiKey) => {
+  const { data, error } = await supabase
+    .from('kpi_benchmarks')
+    .delete()
+    .eq('company_id', companyId)
+    .eq('kpi_key', kpiKey);
+
   if (error) throw error;
   return data;
 };
