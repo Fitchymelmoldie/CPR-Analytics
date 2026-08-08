@@ -1,18 +1,30 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Papa from 'papaparse';
 import ConsultantReviewModal from './ConsultantReviewModal';
-import { parseNum, fmt, MONTH_NAMES, KPI_CONFIG } from './utils/metrics';
+import { parseNum, MONTH_NAMES, KPI_CONFIG } from './utils/metrics';
+import { DASHBOARD_KPI_DEFINITIONS } from './utils/dashboardKpis';
 import { MOCK_HISTORICAL, MOCK_SINGLE } from './utils/mockData';
 import KpiCard from './components/KpiCard';
+import PerformancePulse from './components/PerformancePulse';
+import PerformanceRhythm from './components/PerformanceRhythm';
+import PerformanceInsights from './components/PerformanceInsights';
 import FilterSelect from './components/FilterSelect';
 import Header from './components/Header';
+import AppSidebar from './components/AppSidebar';
+import ShopProfilePanel from './components/ShopProfilePanel';
 import LoginScreen from './components/LoginScreen';
 import SetPasswordScreen from './components/SetPasswordScreen';
 import CustomerManagement from './components/CustomerManagement';
 import { useAuth } from './components/AuthProvider';
 import { uploadAnalytics, getAnalytics, updateShopProfile, deleteAnalyticsPeriod, getCompanies, getConsultantReviews, saveConsultantReview, getLeaderboardGroups, createLeaderboardGroup, deleteLeaderboardGroup, getBenchmarks, upsertBenchmark, deleteBenchmark } from './services/db';
 
-const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
+const PAGE_META = {
+  dashboard: { title: 'Visual Dashboard', description: 'Performance, profitability and operational trends' },
+  profile: { title: 'Shop Profile', description: 'Facility capacity and staffing information' },
+  'raw-data': { title: 'Data & Imports', description: 'Upload, review and adjust bodyshop performance data' },
+  leaderboards: { title: 'Gamified Leaderboards', description: 'Build competitive cohorts and compare performance' },
+  customers: { title: 'Customer Management', description: 'Manage bodyshop access and customer accounts' }
+};
 
 // === Main App ===
     function App() {
@@ -69,6 +81,8 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
       const [isSavingRow, setIsSavingRow] = useState(false);
       const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
       const [activeTab, setActiveTab] = useState('dashboard');
+      const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('cpr_sidebar_collapsed') === 'true');
+      const [mobileNavOpen, setMobileNavOpen] = useState(false);
       const [selectedKpi, setSelectedKpi] = useState('Completed RO');
       const [chartTimeframe, setChartTimeframe] = useState('YTD');
       const [dragOver, setDragOver] = useState(false);
@@ -81,6 +95,16 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
       const [shopProfileForm, setShopProfileForm] = useState({
         painters_count: 0, panel_beaters_count: 0, admin_count: 0, estimators_count: 0, managers_count: 0, booths_count: 0
       });
+
+      useEffect(() => {
+        localStorage.setItem('cpr_sidebar_collapsed', String(sidebarCollapsed));
+      }, [sidebarCollapsed]);
+
+      useEffect(() => {
+        if (currentUserRole !== 'ADMIN' && ['raw-data', 'leaderboards', 'customers'].includes(activeTab)) {
+          setActiveTab('dashboard');
+        }
+      }, [activeTab, currentUserRole]);
 
       const handleEditShopProfile = useCallback(() => {
         const comp = allCompanies.find(c => c.id === selectedCompany);
@@ -236,13 +260,13 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
 
       // Force selectedCompany for CUSTOMER role
       useEffect(() => {
-        if (currentUser && currentUser.role === 'CUSTOMER') {
-          const matchedRow = data.find(r => r['Company Id'] === currentUser.companyId);
-          if (matchedRow) {
-            setSelectedCompany(matchedRow['Company Id']);
-          }
+        if (currentUserRole === 'CUSTOMER' && currentUserCompanyId) {
+          // A bodyshop still needs its profile and consultant reviews before
+          // the first analytics upload exists, so selection cannot depend on
+          // finding an analytics row.
+          setSelectedCompany(currentUserCompanyId);
         }
-      }, [currentUser, data]);
+      }, [currentUserRole, currentUserCompanyId]);
 
       // CSV parsing
       const handleFile = useCallback((file) => {
@@ -290,6 +314,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
       }, [data]);
 
       const onDrop = useCallback((e) => {
@@ -321,6 +346,12 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
         const set = new Set(data.map(r => r['Company Id']).filter(Boolean));
         return [...set].sort();
       }, [data, allCompanies, currentUser]);
+
+      const selectedCompanyProfile = useMemo(
+        () => allCompanies.find(company => company.id === selectedCompany) || null,
+        [allCompanies, selectedCompany]
+      );
+      const pageMeta = PAGE_META[activeTab] || PAGE_META.dashboard;
 
       // Auto-select first company
       useEffect(() => {
@@ -424,6 +455,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
         });
         
         setData(prev => [...prev, newRow]);
+        setHasUnsavedChanges(true);
         const periodStr = `${y}-${String(m).padStart(2, '0')}`;
         // Give React a tiny tick to update uniquePeriods
         setTimeout(() => setSelectedPeriod(periodStr), 50);
@@ -530,7 +562,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
             }
           ]
         };
-      }, [selectedPeriod, isMultiMonth, uniquePeriods, companyData, selectedKpi, chartTimeframe]);
+      }, [isMultiMonth, uniquePeriods, companyData, selectedKpi, chartTimeframe]);
 
       // KPIs
       const kpis = useMemo(() => {
@@ -603,7 +635,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
           actualDailyRevenue: avgMonthlyPaintSales / 19.33,
           rollingMonths: monthsFound
         };
-      }, [currentRow, companyData, selectedPeriod]);
+      }, [currentRow, companyData]);
 
       // Rankings calculation
       const ranks = useMemo(() => {
@@ -702,16 +734,32 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
           case 'Paint Cost / Total Sales': avg = ranks.paintCostToTotalSales?.avgVal; format = 'percent'; break;
           case 'VPD / Per Booth': avg = ranks.vpdPerBooth?.avgVal; format = 'number'; break;
           case 'Booth Cycle Time': avg = ranks.boothCycleTime?.avgVal; format = 'number'; break;
-          case 'Return on Paint Labour': avg = ranks.returnOnPaintLabour?.avgVal; format = 'percent'; break;
+          case 'Return on Paint Labour': avg = ranks.returnOnPaintLabour?.avgVal; format = 'percentWhole'; break;
           case 'Liquid Cost to Refinish': avg = ranks.liquidCostRatio?.avgVal; format = 'percent'; break;
           case 'Total Sales': avg = ranks.totalSales?.avgVal; format = 'currency'; break;
           case 'Paint Revenue P/V': avg = ranks.paintRevPerVehicle?.avgVal; format = 'currency'; break;
         }
         if (avg === null || avg === undefined) return null;
         if (format === 'currency') return '$' + avg.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
-        if (format === 'percent') return avg.toFixed(2) + '%';
+        if (format === 'percent') return (avg * 100).toFixed(2) + '%';
+        if (format === 'percentWhole') return (avg * 100).toFixed(0) + '%';
         return avg.toFixed(1);
       }, [ranks, selectedKpi]);
+
+      const dashboardKpiItems = DASHBOARD_KPI_DEFINITIONS.map((definition, index) => ({
+        ...definition,
+        value: kpis[definition.valueKey],
+        variance: calcVariance(...definition.varianceArgs),
+        benchmark: benchmarks[definition.title]?.target,
+        rank: ranks?.[definition.rankKey],
+        cohortSize: ranks?.cohortSize,
+        description: KPI_CONFIG[definition.title]?.description,
+        delayClass: `card-appear-${(index % 4) + 1}`
+      }));
+      const selectedDashboardKpi = dashboardKpiItems.find(item => item.title === selectedKpi) || dashboardKpiItems[0];
+      const reportingPeriodLabel = selectedPeriod
+        ? `${MONTH_NAMES[parseInt(selectedPeriod.split('-')[1])]} ${selectedPeriod.split('-')[0]}`
+        : 'Latest available period';
 
       // Render Logic
       if (loading) {
@@ -759,19 +807,32 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
         </div>
       );
 
-      // â”€â”€â”€â”€â”€â”€ Render: Dashboard â”€â”€â”€â”€â”€â”€
+      // Render: Dashboard
       return (
-        <div className="min-h-screen flex flex-col">
-          <Header 
-            onReset={resetDashboard} 
-            showReset 
-            currentUser={currentUser} 
-            onLogout={handleLogout} 
-            onExport={handleExport} 
-            showExport={data.length > 0} 
-            hasNotification={selectedPeriod && savedReviews[selectedCompany]?.[selectedPeriod]}
-            onNotificationClick={() => setShowReviewModal(true)}
+        <div className="min-h-screen bg-surface-900 lg:flex">
+          <AppSidebar
+            activeTab={activeTab}
+            onNavigate={setActiveTab}
+            currentUser={currentUser}
+            collapsed={sidebarCollapsed}
+            onToggleCollapsed={() => setSidebarCollapsed(value => !value)}
+            mobileOpen={mobileNavOpen}
+            onCloseMobile={() => setMobileNavOpen(false)}
+            onOpenReviews={() => setShowReviewModal(true)}
+            hasNotification={Boolean(selectedPeriod && savedReviews[selectedCompany]?.[selectedPeriod])}
+            onLogout={handleLogout}
           />
+
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Header
+              pageTitle={pageMeta.title}
+              pageDescription={pageMeta.description}
+              onMenuToggle={() => setMobileNavOpen(true)}
+              onReset={resetDashboard}
+              showReset={activeTab === 'raw-data' && data.length > 0 && currentUser.role === 'ADMIN'}
+              onExport={handleExport}
+              showExport={data.length > 0 && currentUser.role === 'ADMIN' && activeTab !== 'profile' && activeTab !== 'customers'}
+            />
           <ConsultantReviewModal
             isOpen={showReviewModal}
             onClose={() => setShowReviewModal(false)}
@@ -823,9 +884,9 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
             </div>
           )}
 
-          <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 pb-16 relative">
+          <main className="relative mx-auto w-full max-w-[1600px] flex-1 px-4 pb-16 sm:px-6 lg:px-8">
             {/* ────── Render: Empty State Overlay for Customers ────── */}
-            {data.length === 0 && currentUser.role === 'CUSTOMER' && (
+            {activeTab === 'dashboard' && !currentRow && currentUser.role === 'CUSTOMER' && (
               <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-surface-900/20 backdrop-blur-sm rounded-2xl mb-16 mt-6 border border-white/5 pointer-events-auto">
                 <div className="glass rounded-2xl p-12 text-center border border-white/10 shadow-2xl max-w-lg w-full animate-float-in">
                   <div className="w-16 h-16 mx-auto rounded-2xl bg-surface-800 flex items-center justify-center mb-6">
@@ -842,7 +903,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
             )}
             
             {/* Filters */}
-            {true && (
+            {activeTab !== 'customers' && (activeTab !== 'profile' || currentUser.role === 'ADMIN') && (
               <section className="flex flex-wrap items-center gap-4 my-6 animate-float-in" id="filters">
                 {currentUser.role === 'ADMIN' && (
                   <FilterSelect id="filter-company" label="Company" value={selectedCompany}
@@ -854,10 +915,13 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                       return row ? `${row['Company Id']} - ${row['Company Name']}` : compId;
                     }} />
                 )}
-                <FilterSelect id="filter-period" label="Period" value={selectedPeriod}
-                  onChange={setSelectedPeriod} options={uniquePeriods}
-                  formatLabel={(p) => { const parts = p.split('-'); return MONTH_NAMES[parseInt(parts[1])] + ' ' + parts[0]; }} />
-                <div className="ml-auto flex items-center gap-4 text-sm text-surface-400">
+                {activeTab !== 'profile' && (
+                  <FilterSelect id="filter-period" label="Period" value={selectedPeriod}
+                    onChange={setSelectedPeriod} options={uniquePeriods}
+                    formatLabel={(p) => { const parts = p.split('-'); return MONTH_NAMES[parseInt(parts[1])] + ' ' + parts[0]; }} />
+                )}
+                {activeTab !== 'profile' && (
+                  <div className="ml-auto flex items-center gap-4 text-sm text-surface-400">
                   {currentUser.role === 'ADMIN' && (
                     <div className="flex items-center gap-1.5" title="Total customers on the platform">
                       <svg className="w-4 h-4 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -875,12 +939,13 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                       <span className="text-[10px] text-surface-500 uppercase tracking-wider font-medium">All comparisons vs prev month</span>
                     )}
                   </div>
-                </div>
+                  </div>
+                )}
               </section>
             )}
 
             {/* Premium Shop Profile Banner */}
-            {selectedCompany && allCompanies.some(c => c.id === selectedCompany) && (
+            {activeTab === 'dashboard' && selectedCompany && allCompanies.some(c => c.id === selectedCompany) && (
               <div className="glass border border-surface-700/50 rounded-xl px-4 py-2 mb-6 flex flex-col xl:flex-row xl:items-center justify-between gap-4 animate-fade-in shadow-sm w-full">
                 {(() => {
                   const comp = allCompanies.find(c => c.id === selectedCompany);
@@ -991,67 +1056,34 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               </div>
             )}
 
-            {/* Navigation Tabs */}
-            <div className="flex space-x-2 glass rounded-xl p-1.5 w-max mb-8">
-              <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                  activeTab === 'dashboard'
-                    ? 'bg-brand-600/30 text-white shadow-lg border border-brand-500/50'
-                    : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/80 border border-transparent'
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
-                Visual Dashboard
-              </button>
-              {currentUser.role === 'ADMIN' && (
-                <button
-                  onClick={() => setActiveTab('raw-data')}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                    activeTab === 'raw-data'
-                      ? 'bg-brand-600/30 text-white shadow-lg border border-brand-500/50'
-                      : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/80 border border-transparent'
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
-                  Raw Data Adjustment
-                </button>
-              )}
-              {currentUser.role === 'ADMIN' && (
-                <button
-                  onClick={() => setActiveTab('leaderboards')}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                    activeTab === 'leaderboards'
-                      ? 'bg-brand-600/30 text-white shadow-lg border border-brand-500/50'
-                      : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/80 border border-transparent'
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
-                  Gamified Leaderboards
-                </button>
-              )}
-              {currentUser.role === 'ADMIN' && (
-                <button
-                  onClick={() => setActiveTab('customers')}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ${
-                    activeTab === 'customers'
-                      ? 'bg-brand-600/30 text-white shadow-lg border border-brand-500/50'
-                      : 'text-surface-400 hover:text-surface-200 hover:bg-surface-800/80 border border-transparent'
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                  Customer Management
-                </button>
-              )}
+            {activeTab === 'profile' && (
+              <div className="mb-8">
+                <ShopProfilePanel company={selectedCompanyProfile} onEdit={handleEditShopProfile} />
               </div>
+            )}
 
             {activeTab === 'customers' && currentUser.role === 'ADMIN' && (
               <CustomerManagement />
             )}
 
-            {(activeTab === 'dashboard' || activeTab === 'raw-data') && data.length === 0 && currentUser.role === 'ADMIN' && UploadUI}
+            {activeTab === 'raw-data' && data.length === 0 && currentUser.role === 'ADMIN' && UploadUI}
 
-            {(activeTab === 'dashboard' || activeTab === 'raw-data') && data.length === 0 && currentUser.role === 'CUSTOMER' && (
+            {activeTab === 'dashboard' && !currentRow && currentUser.role === 'ADMIN' && (
+              <div className="glass mx-auto mt-8 max-w-2xl rounded-3xl border border-white/[0.08] p-10 text-center shadow-2xl animate-float-in">
+                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-500/20 bg-brand-500/10 text-brand-300">
+                  <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v12m0-12l-4 4m4-4l4 4M5 13v5a2 2 0 002 2h10a2 2 0 002-2v-5" />
+                  </svg>
+                </div>
+                <h2 className="text-xl font-bold text-white">Your dashboard is ready for data</h2>
+                <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-surface-400">Upload a CSV from Data & Imports to populate the dashboard, trends and leaderboards.</p>
+                <button type="button" onClick={() => setActiveTab('raw-data')} className="mt-6 rounded-xl border border-brand-500/30 bg-brand-500/15 px-5 py-2.5 text-sm font-semibold text-brand-200 transition-colors hover:bg-brand-500/25 hover:text-white">
+                  Go to Data & Imports
+                </button>
+              </div>
+            )}
+
+            {(activeTab === 'dashboard' || activeTab === 'raw-data') && !currentRow && currentUser.role === 'CUSTOMER' && (
               <div className="flex flex-col items-center justify-center py-24 animate-fade-in glass border border-surface-700/50 rounded-2xl max-w-3xl mx-auto shadow-2xl">
                 <div className="w-20 h-20 bg-surface-800/80 rounded-full flex items-center justify-center border border-surface-700/50 mb-6 relative">
                   <div className="absolute inset-0 border border-brand-500/30 rounded-full animate-ping opacity-75"></div>
@@ -1073,63 +1105,18 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
                </div>
             )}
 
-            {activeTab === 'dashboard' && (
+            {activeTab === 'dashboard' && currentRow && (
               <>
-                {/* Daily Budget Reminder Banner */}
-                {kpis && (
-                  <div className="bg-gradient-to-r from-surface-800 to-surface-800/50 border border-brand-500/30 rounded-2xl p-4 sm:p-5 mb-6 shadow-lg animate-float-in">
-                     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
-                        <div className="p-4 bg-brand-500/10 rounded-xl text-brand-400 border border-brand-500/20 shadow-[0_0_15px_rgba(0,168,150,0.15)] hidden sm:block">
-                          <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
-                          </svg>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_1px_minmax(0,1fr)] items-stretch gap-4 sm:gap-5 w-full max-w-4xl mx-auto">
-                          {/* Actual Daily Revenue */}
-                          <div className="min-w-0 rounded-xl bg-surface-900/30 border border-surface-700/40 px-4 py-3 text-center sm:text-left">
-                            <p className="text-surface-400 text-xs font-semibold uppercase tracking-wider mb-1">Current Daily Actual</p>
-                            <div className="flex items-baseline justify-center sm:justify-start gap-2">
-                              <p className={`text-3xl font-bold tracking-tight ${kpis.actualDailyRevenue >= kpis.dailyBudget ? 'text-success-400' : 'text-danger-400'}`}>
-                                ${kpis.actualDailyRevenue.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}
-                              </p>
-                              <p className={`text-sm font-medium ${kpis.actualDailyRevenue >= kpis.dailyBudget ? 'text-success-400' : 'text-danger-400'}`}>/ day</p>
-                            </div>
-                            <p className={`text-xs mt-1 max-w-[240px] mx-auto sm:mx-0 ${kpis.actualDailyRevenue >= kpis.dailyBudget ? 'text-success-400/80' : 'text-danger-400/80'}`}>Based on rolling quarterly average paint sales.</p>
-                          </div>
-
-                          {/* Separator */}
-                          <div className="hidden sm:block w-px bg-surface-700/60 self-stretch"></div>
-
-                          {/* Target Daily Budget */}
-                          <div className="min-w-0 rounded-xl bg-surface-900/30 border border-surface-700/40 px-4 py-3 text-center sm:text-left">
-                            <p className="text-surface-400 text-xs font-semibold uppercase tracking-wider mb-1">3.3x Daily Target</p>
-                            {kpis.rollingMonths >= 3 ? (
-                              <>
-                                <div className="flex items-baseline justify-center sm:justify-start gap-2">
-                                  <p className="text-3xl font-bold text-white tracking-tight">
-                                    ${kpis.dailyBudget.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}
-                                  </p>
-                                  <p className="text-sm font-medium text-brand-400">/ day</p>
-                                </div>
-                                <p className="text-xs text-brand-400/80 mt-1 max-w-[240px] mx-auto sm:mx-0">Based on rolling quarterly average 3.3x profitability benchmark.</p>
-                              </>
-                            ) : (
-                              <>
-                                <div className="flex items-center justify-center sm:justify-start gap-2 min-h-[40px]">
-                                  <span className="text-sm italic text-surface-400">Calculating Target...</span>
-                                </div>
-                                <p className="text-[11px] text-surface-500 mt-1 max-w-[240px] mx-auto sm:mx-0">Requires a full quarter (3 months) of historical data to generate benchmark.</p>
-                              </>
-                            )}
-                          </div>
-                       </div>
-                     </div>
-                  </div>
-                )}
+                <PerformancePulse
+                  items={dashboardKpiItems}
+                  dailyActual={kpis.actualDailyRevenue}
+                  dailyTarget={kpis.dailyBudget}
+                  rollingMonths={kpis.rollingMonths}
+                  reportingPeriod={reportingPeriodLabel}
+                />
                 {/* KPI Scorecards */}
             {kpis && (
-              <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8" id="kpi-cards">
+              <section className="mb-5 grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-5" id="kpi-cards" aria-label="Bodyshop key performance indicators">
                 <KpiCard title="Total Sales" value={kpis.totalSales} format="currency"
                   variance={calcVariance('Total Sales')} delayClass="card-appear-1"
                   isActive={selectedKpi === 'Total Sales'} onClick={() => setSelectedKpi('Total Sales')}
@@ -1196,57 +1183,20 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
             {/* Charts */}
             <section className="mb-8" id="charts">
               {isMultiMonth && trendChartData ? (
-                <div className="glass rounded-2xl p-6 card-appear card-appear-1">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
-                    <div>
-                      <h3 className="text-sm font-semibold text-surface-300 uppercase tracking-wider mb-1 flex items-center gap-2">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.519l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" />
-                        </svg>
-                        {selectedKpi} Trend
-                      </h3>
-                      <div className="flex items-center gap-3">
-                        <p className="text-xs text-surface-500">Historical timeline for {selectedKpi}</p>
-                        {activeRankAvgFormatted && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-800/80 border border-surface-700/50 text-[10px] font-medium text-brand-400 uppercase tracking-wider">
-                            3M Avg: {activeRankAvgFormatted}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center bg-surface-800/80 rounded-lg p-1 border border-surface-700/50">
-                      {['YTD', '3M', '6M', '12M', 'ALL'].map(tf => (
-                        <button key={tf} onClick={() => setChartTimeframe(tf)}
-                          className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${chartTimeframe === tf ? 'bg-brand-600 text-white shadow-sm' : 'text-surface-400 hover:text-surface-200'}`}>
-                          {tf}
-                        </button>
-                      ))}
-                    </div>
+                <div className="grid gap-3.5 xl:grid-cols-[minmax(0,1.65fr)_minmax(290px,.7fr)]">
+                  <div className="min-w-0 overflow-x-auto rounded-[28px]">
+                    <PerformanceRhythm
+                      key={`${selectedKpi}-${chartTimeframe}`}
+                      data={trendChartData}
+                      title={selectedKpi}
+                      timeframe={chartTimeframe}
+                      onTimeframeChange={setChartTimeframe}
+                      benchmark={selectedDashboardKpi?.benchmark}
+                      benchmarkType={selectedDashboardKpi?.benchmarkType}
+                      comparisonLabel={activeRankAvgFormatted ? `3M cohort avg ${activeRankAvgFormatted}` : null}
+                    />
                   </div>
-                  <ChartCanvas type="line" data={trendChartData}
-                    options={{
-                      _yScale: {
-                        grace: '5%'
-                      },
-                      _yFormat: (v) => {
-                        if (trendChartData.format === 'currency') {
-                          if (v >= 1000000) return '$' + (v / 1000000).toFixed(2) + 'M';
-                          if (v >= 1000) return '$' + (v / 1000).toFixed(1) + 'k';
-                          return '$' + v;
-                        }
-                        if (trendChartData.format === 'percent') return (v * 100).toFixed(1) + '%';
-                        return v;
-                      },
-                      _tooltipCallbacks: {
-                        label: (ctx) => {
-                          let val = ctx.raw;
-                          if (trendChartData.format === 'currency') val = '$' + val.toLocaleString();
-                          if (trendChartData.format === 'percent') val = (val * 100).toFixed(1) + '%';
-                          return ctx.dataset.label + ': ' + val;
-                        }
-                      }
-                    }}
-                    height="320px" />
+                  <PerformanceInsights items={dashboardKpiItems} selectedTitle={selectedKpi} />
                 </div>
               ) : (
                 <div className="glass rounded-2xl p-10 flex flex-col items-center justify-center text-center min-h-[300px] card-appear card-appear-1">
@@ -1266,7 +1216,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               </>
             )}
 
-            {activeTab === 'raw-data' && data.length > 0 && (
+            {activeTab === 'raw-data' && data.length > 0 && currentUser.role === 'ADMIN' && (
               <section className="glass rounded-2xl p-6 sm:p-8 card-appear card-appear-1 mb-8">
               <div className="flex items-center justify-between gap-3 mb-5">
                 <div className="flex items-center gap-3">
@@ -1310,7 +1260,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
             </section>
             )}
 
-            {activeTab === 'leaderboards' && data.length > 0 && (
+            {activeTab === 'leaderboards' && data.length > 0 && currentUser.role === 'ADMIN' && (
               <section className="glass rounded-2xl p-6 sm:p-8 card-appear card-appear-1 mb-8">
                 <div className="flex items-center gap-3 mb-5">
                   <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
@@ -1411,7 +1361,7 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
           </main>
 
           <footer className="border-t border-surface-800 py-6 text-center text-xs text-surface-500">
-            <p>CPR Analytics Â· Automotive Refinishing Consultancy Dashboard</p>
+            <p>CPR Analytics · Automotive Refinishing Consultancy Dashboard</p>
           </footer>
           
           {/* Shop Profile Modal */}
@@ -1465,9 +1415,10 @@ const ChartCanvas = lazy(() => import('./components/ChartCanvas'));
               </div>
             </div>
           )}
+          </div>
         </div>
       );
     }
 
-    // â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â•  Mount â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• â• 
+    // Mount
   export default App;

@@ -4,6 +4,30 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Pre-Production Regression Audit**
+  - Expanded automated coverage from 20 to 38 tests across login, administrator and bodyshop permissions, every drawer destination, responsive navigation, KPI/chart controls, imports, manual edits, reporting periods, profile editing, consultant reviews, benchmarks, leaderboards, exports, invitations and confirmed deletion flows.
+  - Fixed bodyshop profile and consultant-review workspaces so they remain usable before the first analytics upload.
+  - Removed zero-value KPI and chart widgets from true no-data states while keeping the drawer and intentional awaiting-data guidance available.
+  - Fixed new reporting periods so they immediately show as unsaved and can be persisted with the existing Save Changes action.
+  - Fixed the customer invitation form so a single click cannot submit the same invitation twice.
+  - Corrected the real application footer separator and released temporary export object URLs after CSV downloads.
+  - Updated vulnerable transitive build packages (`postcss` and `nanoid`) to patched lockfile versions; `npm audit` now reports zero vulnerabilities.
+  - Verified all pages at desktop and mobile widths, live Supabase RLS and Edge Function boundaries, preview-only environment scoping, and the final protected Vercel Preview with no application console errors.
+  - Published protected Preview deployment `dpl_FGU22rGnyM9QYGythN7fLnxmRoTq`; production remains unchanged pending explicit approval.
+- **Performance Pulse Dashboard Redesign**
+  - Replaced the oversized summary and square KPI presentation with a compact, rounded performance workspace inspired by modern health and performance products.
+  - Added an honest target pulse that summarizes configured KPI benchmarks without inventing a proprietary score, alongside daily actual and 3.3x target context.
+  - Replaced the legacy line graph with an interactive performance rhythm chart, clearer target markers, timeframe controls, and a factual "What Changed" insight panel.
+  - Added responsive entrance, hover, selection, chart, and drawer motion with reduced-motion support for accessibility.
+  - Preserved all existing calculations, filters, benchmark editing, ranking, imports, customer management, and administrator-only functionality.
+  - Verified the redesign across desktop and mobile, including the mobile drawer, KPI selection, chart animation, overflow, and browser diagnostics.
+  - Published a protected non-production Vercel preview for design review; the production deployment remains unchanged pending final approval.
+- **Workspace Navigation Redesign**
+  - Replaced the crowded top tab bar with a persistent left-hand workspace sidebar inspired by modern productivity tools.
+  - Added a collapsible desktop sidebar and responsive mobile drawer while preserving the existing dashboard, imports, leaderboards, reviews, customer management, and profile functionality.
+  - Grouped administrator-only tools into a clearly labelled Administration section and kept them hidden from bodyshop customer accounts.
+  - Expanded Shop Profile into a dedicated workspace page without removing the compact profile summary from the visual dashboard.
+  - Added contextual page headings, export/import actions, and clearer empty-state guidance for administrators with no uploaded data.
 - **Reliability and Security Hardening**
   - Fixed CSV upload refreshes so they use the current authenticated user's company scope instead of a stale login snapshot.
   - Persisted per-bodyshop KPI benchmarks in Supabase with customer read access and admin-only write access.

@@ -60,7 +60,6 @@ export default function CustomerManagement() {
       if (!selectedCompanyId) return;
     }
 
-    setInviteStatus({ loading: true, error: null, success: false });
     setInviteStatus({ loading: true, error: null, success: false, inviteLink: null });
     try {
       if (isNewCompany) {
@@ -421,7 +420,7 @@ export default function CustomerManagement() {
                     Cancel
                   </button>
                   <button 
-                    onClick={handleInvite}
+                    type="submit"
                     disabled={inviteStatus.loading || !email || (!isNewCompany && !selectedCompanyId) || (isNewCompany && (!newCompanyId || !newCompanyName))}
                     className="bg-brand-600 hover:bg-brand-500 text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow-[0_0_15px_rgba(0,168,150,0.4)] hover:shadow-[0_0_25px_rgba(0,168,150,0.6)] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >

@@ -4,7 +4,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from '../../App';
 import * as authProvider from '../AuthProvider';
 import * as dbServices from '../../services/db';
-import Papa from 'papaparse';
 
 // Mock the dependencies
 vi.mock('../AuthProvider', () => ({
@@ -62,11 +61,13 @@ describe('Upload Pipeline Integration', () => {
 
   it('renders upload zone for Admin when there is no data', async () => {
     render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /^Data & Imports$/i }));
     expect(await screen.findByText(/Upload Performance Data/i)).toBeInTheDocument();
   });
 
   it('alerts on missing required columns in CSV', async () => {
     const { container } = render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /^Data & Imports$/i }));
     await screen.findByText(/Upload Performance Data/i);
     
     const fileInput = container.querySelector('#file-input');
@@ -109,6 +110,7 @@ describe('Upload Pipeline Integration', () => {
     });
 
     const { container } = render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /^Data & Imports$/i }));
     await screen.findByText(/Upload Performance Data/i);
     
     const fileInput = container.querySelector('#file-input');
@@ -122,7 +124,7 @@ describe('Upload Pipeline Integration', () => {
       expect(dbServices.uploadAnalytics).toHaveBeenCalled();
     });
     
-    // The dashboard should now render (Visual Dashboard tab)
-    expect(await screen.findByText(/Visual Dashboard/i)).toBeInTheDocument();
+    // The upload completes without leaving the new Data & Imports workspace.
+    expect(await screen.findByRole('heading', { name: /Data & Imports/i })).toBeInTheDocument();
   });
 });
