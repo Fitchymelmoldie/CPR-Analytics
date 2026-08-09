@@ -1,22 +1,23 @@
 # Current Handoff
 
-Last updated: 9 August 2026, 10:57 AM AEST
+Last updated: 9 August 2026, 11:07 AM AEST
 
 ## Current status
 
-The benchmark-target failure and preview-versus-production layout mismatch remain corrected. The target-status labels, exact target gaps and compact KPI guide have passed automated and deployed-preview verification. The user approved the latest protected preview and explicitly authorised production deployment. Production is still unchanged while the final release gate and source commit are completed.
+The benchmark-target failure, preview-versus-production layout mismatch and ambiguous KPI indicators are corrected and released to production. The approved source was committed, pushed, built remotely by Vercel with production-scoped environment variables and verified against the authenticated live application. No live customer data was changed during the production smoke test.
 
 ## Live and review links
 
 - Current production: https://bodyshop-dashboard.vercel.app
-- Current production deployment ID: `dpl_BuJKH5jSBarFoMmrKuj71bncozdC`
-- Current production source commit: `e0b4823`
+- Current production deployment ID: `dpl_HM7ox6Z57AxNK8d6kXqCwZV28RkH`
+- Current production source commit: `6b18e3c`
+- Immutable production URL: https://bodyshop-dashboard-lvcpm7r6o-cpr-analytics.vercel.app
 - Superseded target-editor preview: https://bodyshop-dashboard-5l6watss2-cpr-analytics.vercel.app/?layout-preview=1 (`dpl_HnqWfk4BQG9vgsSFAmpWqZWc2mLy`)
 - Latest KPI-indicator visual review: https://bodyshop-dashboard-jo951am48-cpr-analytics.vercel.app/?layout-preview=1
 - Latest real authentication preview: https://bodyshop-dashboard-jo951am48-cpr-analytics.vercel.app/
 - Latest preview deployment ID: `dpl_95MxgAQbvh1QoxyS7fWx3xKhEp6m`
 
-The protected preview must be reviewed and explicitly approved before any production deployment. The `?layout-preview=1` route is demonstration-only and is available only when the preview environment enables `VITE_UI_PREVIEW=true`.
+The protected preview was reviewed and explicitly approved before this production deployment. Future releases must follow the same approval boundary. The `?layout-preview=1` route is demonstration-only and is available only when the preview environment enables `VITE_UI_PREVIEW=true`; the switch is disabled on production.
 
 ## What went wrong
 
@@ -68,6 +69,16 @@ The protected preview must be reviewed and explicitly approved before any produc
 - Deployed mobile preview at 390 x 844 retained the two-column guide/card layout, readable stacked target details, no page overflow and no application console errors.
 - The latest preview root still shows the real Secure Login screen and does not expose demonstration data without `?layout-preview=1`.
 - Production alias rechecked after the latest preview: it remains on `dpl_BuJKH5jSBarFoMmrKuj71bncozdC`.
+- Final release gate repeated on the approved source: all 46 tests, production build, lint, dependency audit and Git whitespace checks passed.
+- Release source commit `6b18e3c` was pushed to `origin/agent/bodyshop-audit-hardening` before deployment.
+- Production deployment `dpl_HM7ox6Z57AxNK8d6kXqCwZV28RkH` is `READY`, owns `https://bodyshop-dashboard.vercel.app` and identifies source commit `6b18e3c` in Vercel metadata.
+- Authenticated live production rendered the real `boylesmash` workspace and Supabase-backed values, including the saved Completed RO target of 180 and its written `Target met` / `Ahead by 20` state.
+- Opened and cancelled the live Total Sales target editor without saving, confirming the in-app workflow works and does not invoke a native browser dialog.
+- Verified KPI selection, the 3M timeframe control, Shop Profile navigation and the return to Visual Dashboard on production.
+- Verified the live mobile layout at 390 x 844, including the open/close drawer flow and no horizontal page overflow.
+- Confirmed `?layout-preview=1` is ignored on the production domain: it continued to show the authenticated real workspace and exposed neither the `Demo` label nor preview customer data.
+- Live desktop, preview-query and mobile tabs reported no application console warnings/errors and no native JavaScript dialogs. Vercel reported no production runtime errors after deployment.
+- No live target was saved or removed and no upload, invitation, deletion or other customer-data mutation was performed during production verification.
 
 ## Permanent release guardrails
 
@@ -81,12 +92,13 @@ The protected preview must be reviewed and explicitly approved before any produc
 ## Source-control state
 
 - Working branch: `agent/bodyshop-audit-hardening`
-- Repair changes are currently uncommitted while the protected preview is completed and reviewed.
-- `origin/main` and the production alias have not been changed by this repair.
+- Release source commit: `6b18e3c` (`feat: unify dashboard targets and indicator clarity`), pushed to `origin/agent/bodyshop-audit-hardening`.
+- The production alias now serves deployment `dpl_HM7ox6Z57AxNK8d6kXqCwZV28RkH`, built from that exact source commit.
+- `origin/main` was not changed; the production deployment was made directly from the approved working branch.
 - Preserve the three untracked preview PNG files; they are user-owned artifacts and are excluded from Vercel uploads by `.vercelignore`.
 
 ## Next steps
 
-1. Repeat the final release gate on the approved source.
-2. Commit and push the approved source branch for traceability and rollback.
-3. Deploy the committed source to production and verify the live dashboard, login/demo boundary, console and production alias.
+1. No further release action is pending; the approved target and KPI clarity work is live in production.
+2. Use the current production state as the baseline for the next design or feature change and publish a protected source preview before any future production release.
+3. Keep production smoke tests read-only unless the user explicitly authorises changing a live target or other customer data.

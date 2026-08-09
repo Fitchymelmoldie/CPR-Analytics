@@ -4,6 +4,15 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Production Release - Target Editor, Preview Parity and KPI Indicator Clarity (9 August 2026)**
+  - Deployed approved source commit `6b18e3c` to `https://bodyshop-dashboard.vercel.app` as production deployment `dpl_HM7ox6Z57AxNK8d6kXqCwZV28RkH`.
+  - Released the in-app target editor, shared authenticated/demo dashboard component, explicit KPI target labels and gaps, and responsive KPI card guide.
+  - Repeated the complete release gate immediately before deployment: 6 test files and 46 tests, production build, lint, dependency audit and Git whitespace checks all passed.
+  - Verified the authenticated live `boylesmash` workspace, real Supabase-backed KPI/target values, target-editor open/cancel flow, KPI and timeframe controls, Shop Profile round trip and mobile drawer.
+  - Confirmed desktop and 390 x 844 mobile layouts have no horizontal overflow, the application console is clean, and no native JavaScript dialog appears.
+  - Confirmed the production `?layout-preview=1` query cannot expose demonstration mode and Vercel reported no production runtime errors.
+  - Production verification was read-only: no target save/removal, upload, invitation, deletion or other live customer-data mutation was performed.
+
 - **KPI Indicator Clarity (9 August 2026)**
   - Replaced ambiguous target-status dots with written `Target met`, `Target missed` and `No target set` states.
   - Added a visible target gap to configured KPI cards using plain wording such as `Ahead by`, `Short by`, `Over by` and `Under by`.
@@ -11,7 +20,7 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Preserved the existing higher-is-better and lower-is-better calculations, benchmark values, rankings and Supabase persistence.
   - Added accessible card summaries and regression coverage for sales, booth-cycle and percentage target scenarios.
   - Verified 46 tests, the production build, lint, Git whitespace checks, dynamic target recalculation, and desktop/mobile layouts without application console errors or page overflow.
-  - Published and browser-verified protected source Preview `dpl_95MxgAQbvh1QoxyS7fWx3xKhEp6m`; production remained on `dpl_BuJKH5jSBarFoMmrKuj71bncozdC`.
+  - Published and browser-verified protected source Preview `dpl_95MxgAQbvh1QoxyS7fWx3xKhEp6m`; the approved work was subsequently released to production as `dpl_HM7ox6Z57AxNK8d6kXqCwZV28RkH`.
 
 - **Target Editor and Preview Parity Repair (9 August 2026)**
   - Replaced the benchmark action's unsupported native browser prompt with an accessible in-app editor for creating, updating and removing KPI targets.
@@ -22,7 +31,7 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Added regression coverage for target create/update/remove, validation, keyboard closing, reporting-period creation and shared preview parity.
   - Verified 43 tests, the production build, lint, dependency audit, Git whitespace checks, desktop and mobile browser layouts, target interactions and drawer navigation.
   - Published and browser-verified protected source Preview `dpl_HnqWfk4BQG9vgsSFAmpWqZWc2mLy`, including the deployed target update/removal flow and real login boundary.
-  - Kept production deployment `dpl_BuJKH5jSBarFoMmrKuj71bncozdC` unchanged while the corrected preview awaits approval.
+  - Kept production deployment `dpl_BuJKH5jSBarFoMmrKuj71bncozdC` unchanged during review; the corrected preview was subsequently approved and released as `dpl_HM7ox6Z57AxNK8d6kXqCwZV28RkH`.
 
 - **Production Release - Workspace and Performance Pulse Redesign (9 August 2026)**
   - Deployed the fully audited source release from commit `e0b4823` to `https://bodyshop-dashboard.vercel.app`.
