@@ -1,6 +1,6 @@
 # Current Handoff
 
-Last updated: 9 August 2026, 10:00 PM AEST
+Last updated: 9 August 2026, 10:09 PM AEST
 
 ## Current status
 
@@ -9,6 +9,8 @@ The approved Business Snapshot and operational KPI hierarchy is live and browser
 The Business Snapshot now labels the rolling-quarter figures `Daily actual` and `Daily budget`; the underlying calculations remain unchanged. The authenticated production dashboard was rechecked after release and showed the expected labels and live values.
 
 The current local release candidate replaces the confusing chart-side `What changed` box with a `Metric detail` panel. It follows the selected KPI and reporting period, showing the current value, previous value, selected-period rolling average, movement wording and target status. The panel is wired through the shared dashboard component used by both the authenticated app and the demonstration preview. It has passed the full local test/build/lint checks and desktop/mobile browser review, but it has not been deployed to production.
+
+The latest local refinement removes the redundant `Strongest movement` and `Watch this period` callouts from the Performance Pulse. Movement and target context now live in the selected Metric Detail panel, while the pulse score and Business Snapshot remain intact. This refinement is validated locally and has not been deployed.
 
 ## Live and review links
 

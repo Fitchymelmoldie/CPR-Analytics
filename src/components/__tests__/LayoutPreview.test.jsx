@@ -30,6 +30,8 @@ describe('Layout preview parity', () => {
     expect(screen.getByText('Metric detail')).toBeInTheDocument();
     expect(screen.getByText('3M rolling average')).toBeInTheDocument();
     expect(screen.getByText('Target status')).toBeInTheDocument();
+    expect(screen.queryByText('Strongest movement')).not.toBeInTheDocument();
+    expect(screen.queryByText('Watch this period')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Set target for Total Sales' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Set target for Paint Sales' })).not.toBeInTheDocument();
 

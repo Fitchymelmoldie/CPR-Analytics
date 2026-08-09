@@ -1,6 +1,6 @@
 import React from 'react';
 import BusinessSnapshot from './BusinessSnapshot';
-import { directionalVariance, targetIsMet } from '../utils/dashboardKpis';
+import { targetIsMet } from '../utils/dashboardKpis';
 
 export default function PerformancePulse({
   items,
@@ -22,18 +22,12 @@ export default function PerformancePulse({
     : reportingItems / Math.max(operationalItems.length, 1);
   const progressDegrees = Math.max(0, Math.min(360, progress * 360));
 
-  const movingItems = operationalItems
-    .map(item => ({ ...item, movement: directionalVariance(item) }))
-    .filter(item => item.movement !== null);
-  const strongest = movingItems.reduce((best, item) => !best || item.movement > best.movement ? item : best, null);
-  const attention = movingItems.reduce((worst, item) => !worst || item.movement < worst.movement ? item : worst, null);
-  const hasPositiveMovement = strongest?.movement > 0;
   return (
     <section className="performance-pulse relative overflow-hidden rounded-[30px] px-5 py-6 sm:px-7 lg:px-8" aria-labelledby="performance-pulse-title">
       <div className="pulse-ambient pulse-ambient-one" />
       <div className="pulse-ambient pulse-ambient-two" />
 
-      <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(330px,.85fr)] lg:items-center xl:grid-cols-[minmax(360px,1.15fr)_minmax(330px,.9fr)_minmax(250px,.7fr)]">
+      <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(330px,.85fr)] lg:items-center xl:grid-cols-[minmax(360px,1.15fr)_minmax(330px,.9fr)]">
         <div className="flex items-center gap-5 sm:gap-7">
           <div
             className="pulse-score-ring shrink-0"
@@ -73,16 +67,6 @@ export default function PerformancePulse({
           rollingMonths={rollingMonths}
         />
 
-        <div className="grid gap-2.5 sm:grid-cols-2 lg:col-span-2 xl:col-span-1 xl:grid-cols-1">
-          <div className="pulse-signal pulse-signal-positive">
-            <span>Strongest movement</span>
-            <div><strong>{hasPositiveMovement ? strongest.title : (strongest ? 'No positive movement' : 'Awaiting comparison')}</strong>{hasPositiveMovement ? <em>+{strongest.movement.toFixed(1)}%</em> : null}</div>
-          </div>
-          <div className="pulse-signal pulse-signal-attention">
-            <span>Watch this period</span>
-            <div><strong>{attention?.movement < 0 ? attention.title : 'No negative movement'}</strong>{attention?.movement < 0 ? <em>{attention.movement.toFixed(1)}%</em> : null}</div>
-          </div>
-        </div>
       </div>
     </section>
   );

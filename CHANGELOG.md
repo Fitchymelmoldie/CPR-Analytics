@@ -4,6 +4,12 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Performance Pulse Callout Cleanup (9 August 2026)**
+  - Removed the `Strongest movement` and `Watch this period` callouts from the Performance Pulse because the new Metric Detail panel is now the single place for KPI movement and target context.
+  - Rebalanced the pulse hero into a focused two-column layout while keeping the target score and Business Snapshot unchanged.
+  - Added regression coverage confirming both obsolete callouts stay out of the shared authenticated/demo dashboard.
+  - Verified the local preview at desktop and 390 x 844 mobile sizes; production remains unchanged pending approval.
+
 - **Metric Detail Panel with Rolling Average (9 August 2026)**
   - Replaced the ambiguous `What changed` side panel with a selected-metric detail panel that shows the current period, previous period, rolling average, movement and target status in one place.
   - Added a selected-period three-month rolling average using the selected month and the two preceding available months; ratio KPIs use weighted underlying totals so the average remains mathematically meaningful.
