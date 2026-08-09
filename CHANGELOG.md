@@ -4,6 +4,16 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Production Release - Business Snapshot and Operational KPI Hierarchy (9 August 2026)**
+  - Deployed approved source commit `2d6e55a` to `https://bodyshop-dashboard.vercel.app` as production deployment `dpl_2HGdoxTGysR91weLUPn54nKVJpUf`.
+  - Released the title-only Business Snapshot, two non-targetable sales trend controls, and the balanced eight-card operational KPI grid.
+  - Limited Performance Pulse scoring and insights to operational KPIs and corrected the no-target fallback to report `8/8` rather than the former ten-card denominator.
+  - Repeated the complete release gate immediately before deployment: 6 test files and 48 tests, production build, lint, dependency audit, native-dialog scan and Git whitespace checks all passed.
+  - Verified the authenticated live `boylesmash` workspace, real Supabase-backed KPI/target values, both sales trends, the Completed RO target-editor open/cancel flow, the 3M timeframe and every drawer destination.
+  - Confirmed desktop and 390 x 844 mobile layouts have no horizontal overflow, the mobile drawer and target editor work, and the application console contains no warnings/errors or native JavaScript dialogs.
+  - Confirmed the production `?layout-preview=1` query continues to show the real authenticated workspace rather than demonstration data; the public URL returns HTTP 200 and Vercel reported no production runtime errors.
+  - Production verification was read-only: no target save/removal, upload, invitation, review edit, deletion or other live customer-data mutation was performed.
+
 - **Business Snapshot and Operational KPI Hierarchy Preview (9 August 2026)**
   - Moved Total Sales and Paint Sales out of the health KPI grid and into a compact, neutral Business Snapshot inside the existing Performance Pulse hero.
   - Kept both sales figures clickable for the Performance Rhythm chart while removing their target controls, target states and target-line treatment.
@@ -16,7 +26,7 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
   - Added regression coverage for business/health separation, sales trend selection, operational target editing and the no-target fallback; all 48 tests, build and lint checks pass.
   - Browser-verified the local full application at 1440 x 1000 and 390 x 844 with no horizontal overflow, console warnings/errors or native dialogs.
   - Published and browser-verified protected source Preview `dpl_9vXkoGzRcTkKgyGSwVJbMg3oEP1v` at `https://bodyshop-dashboard-6fhx4afi9-cpr-analytics.vercel.app/?layout-preview=1`; Vercel reports `READY` with preview target `null`.
-  - Repeated the desktop/mobile layout, business/operational trend selection, Completed RO target-editor open/cancel and mobile drawer checks on the hosted preview with no browser warnings/errors, native dialogs or Vercel runtime errors. Production remains unchanged on `dpl_HM7ox6Z57AxNK8d6kXqCwZV28RkH`.
+  - Repeated the desktop/mobile layout, business/operational trend selection, Completed RO target-editor open/cancel and mobile drawer checks on the hosted preview with no browser warnings/errors, native dialogs or Vercel runtime errors. The approved work was subsequently released to production as `dpl_2HGdoxTGysR91weLUPn54nKVJpUf`.
 
 - **Production Release - Target Editor, Preview Parity and KPI Indicator Clarity (9 August 2026)**
   - Deployed approved source commit `6b18e3c` to `https://bodyshop-dashboard.vercel.app` as production deployment `dpl_HM7ox6Z57AxNK8d6kXqCwZV28RkH`.
