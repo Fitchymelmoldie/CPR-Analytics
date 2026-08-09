@@ -41,6 +41,10 @@ describe('Layout preview parity', () => {
     fireEvent.click(paintSales);
     expect(paintSales).toHaveAttribute('aria-pressed', 'true');
     expect(screen.getAllByRole('heading', { name: 'Paint Sales' })).toHaveLength(2);
+
+    fireEvent.click(screen.getByRole('button', { name: /View Paint Cost \/ Total Sales performance/i }));
+    expect(screen.getByLabelText('Percentage scale')).toBeInTheDocument();
+    expect(screen.getAllByText('Target 1.20%')).toHaveLength(2);
   });
 
   it('keeps target editing on genuine operational KPIs', () => {

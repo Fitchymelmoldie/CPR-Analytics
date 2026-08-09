@@ -12,17 +12,25 @@ export default function PerformanceRhythm({ data, title, timeframe, onTimeframeC
   const values = data?.datasets?.[0]?.data || [];
   const labels = data?.labels || [];
   const format = data?.format || 'number';
-  const finiteValues = values.filter(Number.isFinite);
-  const rangeValues = benchmark === undefined || benchmark === null ? finiteValues : [...finiteValues, Number(benchmark)];
+  const isPercentage = format === 'percent' || format === 'percentWhole';
+  const chartValues = values.map(value => Number.isFinite(value) && isPercentage ? value * 100 : value);
+  const chartBenchmark = benchmark === undefined || benchmark === null
+    ? null
+    : Number(benchmark) * (isPercentage ? 100 : 1);
+  const finiteValues = chartValues.filter(Number.isFinite);
+  const rangeValues = chartBenchmark === null ? finiteValues : [...finiteValues, chartBenchmark];
   const rawMin = rangeValues.length ? Math.min(...rangeValues) : 0;
   const rawMax = rangeValues.length ? Math.max(...rangeValues) : 1;
-  const rawRange = Math.max(rawMax - rawMin, Math.abs(rawMax || 1) * 0.12, 1);
+  const rawRange = Math.max(rawMax - rawMin, Math.abs(rawMax || 1) * 0.12, isPercentage ? 0.5 : 1);
   const floor = Math.max(0, rawMin - rawRange * 0.22);
   const ceiling = rawMax + rawRange * 0.18;
   const displayRange = Math.max(ceiling - floor, 1);
-  const targetPosition = benchmark === undefined || benchmark === null
+  const targetPosition = chartBenchmark === null
     ? null
-    : Math.max(4, Math.min(96, ((Number(benchmark) - floor) / displayRange) * 100));
+    : Math.max(4, Math.min(96, ((chartBenchmark - floor) / displayRange) * 100));
+  const axisTicks = isPercentage
+    ? [1, 2 / 3, 1 / 3, 0].map(ratio => floor + displayRange * ratio)
+    : [];
 
   return (
     <section className="performance-rhythm min-w-0 rounded-[28px] p-5 sm:p-6" aria-labelledby="performance-rhythm-title">
@@ -52,6 +60,12 @@ export default function PerformanceRhythm({ data, title, timeframe, onTimeframeC
       </div>
 
       <div className="relative mt-7 h-56 overflow-hidden rounded-[22px] bg-black/[0.12] px-4 pb-8 pt-5 sm:h-64 sm:px-6">
+        {isPercentage ? (
+          <div className="pointer-events-none absolute inset-y-5 bottom-8 left-1 z-20 flex flex-col justify-between text-[9px] font-medium text-surface-600" aria-label="Percentage scale">
+            {axisTicks.map(tick => <span key={tick}>{formatValue(tick / 100, format)}</span>)}
+          </div>
+        ) : null}
+
         <div className="pointer-events-none absolute inset-x-4 top-5 bottom-8 flex flex-col justify-between sm:inset-x-6">
           {[0, 1, 2, 3].map(line => <span key={line} className="block border-t border-dashed border-white/[0.045]" />)}
         </div>
@@ -65,7 +79,8 @@ export default function PerformanceRhythm({ data, title, timeframe, onTimeframeC
 
         <div className="relative z-10 flex h-full items-end gap-2 sm:gap-3">
           {values.map((value, index) => {
-            const height = 14 + Math.max(0, Math.min(1, (value - floor) / displayRange)) * 76;
+            const chartValue = chartValues[index];
+            const height = 14 + Math.max(0, Math.min(1, (chartValue - floor) / displayRange)) * 76;
             const hasBenchmark = benchmark !== undefined && benchmark !== null;
             const targetMet = hasBenchmark && (benchmarkType === 'max' ? value <= benchmark : value >= benchmark);
             const latest = index === values.length - 1;

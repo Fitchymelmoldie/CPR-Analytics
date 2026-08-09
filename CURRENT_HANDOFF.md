@@ -1,6 +1,6 @@
 # Current Handoff
 
-Last updated: 9 August 2026, 10:09 PM AEST
+Last updated: 9 August 2026, 10:32 PM AEST
 
 ## Current status
 
@@ -11,6 +11,8 @@ The Business Snapshot now labels the rolling-quarter figures `Daily actual` and 
 The current local release candidate replaces the confusing chart-side `What changed` box with a `Metric detail` panel. It follows the selected KPI and reporting period, showing the current value, previous value, selected-period rolling average, movement wording and target status. The panel is wired through the shared dashboard component used by both the authenticated app and the demonstration preview. It has passed the full local test/build/lint checks and desktop/mobile browser review, but it has not been deployed to production.
 
 The latest local refinement removes the redundant `Strongest movement` and `Watch this period` callouts from the Performance Pulse. Movement and target context now live in the selected Metric Detail panel, while the pulse score and Business Snapshot remain intact. This refinement is validated locally and has not been deployed.
+
+The latest local release candidate adds a percentage-aware Performance Rhythm mode. Low-range percentage KPIs now use percentage-point values and readable local axis labels, with the target line retained; sales, counts and currency KPIs keep the existing bar scale. Paint Cost / Total Sales and Liquid Cost to Refinish were checked in the local preview at desktop and mobile widths. This change has not been deployed to production.
 
 ## Live and review links
 

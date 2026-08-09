@@ -4,6 +4,13 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Percentage-Aware Performance Rhythm (9 August 2026)**
+  - Added an adaptive percentage chart mode for low-range ratio KPIs such as Paint Cost / Total Sales and Liquid Cost to Refinish.
+  - Percentage values are now plotted in percentage points with readable axis labels, while the target line and accessible month tooltips retain the underlying values.
+  - Kept the existing absolute-value bar treatment for sales, counts and currency KPIs so the chart remains familiar where it already works well.
+  - Added regression coverage for the percentage scale and target line; verified the local desktop/mobile preview, full 48-test suite and production build.
+  - Production remains unchanged pending approval.
+
 - **Performance Pulse Callout Cleanup (9 August 2026)**
   - Removed the `Strongest movement` and `Watch this period` callouts from the Performance Pulse because the new Metric Detail panel is now the single place for KPI movement and target context.
   - Rebalanced the pulse hero into a focused two-column layout while keeping the target score and Business Snapshot unchanged.
