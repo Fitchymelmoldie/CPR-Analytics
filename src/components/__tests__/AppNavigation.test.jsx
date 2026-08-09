@@ -115,7 +115,6 @@ describe('Drawer and dashboard regression coverage', () => {
     vi.clearAllMocks();
     window.localStorage.clear();
     vi.spyOn(window, 'alert').mockImplementation(() => {});
-    vi.spyOn(window, 'prompt').mockImplementation(() => null);
 
     dbServices.getAnalytics.mockResolvedValue(analytics);
     dbServices.getCompanies.mockResolvedValue([company]);
@@ -209,10 +208,13 @@ describe('Drawer and dashboard regression coverage', () => {
 
   it('marks a newly added reporting period as needing to be saved', async () => {
     useRole('ADMIN');
-    window.prompt.mockReturnValueOnce('2026').mockReturnValueOnce('6');
     render(<App />);
     fireEvent.click(await screen.findByRole('button', { name: 'Data & Imports' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Add New Period' }));
+    expect(screen.getByRole('heading', { name: 'Add a reporting period' })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Month'), { target: { value: '6' } });
+    fireEvent.change(screen.getByLabelText('Year'), { target: { value: '2026' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add period' }));
 
     expect(await screen.findByRole('button', { name: 'Save Changes *' })).toBeEnabled();
   });
@@ -312,15 +314,19 @@ describe('Drawer and dashboard regression coverage', () => {
 
   it('keeps target creation and removal connected to the benchmark service', async () => {
     useRole('ADMIN');
-    window.prompt.mockReturnValueOnce('1000000');
     render(<App />);
 
     await waitFor(() => expect(dbServices.getBenchmarks).toHaveBeenCalledWith(company.id));
     fireEvent.click(await screen.findByRole('button', { name: 'Set target for Total Sales' }));
+    expect(screen.getByRole('heading', { name: 'Create target for Total Sales' })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Target value'), { target: { value: '1000000' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create target' }));
     await waitFor(() => expect(dbServices.upsertBenchmark).toHaveBeenCalledWith(company.id, 'Total Sales', 1000000));
 
-    window.prompt.mockReturnValueOnce('');
     fireEvent.click(screen.getByRole('button', { name: 'Set target for Total Sales' }));
+    expect(screen.getByRole('heading', { name: 'Edit target for Total Sales' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove target' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm removal' }));
     await waitFor(() => expect(dbServices.deleteBenchmark).toHaveBeenCalledWith(company.id, 'Total Sales'));
   });
 

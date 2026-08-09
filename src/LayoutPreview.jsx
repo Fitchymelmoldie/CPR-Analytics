@@ -1,10 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import AppSidebar from './components/AppSidebar';
+import BenchmarkTargetModal from './components/BenchmarkTargetModal';
+import DashboardWorkspace from './components/DashboardWorkspace';
 import Header from './components/Header';
-import KpiCard from './components/KpiCard';
-import PerformanceInsights from './components/PerformanceInsights';
-import PerformancePulse from './components/PerformancePulse';
-import PerformanceRhythm from './components/PerformanceRhythm';
 import ShopProfilePanel from './components/ShopProfilePanel';
 import { DASHBOARD_KPI_DEFINITIONS } from './utils/dashboardKpis';
 import { KPI_CONFIG } from './utils/metrics';
@@ -36,22 +34,31 @@ const MOCK_VALUES = {
 };
 const MOCK_VARIANCES = [8.4, 4.2, -3.6, -2.1, -0.7, 12.4, -3.2, 18.6, 2.8, 5.1];
 const MOCK_TARGETS = [1000000, 190, 180000, 50, 0.012, 5.2, 1.7, 4.8, 0.27, 825];
+const PREVIEW_PERIODS = ['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08'];
 const PREVIEW_LABELS = ['Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026', 'Aug 2026'];
 
-function DashboardPreview({ onNotice }) {
+function DashboardPreview() {
   const [selectedTitle, setSelectedTitle] = useState('Total Sales');
   const [timeframe, setTimeframe] = useState('YTD');
+  const [selectedPeriod, setSelectedPeriod] = useState('2026-08');
+  const [targets, setTargets] = useState(() => Object.fromEntries(
+    DASHBOARD_KPI_DEFINITIONS.map((definition, index) => [definition.title, MOCK_TARGETS[index]])
+  ));
+  const [targetEditorMetric, setTargetEditorMetric] = useState(null);
+
   const items = useMemo(() => DASHBOARD_KPI_DEFINITIONS.map((definition, index) => ({
     ...definition,
     value: MOCK_VALUES[definition.title],
     variance: MOCK_VARIANCES[index],
-    benchmark: MOCK_TARGETS[index],
+    benchmark: targets[definition.title],
     description: KPI_CONFIG[definition.title]?.description,
     rank: index < 4 ? { rank: index + 1 } : null,
     cohortSize: 8,
     delayClass: `card-appear-${(index % 4) + 1}`
-  })), []);
+  })), [targets]);
   const selected = items.find(item => item.title === selectedTitle) || items[0];
+  const targetDefinition = DASHBOARD_KPI_DEFINITIONS.find(definition => definition.title === targetEditorMetric);
+  const reportingPeriod = PREVIEW_LABELS[PREVIEW_PERIODS.indexOf(selectedPeriod)] || 'August 2026';
   const trendData = useMemo(() => {
     const factors = selected.benchmarkType === 'max'
       ? [1.24, 1.18, 1.2, 1.13, 1.09, 1.1, 1.04, 1]
@@ -64,45 +71,58 @@ function DashboardPreview({ onNotice }) {
   }, [selected]);
 
   return (
-    <div className="space-y-4">
-      <section className="grid gap-2.5 sm:grid-cols-3">
-        {['Boyle Smash Repairs', 'August 2026', '10 metrics reporting'].map((value, index) => (
-          <div key={value} className="rounded-2xl bg-white/[0.025] px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,.04)]">
-            <p className="text-[9px] font-bold uppercase tracking-[0.17em] text-surface-600">{['Bodyshop', 'Reporting period', 'Data status'][index]}</p>
-            <div className="mt-1.5 flex items-center justify-between gap-3 text-sm font-semibold text-surface-200">
-              <span className="truncate">{value}</span><span className="text-surface-600" aria-hidden="true">⌄</span>
-            </div>
-          </div>
-        ))}
-      </section>
-
-      <div className="flex flex-col gap-3 rounded-2xl bg-white/[0.02] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div><p className="text-[9px] font-bold uppercase tracking-[0.18em] text-brand-400">Current bodyshop</p><p className="mt-1 font-semibold text-white">Boyle Smash Repairs <span className="ml-2 font-normal text-surface-500">4 painters · 6 panel beaters · 2 booths</span></p></div>
-        <span className="w-fit rounded-full bg-success-500/10 px-3 py-1 text-[10px] font-bold text-success-400">Data current</span>
-      </div>
-
-      <PerformancePulse items={items} dailyActual={9108} dailyTarget={8670} rollingMonths={3} reportingPeriod="August 2026" />
-
-      <section className="grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-5" aria-label="Bodyshop key performance indicators">
-        {items.map(item => (
-          <KpiCard
-            key={item.title}
-            {...item}
-            isActive={selectedTitle === item.title}
-            onClick={() => setSelectedTitle(item.title)}
-            onSetBenchmark={() => onNotice(`Target editing for ${item.title} is disabled in this visual preview.`)}
-            isAdmin
-          />
-        ))}
-      </section>
-
-      <section className="grid gap-3.5 xl:grid-cols-[minmax(0,1.65fr)_minmax(290px,.7fr)]">
-        <div className="min-w-0 overflow-x-auto rounded-[28px]">
-          <PerformanceRhythm key={`${selectedTitle}-${timeframe}`} data={trendData} title={selectedTitle} timeframe={timeframe} onTimeframeChange={setTimeframe} benchmark={selected.benchmark} benchmarkType={selected.benchmarkType} comparisonLabel="3M cohort comparison" />
-        </div>
-        <PerformanceInsights items={items} selectedTitle={selectedTitle} />
-      </section>
-    </div>
+    <>
+      <DashboardWorkspace
+        companies={[MOCK_COMPANY.id]}
+        selectedCompany={MOCK_COMPANY.id}
+        onCompanyChange={() => {}}
+        formatCompanyLabel={() => MOCK_COMPANY.name}
+        isAdmin
+        periods={PREVIEW_PERIODS}
+        selectedPeriod={selectedPeriod}
+        onPeriodChange={setSelectedPeriod}
+        formatPeriodLabel={(period) => PREVIEW_LABELS[PREVIEW_PERIODS.indexOf(period)] || period}
+        company={MOCK_COMPANY}
+        items={items}
+        selectedKpi={selectedTitle}
+        onSelectKpi={setSelectedTitle}
+        onSetBenchmark={setTargetEditorMetric}
+        dailyActual={9108}
+        dailyTarget={8670}
+        rollingMonths={3}
+        reportingPeriod={reportingPeriod}
+        dataStatusLabel="10 metrics reporting"
+        dataStatusTone={selectedPeriod === '2026-08' ? 'current' : 'historical'}
+        trendData={trendData}
+        timeframe={timeframe}
+        onTimeframeChange={setTimeframe}
+        comparisonLabel="3M cohort comparison"
+        demoMode
+      />
+      <BenchmarkTargetModal
+        isOpen={Boolean(targetEditorMetric)}
+        metric={targetEditorMetric}
+        companyName={MOCK_COMPANY.name}
+        currentTarget={targetEditorMetric ? targets[targetEditorMetric] : undefined}
+        benchmarkType={targetDefinition?.benchmarkType}
+        format={targetDefinition?.format}
+        isSaving={false}
+        error={null}
+        onSave={(target) => {
+          setTargets(current => ({ ...current, [targetEditorMetric]: target }));
+          setTargetEditorMetric(null);
+        }}
+        onRemove={() => {
+          setTargets(current => {
+            const next = { ...current };
+            delete next[targetEditorMetric];
+            return next;
+          });
+          setTargetEditorMetric(null);
+        }}
+        onClose={() => setTargetEditorMetric(null)}
+      />
+    </>
   );
 }
 
@@ -129,7 +149,7 @@ export default function LayoutPreview() {
   return (
     <div className="min-h-screen bg-surface-900 text-surface-100 lg:flex">
       <AppSidebar activeTab={activeTab} onNavigate={setActiveTab} currentUser={MOCK_USER} collapsed={collapsed} onToggleCollapsed={() => setCollapsed(value => !value)} mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} onOpenReviews={() => showNotice('Consultant reviews would open here.')} hasNotification onLogout={() => showNotice('Logout is disabled in this visual preview.')} />
-      <div className="min-w-0 flex-1"><Header pageTitle={title} pageDescription={description} onMenuToggle={() => setMobileOpen(true)} onReset={() => setActiveTab('raw-data')} showReset={activeTab === 'raw-data'} onExport={() => showNotice('Export is disabled in this visual preview.')} showExport={!['profile', 'customers'].includes(activeTab)} /><main className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">{activeTab === 'dashboard' ? <DashboardPreview onNotice={showNotice} /> : null}{activeTab === 'profile' ? <ShopProfilePanel company={MOCK_COMPANY} onEdit={() => showNotice('Profile editing is disabled in this visual preview.')} /> : null}{activeTab === 'raw-data' ? <DataPreview /> : null}{activeTab === 'leaderboards' ? <LeaderboardPreview /> : null}{activeTab === 'customers' ? <CustomersPreview /> : null}</main><footer className="border-t border-surface-800 py-6 text-center text-xs text-surface-500">CPR Analytics · Automotive Refinishing Consultancy Dashboard</footer></div>
+      <div className="min-w-0 flex-1"><Header pageTitle={title} pageDescription={description} onMenuToggle={() => setMobileOpen(true)} onReset={() => setActiveTab('raw-data')} showReset={activeTab === 'raw-data'} onExport={() => showNotice('Export is disabled in this visual preview.')} showExport={!['profile', 'customers'].includes(activeTab)} /><main className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">{activeTab === 'dashboard' ? <DashboardPreview /> : null}{activeTab === 'profile' ? <ShopProfilePanel company={MOCK_COMPANY} onEdit={() => showNotice('Profile editing is disabled in this visual preview.')} /> : null}{activeTab === 'raw-data' ? <DataPreview /> : null}{activeTab === 'leaderboards' ? <LeaderboardPreview /> : null}{activeTab === 'customers' ? <CustomersPreview /> : null}</main><footer className="border-t border-surface-800 py-6 text-center text-xs text-surface-500">CPR Analytics · Automotive Refinishing Consultancy Dashboard</footer></div>
       {notice ? <div role="status" className="fixed bottom-5 right-5 z-[70] rounded-xl bg-surface-800 px-4 py-3 text-sm text-surface-200 shadow-2xl">{notice}</div> : null}
     </div>
   );

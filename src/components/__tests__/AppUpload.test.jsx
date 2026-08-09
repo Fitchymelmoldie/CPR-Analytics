@@ -32,17 +32,9 @@ vi.mock('../../components/ChartCanvas', () => ({
   default: () => <div data-testid="mock-chart-canvas"></div>
 }));
 
-// Mock window.alert to prevent tests from hanging or throwing uncaught
-const alertMock = vi.fn();
-Object.defineProperty(window, 'alert', {
-  value: alertMock,
-  writable: true
-});
-
 describe('Upload Pipeline Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    alertMock.mockClear();
     
     // Default: Mock Admin User with no data initially
     authProvider.useAuth.mockReturnValue({
@@ -65,7 +57,7 @@ describe('Upload Pipeline Integration', () => {
     expect(await screen.findByText(/Upload Performance Data/i)).toBeInTheDocument();
   });
 
-  it('alerts on missing required columns in CSV', async () => {
+  it('shows an in-app error when required CSV columns are missing', async () => {
     const { container } = render(<App />);
     fireEvent.click(await screen.findByRole('button', { name: /^Data & Imports$/i }));
     await screen.findByText(/Upload Performance Data/i);
@@ -78,9 +70,7 @@ describe('Upload Pipeline Integration', () => {
     
     fireEvent.change(fileInput, { target: { files: [file] } });
     
-    await waitFor(() => {
-      expect(alertMock).toHaveBeenCalledWith(expect.stringContaining('Missing required columns'));
-    });
+    expect(await screen.findByRole('alert')).toHaveTextContent('Missing required columns');
     
     // Should not call upload
     expect(dbServices.uploadAnalytics).not.toHaveBeenCalled();

@@ -1,76 +1,92 @@
 # Current Handoff
 
-Last updated: 9 August 2026, 9:10 AM AEST
+Last updated: 9 August 2026, 10:57 AM AEST
 
-## Review status
+## Current status
 
-The user approved the fully audited sidebar and Performance Pulse dashboard redesign, and it is now live in production. The production deployment and authenticated smoke checks completed successfully.
+The benchmark-target failure and preview-versus-production layout mismatch remain corrected. The target-status labels, exact target gaps and compact KPI guide have passed automated and deployed-preview verification. The user approved the latest protected preview and explicitly authorised production deployment. Production is still unchanged while the final release gate and source commit are completed.
 
 ## Live and review links
 
-- Production: https://bodyshop-dashboard.vercel.app
-- Production deployment ID: `dpl_BuJKH5jSBarFoMmrKuj71bncozdC`
-- Production source commit: `e0b4823`
-- Visual layout preview with demonstration data: https://bodyshop-dashboard-4vfew2xk5-cpr-analytics.vercel.app/?layout-preview=1
-- Real authentication preview: https://bodyshop-dashboard-4vfew2xk5-cpr-analytics.vercel.app
-- Preview deployment ID: `dpl_FGU22rGnyM9QYGythN7fLnxmRoTq`
+- Current production: https://bodyshop-dashboard.vercel.app
+- Current production deployment ID: `dpl_BuJKH5jSBarFoMmrKuj71bncozdC`
+- Current production source commit: `e0b4823`
+- Superseded target-editor preview: https://bodyshop-dashboard-5l6watss2-cpr-analytics.vercel.app/?layout-preview=1 (`dpl_HnqWfk4BQG9vgsSFAmpWqZWc2mLy`)
+- Latest KPI-indicator visual review: https://bodyshop-dashboard-jo951am48-cpr-analytics.vercel.app/?layout-preview=1
+- Latest real authentication preview: https://bodyshop-dashboard-jo951am48-cpr-analytics.vercel.app/
+- Latest preview deployment ID: `dpl_95MxgAQbvh1QoxyS7fWx3xKhEp6m`
 
-The preview is protected by Vercel and may require a Vercel sign-in. The visual layout route uses demonstration data. The preview-only demonstration flag is not configured in production; adding `?layout-preview=1` to the production URL still loads the real authenticated application.
+The protected preview must be reviewed and explicitly approved before any production deployment. The `?layout-preview=1` route is demonstration-only and is available only when the preview environment enables `VITE_UI_PREVIEW=true`.
 
-## Implemented in the current working tree
+## What went wrong
 
-- Persistent collapsible desktop sidebar and responsive mobile drawer.
-- Separate workspace navigation for Visual Dashboard, Shop Profile and Consultant Reviews.
-- Administrator-only navigation for imports, leaderboards and customer management.
-- Dedicated Shop Profile workspace while preserving the dashboard profile summary.
-- Compact rounded KPI tiles with target, ranking, variance and selection states.
-- Performance Pulse target summary using real configured benchmarks rather than an invented score.
-- Performance Rhythm animated bar chart with target markers and timeframe controls.
-- Factual What Changed insight panel.
-- Responsive entrance, hover, selection, drawer and chart animations.
-- `prefers-reduced-motion` support.
-- Updated changelog and preview-only deployment configuration.
-- Bodyshop profile and consultant-review selection now works even before analytics data exists.
-- True no-data states no longer render misleading zero-value KPI and chart sections.
-- New manual reporting periods are immediately marked unsaved and can be saved.
-- Customer invitations submit exactly once.
-- CSV export object URLs are released and the footer separator renders correctly.
-- Patched transitive `postcss` and `nanoid` versions are recorded in `package-lock.json`.
+1. The benchmark button used the browser's built-in `window.prompt()` box. The Codex in-app browser does not support that interaction, so clicking the button appeared to do nothing and the Supabase save request was never reached.
+2. The approved visual mock-up was implemented in a separate `LayoutPreview` dashboard instead of rendering the exact dashboard component used by the authenticated application. That allowed the mock-up and the real production interface to drift apart even though each one worked independently.
+3. The previous release checks verified the mock-up's appearance and the real app's general navigation, but did not exercise this exact target-editing action in the supported in-app browser or compare the two dashboard component trees. The audit therefore missed both issues.
+
+## Corrections implemented
+
+- Replaced the native benchmark prompt with an accessible in-app target editor that supports create, update, validation, cancellation, Escape/backdrop closing and two-step removal.
+- Preserved the existing Supabase benchmark upsert/delete service and permissions; only the broken browser interaction was replaced.
+- Added correct currency, number and percentage input handling, including conversion between visible percentage values and stored ratios.
+- Replaced the remaining native reporting-period prompt with a proper in-app modal.
+- Replaced all remaining `window.alert()` calls with in-app notices.
+- Added a lint error for native `alert`, `prompt` and `confirm`, preventing this browser-incompatible pattern from being reintroduced.
+- Introduced one shared `DashboardWorkspace` component. Both the authenticated dashboard and `LayoutPreview` now render this exact component; the preview supplies demonstration data through an adapter instead of maintaining a separate design.
+- Added a visible `Demo` label to the demonstration route so it cannot be mistaken for real customer data.
+- Aligned the authenticated Visual Dashboard with the approved layout: context cards, current bodyshop strip, Performance Pulse, compact KPI grid, Performance Rhythm chart and What Changed panel.
+- Preserved all other drawer destinations and administrator/bodyshop permission boundaries.
+- Replaced the tiny green/amber target dots with explicit `Target met`, `Target missed` and `No target set` labels.
+- Added a concise distance from target to every configured KPI, such as `Ahead by $80,528`, `Short by $3,971`, `Over by 0.1` and `Under by 2.50 pts`.
+- Added a responsive KPI card guide that separately explains favourable/unfavourable movement, target result, peer-group rank and the teal selected-for-chart state.
+- Kept the monthly movement colour independent from the current target result, so an improving KPI can still honestly show that its target is missed.
+- Expanded each KPI card's accessible description to include the current result, target result, target distance and peer rank.
 
 ## Verification completed
 
-- `npm.cmd test -- --run`: 4 test files and 38 tests passed.
+- `npm.cmd test -- --run`: 6 test files and 46 tests passed.
 - `npm.cmd run build`: passed.
-- `npm.cmd run lint`: passed with no errors; only pre-existing warnings remain.
+- `npm.cmd run lint`: passed with no errors; only existing non-blocking warnings remain.
+- `npm.cmd audit --omit=dev --audit-level=high`: zero vulnerabilities.
 - `git diff --check`: passed; Git only reported expected LF-to-CRLF notices.
-- `npm.cmd audit --omit=dev --audit-level=high`: zero vulnerabilities after safe transitive dependency updates.
-- Desktop review at 1440 x 1000: every drawer destination, KPI selection, timeframe controls and collapse/expand behavior passed with no horizontal overflow.
-- Mobile review at 390 x 844: every drawer destination, automatic close-after-navigation and all dashboard components passed with no horizontal overflow.
-- Browser review: the final deployed layout preview has ten KPI tiles, the Performance Rhythm chart, correct footer text and no application console errors.
-- Authentication boundary: the final preview root shows the real Secure Login screen and does not expose demonstration data without the preview query flag.
-- Existing production administrator session was checked read-only: dashboard data, imports, leaderboards, customer management, consultant reviews and profile modal all remained operational. No save, invite, upload or delete action was performed against live data.
-- Supabase project `fqmjvnydevnxlqeqrauf` is `ACTIVE_HEALTHY`; every application table has RLS enabled, administrator/customer policies are present, Edge Functions are active, and the sampled API log contained only successful responses.
-- Final Vercel preview: target `preview`, status `Ready`, deployment `dpl_FGU22rGnyM9QYGythN7fLnxmRoTq`.
-- Final release gate repeated immediately before production: 38 tests passed, the production build passed, lint had no errors, dependency audit reported zero vulnerabilities, and Git whitespace checks passed.
-- Production was deployed from source so Vercel applied only production-scoped environment variables; no local prebuilt output was promoted.
-- Production `https://bodyshop-dashboard.vercel.app` now aliases Ready deployment `dpl_BuJKH5jSBarFoMmrKuj71bncozdC` and returned HTTP 200 from the Sydney edge.
-- Authenticated production smoke checks passed for real dashboard data, all drawer destinations, Consultant Reviews, KPI and timeframe selection, and sidebar collapse/expand.
-- The production preview-query check loaded the real administrator workspace rather than demonstration data, confirming the preview-only switch is disabled.
-- Vercel reported no runtime error logs and no HTTP 500 responses for the new deployment during the post-release scan.
-- No production save, upload, invitation or deletion action was performed; live verification remained read-only apart from harmless navigation and local UI selections.
-- Chrome reported only the known browser-extension message-channel noise; no application failure was visible, and the same audited build had a clean console in the protected preview.
+- Confirmed there are no production `window.prompt`, `window.alert` or `window.confirm` calls left under `src`.
+- Desktop browser check at 1440 x 1000: shared dashboard rendered without horizontal overflow or application console errors.
+- Mobile browser check at 390 x 844: dashboard, target editor, mobile drawer and automatic drawer close all passed without overflow or application console errors.
+- Target flow checked end-to-end in the demonstration adapter: open, validate, update and confirmed removal all worked without a native browser dialog.
+- Navigation from Visual Dashboard to Shop Profile and back continued to work on mobile.
+- Protected source preview `dpl_HnqWfk4BQG9vgsSFAmpWqZWc2mLy` is `READY` with preview target `null`; it was not promoted to production.
+- Repeated the target update and confirmed-removal flow on the deployed preview itself; both worked and the deployed browser console remained clean.
+- The deployed preview's root route shows the real Secure Login screen, while demonstration data remains isolated behind `?layout-preview=1`.
+- Rechecked the production alias after preview deployment: it still points to production deployment `dpl_BuJKH5jSBarFoMmrKuj71bncozdC`.
+- New indicator tests cover higher-is-better, lower-is-better, favourable movement with a missed target, percentage-point gaps and unset targets.
+- Desktop indicator review at 1440 x 1000: the guide and all target labels/gaps rendered clearly with no page overflow or application console errors.
+- Mobile indicator review at 390 x 844: the guide uses a compact two-column layout, card target details stack for readability, and the page has no horizontal overflow or application console errors.
+- Local target interaction check: moving Total Sales target from $1,000,000 to $1,100,000 changed its card to `Target missed` / `Short by $19,472` and changed the Performance Pulse from 7/10 to 6/10 immediately.
+- Protected source preview `dpl_95MxgAQbvh1QoxyS7fWx3xKhEp6m` is `READY` with preview target `null`; it was not promoted to production.
+- Deployed desktop preview confirmed seven `Target met` and three `Target missed` cards, the correct Paint Sales gap, the complete KPI guide, no page overflow and no application console errors.
+- Deployed target interaction repeated successfully: the in-app target editor changed Total Sales to `Short by $19,472` and the Performance Pulse to 6/10 without invoking a native browser dialog.
+- Deployed mobile preview at 390 x 844 retained the two-column guide/card layout, readable stacked target details, no page overflow and no application console errors.
+- The latest preview root still shows the real Secure Login screen and does not expose demonstration data without `?layout-preview=1`.
+- Production alias rechecked after the latest preview: it remains on `dpl_BuJKH5jSBarFoMmrKuj71bncozdC`.
+
+## Permanent release guardrails
+
+1. Design approval must use the same production component tree as the authenticated application. Demonstration data may be substituted, but the interface component cannot be duplicated.
+2. Do not use native browser `alert`, `prompt` or `confirm` for application workflows. The lint rule now enforces this automatically.
+3. Every material button must be exercised in the actual supported browser, not inferred from rendering or unit tests alone.
+4. Before release, compare the protected preview and authenticated application at the same desktop and mobile widths.
+5. Continue the sequence: local checks -> protected source preview -> browser action audit -> explicit approval -> source-based production deployment.
+6. A production deploy is not complete until the deployed DOM, console, core actions and Supabase-backed data have been verified.
 
 ## Source-control state
 
 - Working branch: `agent/bodyshop-audit-hardening`
-- Production source commit: `e0b4823` (`feat: redesign dashboard workspace`).
-- The source commit is pushed to `origin/agent/bodyshop-audit-hardening` for traceability and rollback.
-- `origin/main` was not changed during the direct, source-based production deployment.
-- The only post-release source changes are this handoff and the production deployment entry in `CHANGELOG.md`.
+- Repair changes are currently uncommitted while the protected preview is completed and reviewed.
+- `origin/main` and the production alias have not been changed by this repair.
 - Preserve the three untracked preview PNG files; they are user-owned artifacts and are excluded from Vercel uploads by `.vercelignore`.
 
-## Recommended next steps
+## Next steps
 
-1. Monitor normal production use and collect any final visual feedback.
-2. Keep future work on a branch and repeat the local test, protected preview, approval and source-based production process.
-3. Preserve the current production deployment ID and source commit as the rollback reference.
+1. Repeat the final release gate on the approved source.
+2. Commit and push the approved source branch for traceability and rollback.
+3. Deploy the committed source to production and verify the live dashboard, login/demo boundary, console and production alias.

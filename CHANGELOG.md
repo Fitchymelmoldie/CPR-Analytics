@@ -4,6 +4,26 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **KPI Indicator Clarity (9 August 2026)**
+  - Replaced ambiguous target-status dots with written `Target met`, `Target missed` and `No target set` states.
+  - Added a visible target gap to configured KPI cards using plain wording such as `Ahead by`, `Short by`, `Over by` and `Under by`.
+  - Added a responsive KPI card guide explaining movement colours, target colours, peer ranking and the selected-for-chart treatment.
+  - Preserved the existing higher-is-better and lower-is-better calculations, benchmark values, rankings and Supabase persistence.
+  - Added accessible card summaries and regression coverage for sales, booth-cycle and percentage target scenarios.
+  - Verified 46 tests, the production build, lint, Git whitespace checks, dynamic target recalculation, and desktop/mobile layouts without application console errors or page overflow.
+  - Published and browser-verified protected source Preview `dpl_95MxgAQbvh1QoxyS7fWx3xKhEp6m`; production remained on `dpl_BuJKH5jSBarFoMmrKuj71bncozdC`.
+
+- **Target Editor and Preview Parity Repair (9 August 2026)**
+  - Replaced the benchmark action's unsupported native browser prompt with an accessible in-app editor for creating, updating and removing KPI targets.
+  - Added validation and correct currency, number and percentage conversions while preserving the existing Supabase save/delete services and permission boundaries.
+  - Replaced the native reporting-period prompt and remaining native alerts with in-app UI.
+  - Added a lint error that blocks future use of `alert`, `prompt` and `confirm` in application code.
+  - Removed the design drift between the demonstration preview and authenticated application by introducing one shared `DashboardWorkspace` component; the demo now swaps only its data adapter and is clearly labelled `Demo`.
+  - Added regression coverage for target create/update/remove, validation, keyboard closing, reporting-period creation and shared preview parity.
+  - Verified 43 tests, the production build, lint, dependency audit, Git whitespace checks, desktop and mobile browser layouts, target interactions and drawer navigation.
+  - Published and browser-verified protected source Preview `dpl_HnqWfk4BQG9vgsSFAmpWqZWc2mLy`, including the deployed target update/removal flow and real login boundary.
+  - Kept production deployment `dpl_BuJKH5jSBarFoMmrKuj71bncozdC` unchanged while the corrected preview awaits approval.
+
 - **Production Release - Workspace and Performance Pulse Redesign (9 August 2026)**
   - Deployed the fully audited source release from commit `e0b4823` to `https://bodyshop-dashboard.vercel.app`.
   - Recorded production deployment `dpl_BuJKH5jSBarFoMmrKuj71bncozdC`, built remotely by Vercel with production-scoped environment variables.

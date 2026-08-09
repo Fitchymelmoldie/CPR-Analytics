@@ -75,6 +75,23 @@
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
 
+    .dashboard-context-card {
+      background: rgba(255, 255, 255, 0.025);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 12px 30px rgba(0, 0, 0, 0.08);
+      transition: background-color 220ms ease, transform 220ms ease, box-shadow 220ms ease;
+    }
+    .dashboard-context-card:hover,
+    .dashboard-context-card:focus-within {
+      background: rgba(255, 255, 255, 0.04);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055), 0 16px 34px rgba(0, 0, 0, 0.12);
+      transform: translateY(-1px);
+    }
+    .dashboard-context-card select option { background: #262a33; color: #f3f4f6; }
+    .dashboard-shop-strip {
+      background: rgba(255, 255, 255, 0.02);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+    }
+
     .drag-over {
       border-color: #00a896 !important;
       background: rgba(0, 168, 150, 0.08) !important;
@@ -238,7 +255,7 @@
         animation-delay: 0ms !important;
         animation-iteration-count: 1 !important;
       }
-      .kpi-tile, .pulse-stat, .insight-row, .kpi-icon { transition-duration: 0.001ms !important; }
+      .kpi-tile, .pulse-stat, .insight-row, .kpi-icon, .dashboard-context-card { transition-duration: 0.001ms !important; }
     }
 
     textarea:focus { outline: none; box-shadow: 0 0 0 2px rgba(0, 168, 150, 0.3); }
