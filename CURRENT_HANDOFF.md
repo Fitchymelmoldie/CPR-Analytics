@@ -1,10 +1,10 @@
 # Current Handoff
 
-Last updated: 9 August 2026, 11:07 AM AEST
+Last updated: 9 August 2026, 7:59 PM AEST
 
 ## Current status
 
-The benchmark-target failure, preview-versus-production layout mismatch and ambiguous KPI indicators are corrected and released to production. The approved source was committed, pushed, built remotely by Vercel with production-scoped environment variables and verified against the authenticated live application. No live customer data was changed during the production smoke test.
+The last approved benchmark, parity and KPI-indicator release remains live and healthy in production. The new Business Snapshot refinement is complete and browser-verified locally and on a protected Vercel preview, but it is not committed, pushed or deployed to production. A final local-only copy refinement now leaves the customer-facing card with the `Business snapshot` title and business figures only. The existing hosted preview predates this copy cleanup. Production remains unchanged.
 
 ## Live and review links
 
@@ -12,6 +12,11 @@ The benchmark-target failure, preview-versus-production layout mismatch and ambi
 - Current production deployment ID: `dpl_HM7ox6Z57AxNK8d6kXqCwZV28RkH`
 - Current production source commit: `6b18e3c`
 - Immutable production URL: https://bodyshop-dashboard-lvcpm7r6o-cpr-analytics.vercel.app
+- Current local Business Snapshot review: http://127.0.0.1:5179/?layout-preview=1 (includes the title-only copy refinement while the local server is running)
+- Hosted Business Snapshot preview: https://bodyshop-dashboard-6fhx4afi9-cpr-analytics.vercel.app/?layout-preview=1
+- Hosted Business Snapshot preview deployment ID: `dpl_9vXkoGzRcTkKgyGSwVJbMg3oEP1v` (`READY`, preview target `null`)
+
+The hosted Business Snapshot preview does not yet include the latest title-only copy refinement. A fresh source-upload approval is required before replacing it with an updated protected preview.
 - Superseded target-editor preview: https://bodyshop-dashboard-5l6watss2-cpr-analytics.vercel.app/?layout-preview=1 (`dpl_HnqWfk4BQG9vgsSFAmpWqZWc2mLy`)
 - Latest KPI-indicator visual review: https://bodyshop-dashboard-jo951am48-cpr-analytics.vercel.app/?layout-preview=1
 - Latest real authentication preview: https://bodyshop-dashboard-jo951am48-cpr-analytics.vercel.app/
@@ -42,6 +47,17 @@ The protected preview was reviewed and explicitly approved before this productio
 - Added a responsive KPI card guide that separately explains favourable/unfavourable movement, target result, peer-group rank and the teal selected-for-chart state.
 - Kept the monthly movement colour independent from the current target result, so an improving KPI can still honestly show that its target is missed.
 - Expanded each KPI card's accessible description to include the current result, target result, target distance and peer rank.
+
+## Current Business Snapshot preview
+
+- Total Sales and Paint Sales are now neutral business results inside the existing Performance Pulse hero instead of targetable KPI cards.
+- Both sales results remain clickable and continue to drive the existing Performance Rhythm chart.
+- Sales results no longer expose target buttons, target status, target gaps or target chart lines and do not contribute to the Performance Pulse score.
+- Existing stored sales benchmark records are not deleted or changed; the interface simply ignores them.
+- The daily sales pace and 3.3x amount remain visible, while the customer-facing card now shows no internal score explanation, `Not scored` badge or informational footer.
+- Performance Pulse scoring, strongest/watch signals and missed-target insights now use only operational KPIs.
+- The remaining eight KPI cards form a balanced four-by-two desktop grid and two-column mobile grid.
+- Completed RO remains targetable because it can represent a genuine production-volume goal.
 
 ## Verification completed
 
@@ -79,6 +95,20 @@ The protected preview was reviewed and explicitly approved before this productio
 - Confirmed `?layout-preview=1` is ignored on the production domain: it continued to show the authenticated real workspace and exposed neither the `Demo` label nor preview customer data.
 - Live desktop, preview-query and mobile tabs reported no application console warnings/errors and no native JavaScript dialogs. Vercel reported no production runtime errors after deployment.
 - No live target was saved or removed and no upload, invitation, deletion or other customer-data mutation was performed during production verification.
+- Business Snapshot preview gate: 6 test files and 47 tests passed; production build passed; lint passed with only the pre-existing non-blocking warnings.
+- Local desktop review at 1440 x 1000 confirmed two business-result controls, eight operational KPI cards, a 6/8 demonstration pulse, no sales target controls and no horizontal overflow.
+- Local mobile review at 390 x 844 confirmed the compact Business Snapshot, readable two-column operational grid, functioning mobile drawer and no horizontal overflow.
+- Verified Total Sales and Paint Sales still select the trend chart without showing target lines; Completed RO still selects the chart and opens/cancels its in-app target editor.
+- The local preview reported no application console warnings/errors and no native JavaScript dialog.
+- The dedicated `agent-browser` command was unavailable on this machine; the equivalent checks were completed through the integrated browser.
+- The protected Business Snapshot source preview `dpl_9vXkoGzRcTkKgyGSwVJbMg3oEP1v` is `READY` with preview target `null`; it was not promoted to production.
+- Hosted desktop verification at 1440 x 1000 confirmed two business-result controls, eight operational KPI cards, a 6/8 demonstration pulse, no sales target controls and no horizontal overflow.
+- Hosted Paint Sales selection updated the trend chart without a target marker; hosted Completed RO selection displayed `Target 190` and its in-app target editor opened and cancelled correctly.
+- Hosted mobile verification at 390 x 844 confirmed the compact Business Snapshot, all eight operational cards, no horizontal overflow and a working open/close drawer.
+- The hosted preview reported no browser warnings/errors, no native JavaScript dialog and no Vercel preview runtime errors.
+- Rechecked `https://bodyshop-dashboard.vercel.app` after the preview upload: it still resolves to production deployment `dpl_HM7ox6Z57AxNK8d6kXqCwZV28RkH`.
+- Final title-only copy refinement: the focused Layout Preview tests passed, the production build passed and lint reported no errors (only the existing non-blocking warnings).
+- Local desktop and 390 x 844 mobile checks confirmed the card retains its title, two business controls and business figures while removing the score explanation, badge and informational footer; both widths remained free of horizontal overflow and browser warnings/errors.
 
 ## Permanent release guardrails
 
@@ -95,10 +125,12 @@ The protected preview was reviewed and explicitly approved before this productio
 - Release source commit: `6b18e3c` (`feat: unify dashboard targets and indicator clarity`), pushed to `origin/agent/bodyshop-audit-hardening`.
 - The production alias now serves deployment `dpl_HM7ox6Z57AxNK8d6kXqCwZV28RkH`, built from that exact source commit.
 - `origin/main` was not changed; the production deployment was made directly from the approved working branch.
+- The Business Snapshot candidate is currently an uncommitted local change on `agent/bodyshop-audit-hardening`; it has not been pushed or deployed to production. Protected preview `dpl_9vXkoGzRcTkKgyGSwVJbMg3oEP1v` contains the approved structural refinement but predates the final title-only copy cleanup.
 - Preserve the three untracked preview PNG files; they are user-owned artifacts and are excluded from Vercel uploads by `.vercelignore`.
 
 ## Next steps
 
-1. No further release action is pending; the approved target and KPI clarity work is live in production.
-2. Use the current production state as the baseline for the next design or feature change and publish a protected source preview before any future production release.
-3. Keep production smoke tests read-only unless the user explicitly authorises changing a live target or other customer data.
+1. Review the local title-only Business Snapshot refinement.
+2. If approved, explicitly authorise uploading the updated source to replace the protected preview, then repeat the hosted desktop/mobile browser audit.
+3. After hosted approval, commit and push the reviewed candidate and repeat the release checks from that exact source.
+4. Do not change production without a separate explicit production-deployment approval; after any production deployment, re-verify the authenticated live application and Supabase-backed data.

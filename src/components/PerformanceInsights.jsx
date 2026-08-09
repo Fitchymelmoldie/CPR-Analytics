@@ -8,12 +8,13 @@ function displayValue(item) {
 }
 
 export default function PerformanceInsights({ items, selectedTitle }) {
-  const withMovement = items
+  const operationalItems = items.filter(item => item.targetable !== false);
+  const withMovement = operationalItems
     .map(item => ({ ...item, movement: directionalVariance(item) }))
     .filter(item => item.movement !== null);
   const strongest = withMovement.reduce((best, item) => !best || item.movement > best.movement ? item : best, null);
   const weakest = withMovement.reduce((worst, item) => !worst || item.movement < worst.movement ? item : worst, null);
-  const missedTargets = items.filter(item => item.benchmark !== undefined && item.benchmark !== null && !targetIsMet(item));
+  const missedTargets = operationalItems.filter(item => item.benchmark !== undefined && item.benchmark !== null && !targetIsMet(item));
   const selected = items.find(item => item.title === selectedTitle) || items[0];
   const hasPositiveMovement = strongest?.movement > 0;
 

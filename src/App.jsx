@@ -243,6 +243,8 @@ const PAGE_META = {
 
       const handleOpenBenchmarkEditor = useCallback((kpiTitle) => {
         if (!selectedCompany || currentUserRole !== 'ADMIN') return;
+        const definition = DASHBOARD_KPI_DEFINITIONS.find(item => item.title === kpiTitle);
+        if (!definition || definition.targetable === false) return;
         setBenchmarkMutation({ loading: false, error: null });
         setTargetEditorMetric(kpiTitle);
       }, [currentUserRole, selectedCompany]);
@@ -770,7 +772,7 @@ const PAGE_META = {
         ...definition,
         value: kpis[definition.valueKey],
         variance: calcVariance(...definition.varianceArgs),
-        benchmark: benchmarks[definition.title]?.target,
+        benchmark: definition.targetable === false ? undefined : benchmarks[definition.title]?.target,
         rank: ranks?.[definition.rankKey],
         cohortSize: ranks?.cohortSize,
         description: KPI_CONFIG[definition.title]?.description,

@@ -33,7 +33,16 @@ const MOCK_VALUES = {
   'Paint Revenue P/V': 880
 };
 const MOCK_VARIANCES = [8.4, 4.2, -3.6, -2.1, -0.7, 12.4, -3.2, 18.6, 2.8, 5.1];
-const MOCK_TARGETS = [1000000, 190, 180000, 50, 0.012, 5.2, 1.7, 4.8, 0.27, 825];
+const MOCK_TARGETS = {
+  'Completed RO': 190,
+  'Paint Cost / RO': 50,
+  'Paint Cost / Total Sales': 0.012,
+  'VPD / Per Booth': 5.2,
+  'Booth Cycle Time': 1.7,
+  'Return on Paint Labour': 4.8,
+  'Liquid Cost to Refinish': 0.27,
+  'Paint Revenue P/V': 825
+};
 const PREVIEW_PERIODS = ['2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08'];
 const PREVIEW_LABELS = ['Jan 2026', 'Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026', 'Aug 2026'];
 
@@ -41,16 +50,14 @@ function DashboardPreview() {
   const [selectedTitle, setSelectedTitle] = useState('Total Sales');
   const [timeframe, setTimeframe] = useState('YTD');
   const [selectedPeriod, setSelectedPeriod] = useState('2026-08');
-  const [targets, setTargets] = useState(() => Object.fromEntries(
-    DASHBOARD_KPI_DEFINITIONS.map((definition, index) => [definition.title, MOCK_TARGETS[index]])
-  ));
+  const [targets, setTargets] = useState(() => ({ ...MOCK_TARGETS }));
   const [targetEditorMetric, setTargetEditorMetric] = useState(null);
 
   const items = useMemo(() => DASHBOARD_KPI_DEFINITIONS.map((definition, index) => ({
     ...definition,
     value: MOCK_VALUES[definition.title],
     variance: MOCK_VARIANCES[index],
-    benchmark: targets[definition.title],
+    benchmark: definition.targetable === false ? undefined : targets[definition.title],
     description: KPI_CONFIG[definition.title]?.description,
     rank: index < 4 ? { rank: index + 1 } : null,
     cohortSize: 8,

@@ -72,13 +72,13 @@ function CurrentBodyshop({ company, statusTone }) {
   );
 }
 
-function KpiCardGuide() {
+function KpiCardGuide({ count }) {
   return (
     <aside className="dashboard-shop-strip rounded-2xl px-4 py-3" aria-labelledby="kpi-card-guide-title">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div className="shrink-0">
-          <p id="kpi-card-guide-title" className="text-[9px] font-bold uppercase tracking-[0.18em] text-brand-400">KPI card guide</p>
-          <p className="mt-1 text-[11px] text-surface-500">Each marker answers a different question.</p>
+          <p id="kpi-card-guide-title" className="text-[9px] font-bold uppercase tracking-[0.18em] text-brand-400">Operational KPI guide</p>
+          <p className="mt-1 text-[11px] text-surface-500">These {count} health KPIs contribute to the Performance Pulse.</p>
         </div>
         <div className="grid flex-1 grid-cols-2 gap-2 xl:max-w-4xl xl:grid-cols-4">
           <div className="flex flex-wrap items-center gap-1.5 rounded-xl bg-black/10 px-3 py-2">
@@ -133,6 +133,7 @@ export default function DashboardWorkspace({
   demoMode = false
 }) {
   const selectedItem = items.find(item => item.title === selectedKpi) || items[0];
+  const operationalItems = items.filter(item => item.targetable !== false);
 
   return (
     <div className="space-y-4 pt-6" data-testid="dashboard-workspace">
@@ -161,19 +162,22 @@ export default function DashboardWorkspace({
 
       <PerformancePulse
         items={items}
+        selectedKpi={selectedKpi}
+        onSelectKpi={onSelectKpi}
         dailyActual={dailyActual}
         dailyTarget={dailyTarget}
         rollingMonths={rollingMonths}
         reportingPeriod={reportingPeriod}
       />
 
-      <KpiCardGuide />
+      <KpiCardGuide count={operationalItems.length} />
 
-      <section className="grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-5" aria-label="Bodyshop key performance indicators">
-        {items.map(item => (
+      <section className="grid grid-cols-2 gap-2.5 lg:grid-cols-4" aria-label="Operational bodyshop KPIs">
+        {operationalItems.map((item, index) => (
           <KpiCard
             key={item.title}
             {...item}
+            delayClass={`card-appear-${(index % 4) + 1}`}
             isActive={selectedKpi === item.title}
             onClick={() => onSelectKpi(item.title)}
             onSetBenchmark={onSetBenchmark}
@@ -192,7 +196,7 @@ export default function DashboardWorkspace({
                 title={selectedKpi}
                 timeframe={timeframe}
                 onTimeframeChange={onTimeframeChange}
-                benchmark={selectedItem?.benchmark}
+                benchmark={selectedItem?.targetable === false ? null : selectedItem?.benchmark}
                 benchmarkType={selectedItem?.benchmarkType}
                 comparisonLabel={comparisonLabel}
               />

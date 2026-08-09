@@ -1,43 +1,47 @@
 import React from 'react';
+import BusinessSnapshot from './BusinessSnapshot';
 import { directionalVariance, targetIsMet } from '../utils/dashboardKpis';
 
-function compactCurrency(value) {
-  return '$' + Number(value || 0).toLocaleString('en-AU', { maximumFractionDigits: 0 });
-}
-
-export default function PerformancePulse({ items, dailyActual, dailyTarget, rollingMonths, reportingPeriod }) {
-  const targetedItems = items.filter(item => item.benchmark !== undefined && item.benchmark !== null);
+export default function PerformancePulse({
+  items,
+  selectedKpi,
+  onSelectKpi,
+  dailyActual,
+  dailyTarget,
+  rollingMonths,
+  reportingPeriod
+}) {
+  const operationalItems = items.filter(item => item.targetable !== false);
+  const businessItems = items.filter(item => item.targetable === false);
+  const targetedItems = operationalItems.filter(item => item.benchmark !== undefined && item.benchmark !== null);
   const targetsMet = targetedItems.filter(targetIsMet).length;
-  const reportingItems = items.filter(item => Number.isFinite(item.value)).length;
+  const reportingItems = operationalItems.filter(item => Number.isFinite(item.value)).length;
   const hasTargets = targetedItems.length > 0;
   const progress = hasTargets
     ? targetsMet / targetedItems.length
-    : reportingItems / Math.max(items.length, 1);
+    : reportingItems / Math.max(operationalItems.length, 1);
   const progressDegrees = Math.max(0, Math.min(360, progress * 360));
 
-  const movingItems = items
+  const movingItems = operationalItems
     .map(item => ({ ...item, movement: directionalVariance(item) }))
     .filter(item => item.movement !== null);
   const strongest = movingItems.reduce((best, item) => !best || item.movement > best.movement ? item : best, null);
   const attention = movingItems.reduce((worst, item) => !worst || item.movement < worst.movement ? item : worst, null);
   const hasPositiveMovement = strongest?.movement > 0;
-  const paceReady = rollingMonths >= 3 && dailyTarget > 0;
-  const paceIsAhead = paceReady && dailyActual >= dailyTarget;
-
   return (
-    <section className="performance-pulse relative mb-5 overflow-hidden rounded-[30px] px-5 py-6 sm:px-7 lg:px-8" aria-labelledby="performance-pulse-title">
+    <section className="performance-pulse relative overflow-hidden rounded-[30px] px-5 py-6 sm:px-7 lg:px-8" aria-labelledby="performance-pulse-title">
       <div className="pulse-ambient pulse-ambient-one" />
       <div className="pulse-ambient pulse-ambient-two" />
 
-      <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(240px,.75fr)] lg:items-center xl:grid-cols-[minmax(360px,1.25fr)_minmax(300px,.85fr)_minmax(280px,.8fr)]">
+      <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(330px,.85fr)] lg:items-center xl:grid-cols-[minmax(360px,1.15fr)_minmax(330px,.9fr)_minmax(250px,.7fr)]">
         <div className="flex items-center gap-5 sm:gap-7">
           <div
             className="pulse-score-ring shrink-0"
             style={{ '--ring-target': `${progressDegrees}deg`, '--ring-colour': hasTargets && progress < 0.5 ? '#fb7185' : '#2dd4bf' }}
-            aria-label={hasTargets ? `${targetsMet} of ${targetedItems.length} configured targets met` : `${reportingItems} of ${items.length} metrics reporting`}
+            aria-label={hasTargets ? `${targetsMet} of ${targetedItems.length} configured operational targets met` : `${reportingItems} of ${operationalItems.length} operational metrics reporting`}
           >
             <div className="pulse-score-inner">
-              <strong>{hasTargets ? `${targetsMet}/${targetedItems.length}` : `${reportingItems}/${items.length}`}</strong>
+              <strong>{hasTargets ? `${targetsMet}/${targetedItems.length}` : `${reportingItems}/${operationalItems.length}`}</strong>
               <span>{hasTargets ? 'on target' : 'reporting'}</span>
             </div>
           </div>
@@ -54,24 +58,20 @@ export default function PerformancePulse({ items, dailyActual, dailyTarget, roll
             </h2>
             <p className="mt-2 max-w-xl text-sm leading-relaxed text-surface-400">
               {hasTargets
-                ? 'A concise view of target coverage, daily pace and the movements that deserve attention.'
-                : 'Add KPI targets to turn this pulse into a live benchmark score for the selected bodyshop.'}
+                ? 'Operational target coverage at a glance, with business activity kept clearly separate.'
+                : 'Add operational KPI targets to turn this pulse into a live health score for the selected bodyshop.'}
             </p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5">
-          <div className="pulse-stat group">
-            <p>Daily actual</p>
-            <strong className={paceReady ? (paceIsAhead ? 'text-success-400' : 'text-rose-400') : 'text-white'}>{compactCurrency(dailyActual)}</strong>
-            <span>rolling quarterly pace</span>
-          </div>
-          <div className="pulse-stat group">
-            <p>3.3x target</p>
-            <strong>{paceReady ? compactCurrency(dailyTarget) : 'Building'}</strong>
-            <span>{paceReady ? (paceIsAhead ? 'pace is ahead' : 'pace needs attention') : 'requires 3 months'}</span>
-          </div>
-        </div>
+        <BusinessSnapshot
+          items={businessItems}
+          selectedKpi={selectedKpi}
+          onSelectKpi={onSelectKpi}
+          dailyActual={dailyActual}
+          dailyReference={dailyTarget}
+          rollingMonths={rollingMonths}
+        />
 
         <div className="grid gap-2.5 sm:grid-cols-2 lg:col-span-2 xl:col-span-1 xl:grid-cols-1">
           <div className="pulse-signal pulse-signal-positive">

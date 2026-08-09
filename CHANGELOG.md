@@ -4,6 +4,20 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Business Snapshot and Operational KPI Hierarchy Preview (9 August 2026)**
+  - Moved Total Sales and Paint Sales out of the health KPI grid and into a compact, neutral Business Snapshot inside the existing Performance Pulse hero.
+  - Kept both sales figures clickable for the Performance Rhythm chart while removing their target controls, target states and target-line treatment.
+  - Preserved the existing daily sales pace and 3.3x figure as a clearly labelled informational rolling-quarter reference rather than a health target.
+  - Simplified the customer-facing Business Snapshot to show only its title and business figures, removing the internal score explanation, `Not scored` badge and informational footer copy.
+  - Limited the Performance Pulse score, strongest/watch signals and missed-target insights to genuine operational KPIs.
+  - Corrected the no-target fallback ring so a fully reporting shop shows `8/8` operational KPIs rather than retaining the former ten-card denominator.
+  - Rebalanced the eight operational KPIs into a four-by-two desktop grid and retained the two-column mobile layout.
+  - Left any previously stored Total Sales or Paint Sales benchmark records untouched; the preview simply ignores them in the interface and score.
+  - Added regression coverage for business/health separation, sales trend selection, operational target editing and the no-target fallback; all 48 tests, build and lint checks pass.
+  - Browser-verified the local full application at 1440 x 1000 and 390 x 844 with no horizontal overflow, console warnings/errors or native dialogs.
+  - Published and browser-verified protected source Preview `dpl_9vXkoGzRcTkKgyGSwVJbMg3oEP1v` at `https://bodyshop-dashboard-6fhx4afi9-cpr-analytics.vercel.app/?layout-preview=1`; Vercel reports `READY` with preview target `null`.
+  - Repeated the desktop/mobile layout, business/operational trend selection, Completed RO target-editor open/cancel and mobile drawer checks on the hosted preview with no browser warnings/errors, native dialogs or Vercel runtime errors. Production remains unchanged on `dpl_HM7ox6Z57AxNK8d6kXqCwZV28RkH`.
+
 - **Production Release - Target Editor, Preview Parity and KPI Indicator Clarity (9 August 2026)**
   - Deployed approved source commit `6b18e3c` to `https://bodyshop-dashboard.vercel.app` as production deployment `dpl_HM7ox6Z57AxNK8d6kXqCwZV28RkH`.
   - Released the in-app target editor, shared authenticated/demo dashboard component, explicit KPI target labels and gaps, and responsive KPI card guide.
