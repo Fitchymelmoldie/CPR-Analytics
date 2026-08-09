@@ -135,7 +135,7 @@ The protected preview was reviewed and explicitly approved before this productio
 - Local browser verification passed at desktop and 390 x 844 mobile sizes. Selecting `Booth Cycle Time` updated the chart and panel together, including its rolling average and target status.
 - Local automated verification passed: 6 test files, 48 tests, production build, lint (existing non-blocking warnings only) and `git diff --check`.
 - Production remains on `dpl_6TCVFrMDUDVqeqkwrLBrkCWVT1Ti` / `bed17b8` until the user explicitly approves this release.
-- Review candidate source commits `5f3bc74` (`feat: add metric detail rolling average panel`) and `886b4a5` (`refine: remove redundant pulse callouts`), plus handoff commit `84f0872`, are pushed to `origin/agent/bodyshop-audit-hardening`.
+- Review candidate source commits `5f3bc74` (`feat: add metric detail rolling average panel`), `886b4a5` (`refine: remove redundant pulse callouts`) and `f094d51` (`feat: add percentage-aware chart scaling`), plus handoff metadata, are pushed to `origin/agent/bodyshop-audit-hardening`.
 
 ## Permanent release guardrails
 
@@ -149,7 +149,7 @@ The protected preview was reviewed and explicitly approved before this productio
 ## Source-control state
 
 - Working branch: `agent/bodyshop-audit-hardening`
-- Latest review candidate source: `886b4a5` (`refine: remove redundant pulse callouts`), building on `5f3bc74`; handoff metadata is in `84f0872`. All are pushed to `origin/agent/bodyshop-audit-hardening`.
+- Latest review candidate source: `f094d51` (`feat: add percentage-aware chart scaling`), building on `886b4a5` and `5f3bc74`; all review commits are pushed to `origin/agent/bodyshop-audit-hardening`.
 - Production remains on deployment `dpl_6TCVFrMDUDVqeqkwrLBrkCWVT1Ti`, built from source commit `bed17b8`; the review candidate has not been deployed.
 - `origin/main` was not changed; the production deployment was made directly from the approved working branch.
 - Only the three user-owned preview PNG files remain untracked; they were not committed or uploaded.
