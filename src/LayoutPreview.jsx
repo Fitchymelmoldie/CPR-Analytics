@@ -33,6 +33,22 @@ const MOCK_VALUES = {
   'Paint Revenue P/V': 880
 };
 const MOCK_VARIANCES = [8.4, 4.2, -3.6, -2.1, -0.7, 12.4, -3.2, 18.6, 2.8, 5.1];
+const MOCK_PREVIOUS_VALUES = Object.fromEntries(DASHBOARD_KPI_DEFINITIONS.map((definition, index) => {
+  const variance = MOCK_VARIANCES[index];
+  return [definition.title, Number.isFinite(variance) && variance > -100 ? MOCK_VALUES[definition.title] / (1 + variance / 100) : null];
+}));
+const MOCK_ROLLING_AVERAGES = {
+  'Total Sales': 1042500,
+  'Completed RO': 194,
+  'Paint Sales': 172600,
+  'Paint Cost / RO': 56,
+  'Paint Cost / Total Sales': 0.0118,
+  'VPD / Per Booth': 5.4,
+  'Booth Cycle Time': 1.9,
+  'Return on Paint Labour': 5.1,
+  'Liquid Cost to Refinish': 0.24,
+  'Paint Revenue P/V': 850
+};
 const MOCK_TARGETS = {
   'Completed RO': 190,
   'Paint Cost / RO': 50,
@@ -56,6 +72,9 @@ function DashboardPreview() {
   const items = useMemo(() => DASHBOARD_KPI_DEFINITIONS.map((definition, index) => ({
     ...definition,
     value: MOCK_VALUES[definition.title],
+    previousValue: MOCK_PREVIOUS_VALUES[definition.title],
+    rollingAverage: MOCK_ROLLING_AVERAGES[definition.title],
+    rollingMonths: 3,
     variance: MOCK_VARIANCES[index],
     benchmark: definition.targetable === false ? undefined : targets[definition.title],
     description: KPI_CONFIG[definition.title]?.description,
@@ -98,6 +117,7 @@ function DashboardPreview() {
         dailyTarget={8670}
         rollingMonths={3}
         reportingPeriod={reportingPeriod}
+        previousPeriod="July 2026"
         dataStatusLabel="10 metrics reporting"
         dataStatusTone={selectedPeriod === '2026-08' ? 'current' : 'historical'}
         trendData={trendData}

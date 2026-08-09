@@ -124,6 +124,7 @@ export default function DashboardWorkspace({
   dailyTarget,
   rollingMonths,
   reportingPeriod,
+  previousPeriod,
   dataStatusLabel,
   dataStatusTone,
   trendData,
@@ -201,7 +202,12 @@ export default function DashboardWorkspace({
                 comparisonLabel={comparisonLabel}
               />
             </div>
-            <PerformanceInsights items={items} selectedTitle={selectedKpi} />
+            <PerformanceInsights
+              items={items}
+              selectedTitle={selectedKpi}
+              reportingPeriod={reportingPeriod}
+              previousPeriod={previousPeriod}
+            />
           </div>
         ) : (
           <div className="glass card-appear card-appear-1 flex min-h-[300px] flex-col items-center justify-center rounded-[28px] p-10 text-center">

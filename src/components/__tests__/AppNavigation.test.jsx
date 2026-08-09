@@ -185,7 +185,7 @@ describe('Drawer and dashboard regression coverage', () => {
     const paintSales = await screen.findByRole('button', { name: /View Paint Sales trend/i });
     fireEvent.click(paintSales);
     expect(paintSales).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('heading', { name: 'Paint Sales' })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { name: 'Paint Sales' })).toHaveLength(2);
     expect(screen.queryByRole('button', { name: 'Set target for Paint Sales' })).not.toBeInTheDocument();
 
     const threeMonths = screen.getByRole('button', { name: '3M' });

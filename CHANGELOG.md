@@ -4,6 +4,13 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Metric Detail Panel with Rolling Average (9 August 2026)**
+  - Replaced the ambiguous `What changed` side panel with a selected-metric detail panel that shows the current period, previous period, rolling average, movement and target status in one place.
+  - Added a selected-period three-month rolling average using the selected month and the two preceding available months; ratio KPIs use weighted underlying totals so the average remains mathematically meaningful.
+  - Added plain-language target explanations such as `Ahead by`, `Short by`, `Over by` and `Under by`, plus an explicit `No target set` state for business metrics.
+  - Kept the shared authenticated/demo `DashboardWorkspace` component tree intact and added regression coverage for the new detail panel and KPI selection.
+  - Verified the local preview at desktop and 390 x 844 mobile sizes; the production alias remains unchanged pending release approval.
+
 - **Production Release - Business Snapshot Labels (9 August 2026)**
   - Deployed source commit `bed17b8` to `https://bodyshop-dashboard.vercel.app` as production deployment `dpl_6TCVFrMDUDVqeqkwrLBrkCWVT1Ti`.
   - Released the clearer `Daily actual` and `Daily budget` wording while leaving both rolling-quarter calculations unchanged.

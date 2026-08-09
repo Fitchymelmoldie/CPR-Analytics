@@ -1,12 +1,14 @@
 # Current Handoff
 
-Last updated: 9 August 2026, 9:27 PM AEST
+Last updated: 9 August 2026, 10:00 PM AEST
 
 ## Current status
 
 The approved Business Snapshot and operational KPI hierarchy is live and browser-verified in production. The customer-facing card now contains the `Business snapshot` title and business figures only, Total Sales and Paint Sales remain selectable trends without target controls, and the eight genuine operational KPIs drive the Performance Pulse. The latest source commit `bed17b8` is pushed to GitHub and Vercel production deployment `dpl_6TCVFrMDUDVqeqkwrLBrkCWVT1Ti` is `READY` on the public domain.
 
 The Business Snapshot now labels the rolling-quarter figures `Daily actual` and `Daily budget`; the underlying calculations remain unchanged. The authenticated production dashboard was rechecked after release and showed the expected labels and live values.
+
+The current local release candidate replaces the confusing chart-side `What changed` box with a `Metric detail` panel. It follows the selected KPI and reporting period, showing the current value, previous value, selected-period rolling average, movement wording and target status. The panel is wired through the shared dashboard component used by both the authenticated app and the demonstration preview. It has passed the full local test/build/lint checks and desktop/mobile browser review, but it has not been deployed to production.
 
 ## Live and review links
 
@@ -119,6 +121,16 @@ The protected preview was reviewed and explicitly approved before this productio
 - Confirmed `?layout-preview=1` remains disabled on production and continued to show the real authenticated workspace with no `Demo` label.
 - The public production URL returned HTTP 200; browser diagnostics and Vercel runtime scans reported no warnings, errors, fatal logs or native JavaScript dialogs.
 - No target, review, upload, invitation, deletion or other customer-data change was saved during production verification.
+
+### Metric Detail panel release candidate (9 August 2026)
+
+- Replaced the old `What changed` panel with a selected-metric `Metric detail` panel so the chart and its explanation refer to the same KPI.
+- The panel shows current period, previous period, selected-period rolling average, movement versus the previous period and target status/gap.
+- The rolling window is the selected reporting period plus the two preceding available periods. Ratio metrics use weighted source totals; simple operational metrics use the available-period average.
+- Business Snapshot metrics intentionally show `No target set`; operational metrics retain their configured health targets and plain-language gap wording.
+- Local browser verification passed at desktop and 390 x 844 mobile sizes. Selecting `Booth Cycle Time` updated the chart and panel together, including its rolling average and target status.
+- Local automated verification passed: 6 test files, 48 tests, production build, lint (existing non-blocking warnings only) and `git diff --check`.
+- Production remains on `dpl_6TCVFrMDUDVqeqkwrLBrkCWVT1Ti` / `bed17b8` until the user explicitly approves this release.
 
 ## Permanent release guardrails
 

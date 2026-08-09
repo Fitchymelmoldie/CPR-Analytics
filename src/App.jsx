@@ -25,6 +25,51 @@ const PAGE_META = {
   customers: { title: 'Customer Management', description: 'Manage bodyshop access and customer accounts' }
 };
 
+function metricValueFromRow(title, row) {
+  if (!row) return null;
+  const value = KPI_CONFIG[title]?.getValue(row);
+  return Number.isFinite(value) ? value : null;
+}
+
+function rollingMetricValue(title, rows) {
+  if (!rows.length) return null;
+
+  const sumField = (field) => rows.reduce((sum, row) => sum + (parseNum(row[field]) || 0), 0);
+
+  if (title === 'Return on Paint Labour') {
+    const sales = sumField('Paint Sales');
+    const labourCosts = sumField('Paint Labour Costs');
+    return labourCosts > 0 ? sales / labourCosts : null;
+  }
+
+  if (title === 'Paint Revenue P/V') {
+    const sales = sumField('Paint Sales');
+    const completedRO = sumField('Completed RO');
+    return completedRO > 0 ? sales / completedRO : null;
+  }
+
+  if (title === 'Paint Cost / RO') {
+    const totalPaintCost = rows.reduce((sum, row) => sum + ((parseNum(row['Paint Cost per RO']) || 0) * (parseNum(row['Completed RO']) || 0)), 0);
+    const completedRO = sumField('Completed RO');
+    return completedRO > 0 ? totalPaintCost / completedRO : null;
+  }
+
+  if (title === 'Paint Cost / Total Sales') {
+    const totalPaintCost = rows.reduce((sum, row) => sum + ((parseNum(row['Paint Cost per RO']) || 0) * (parseNum(row['Completed RO']) || 0)), 0);
+    const totalSales = sumField('Total Sales');
+    return totalSales > 0 ? totalPaintCost / totalSales : null;
+  }
+
+  if (title === 'Liquid Cost to Refinish') {
+    const totalPaintCost = rows.reduce((sum, row) => sum + ((parseNum(row['Paint Cost per RO']) || 0) * (parseNum(row['Completed RO']) || 0)), 0);
+    const paintSales = sumField('Paint Sales');
+    return paintSales > 0 ? totalPaintCost / paintSales : null;
+  }
+
+  const values = rows.map(row => metricValueFromRow(title, row)).filter(Number.isFinite);
+  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+}
+
 // === Main App ===
     function App() {
       const { user, profile, loading, requirePasswordSet, setRequirePasswordSet, signOut } = useAuth();
@@ -435,6 +480,20 @@ const PAGE_META = {
         return companyData.find(r => parseNum(r['Year']) === y && parseNum(r['Month']) === m) || null;
       }, [companyData, isMultiMonth, selectedPeriod, uniquePeriods]);
 
+      const selectedPeriodRollingRows = useMemo(() => {
+        if (!selectedPeriod) return [];
+        const [year, month] = selectedPeriod.split('-').map(Number);
+        const targetTotalMonths = year * 12 + month;
+        return companyData.filter(row => {
+          const rowTotalMonths = parseNum(row['Year']) * 12 + parseNum(row['Month']);
+          return rowTotalMonths <= targetTotalMonths && rowTotalMonths > targetTotalMonths - 3;
+        });
+      }, [companyData, selectedPeriod]);
+
+      const rollingMetricValues = useMemo(() => Object.fromEntries(
+        DASHBOARD_KPI_DEFINITIONS.map(definition => [definition.title, rollingMetricValue(definition.title, selectedPeriodRollingRows)])
+      ), [selectedPeriodRollingRows]);
+
       const handleDataEdit = (key, val) => {
         if (!currentRow) return;
         setHasUnsavedChanges(true);
@@ -771,6 +830,9 @@ const PAGE_META = {
       const dashboardKpiItems = DASHBOARD_KPI_DEFINITIONS.map((definition, index) => ({
         ...definition,
         value: kpis[definition.valueKey],
+        previousValue: metricValueFromRow(definition.title, prevRow),
+        rollingAverage: rollingMetricValues[definition.title],
+        rollingMonths: selectedPeriodRollingRows.length,
         variance: calcVariance(...definition.varianceArgs),
         benchmark: definition.targetable === false ? undefined : benchmarks[definition.title]?.target,
         rank: ranks?.[definition.rankKey],
@@ -781,6 +843,9 @@ const PAGE_META = {
       const reportingPeriodLabel = selectedPeriod
         ? `${MONTH_NAMES[parseInt(selectedPeriod.split('-')[1])]} ${selectedPeriod.split('-')[0]}`
         : 'Latest available period';
+      const previousReportingPeriodLabel = prevRow
+        ? `${MONTH_NAMES[parseNum(prevRow['Month'])]} ${parseNum(prevRow['Year'])}`
+        : null;
       const dashboardCompany = selectedCompanyProfile || (selectedCompany ? {
         id: selectedCompany,
         name: currentRow?.['Company Name'] || selectedCompany,
@@ -1075,6 +1140,7 @@ const PAGE_META = {
                 dailyTarget={kpis.dailyBudget}
                 rollingMonths={kpis.rollingMonths}
                 reportingPeriod={reportingPeriodLabel}
+                previousPeriod={previousReportingPeriodLabel}
                 dataStatusLabel={dashboardDataStatusLabel}
                 dataStatusTone={dashboardDataStatusTone}
                 trendData={isMultiMonth ? trendChartData : null}

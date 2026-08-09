@@ -27,6 +27,9 @@ describe('Layout preview parity', () => {
     expect(within(businessSnapshot).getByText('$1,080,528')).toBeInTheDocument();
     expect(within(businessSnapshot).getByText('Daily actual')).toBeInTheDocument();
     expect(within(businessSnapshot).getByText('Daily budget')).toBeInTheDocument();
+    expect(screen.getByText('Metric detail')).toBeInTheDocument();
+    expect(screen.getByText('3M rolling average')).toBeInTheDocument();
+    expect(screen.getByText('Target status')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Set target for Total Sales' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Set target for Paint Sales' })).not.toBeInTheDocument();
 
@@ -35,7 +38,7 @@ describe('Layout preview parity', () => {
 
     fireEvent.click(paintSales);
     expect(paintSales).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('heading', { name: 'Paint Sales' })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { name: 'Paint Sales' })).toHaveLength(2);
   });
 
   it('keeps target editing on genuine operational KPIs', () => {
@@ -48,7 +51,7 @@ describe('Layout preview parity', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Update target' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(screen.getByText('Target 210')).toBeInTheDocument();
+    expect(screen.getByText('Target 210', { selector: 'span' })).toBeInTheDocument();
   });
 
   it('uses only operational KPIs in the no-target reporting fallback', () => {
