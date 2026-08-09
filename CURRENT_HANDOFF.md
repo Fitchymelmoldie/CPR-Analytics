@@ -131,6 +131,7 @@ The protected preview was reviewed and explicitly approved before this productio
 - Local browser verification passed at desktop and 390 x 844 mobile sizes. Selecting `Booth Cycle Time` updated the chart and panel together, including its rolling average and target status.
 - Local automated verification passed: 6 test files, 48 tests, production build, lint (existing non-blocking warnings only) and `git diff --check`.
 - Production remains on `dpl_6TCVFrMDUDVqeqkwrLBrkCWVT1Ti` / `bed17b8` until the user explicitly approves this release.
+- Review candidate commit `5f3bc74` (`feat: add metric detail rolling average panel`) is pushed to `origin/agent/bodyshop-audit-hardening`.
 
 ## Permanent release guardrails
 
@@ -144,8 +145,8 @@ The protected preview was reviewed and explicitly approved before this productio
 ## Source-control state
 
 - Working branch: `agent/bodyshop-audit-hardening`
-- Release source commit: `2d6e55a` (`feat: separate business snapshot from operational KPIs`), pushed to `origin/agent/bodyshop-audit-hardening`.
-- The production alias now serves deployment `dpl_2HGdoxTGysR91weLUPn54nKVJpUf`, built from that exact source commit.
+- Latest review candidate commit: `5f3bc74` (`feat: add metric detail rolling average panel`), pushed to `origin/agent/bodyshop-audit-hardening`.
+- Production remains on deployment `dpl_6TCVFrMDUDVqeqkwrLBrkCWVT1Ti`, built from source commit `bed17b8`; the review candidate has not been deployed.
 - `origin/main` was not changed; the production deployment was made directly from the approved working branch.
 - Only the three user-owned preview PNG files remain untracked; they were not committed or uploaded.
 - Preserve the three untracked preview PNG files; they are user-owned artifacts and are excluded from Vercel uploads by `.vercelignore`.
