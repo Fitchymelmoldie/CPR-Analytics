@@ -1,16 +1,17 @@
 # Current Handoff
 
-Last updated: 9 August 2026, 8:30 PM AEST
+Last updated: 9 August 2026, 9:27 PM AEST
 
 ## Current status
 
-The approved Business Snapshot and operational KPI hierarchy is live and browser-verified in production. The customer-facing card now contains the `Business snapshot` title and business figures only, Total Sales and Paint Sales remain selectable trends without target controls, and the eight genuine operational KPIs drive the Performance Pulse. Release source commit `2d6e55a` is pushed to GitHub and Vercel production deployment `dpl_2HGdoxTGysR91weLUPn54nKVJpUf` is `READY` on the public domain.
+The approved Business Snapshot and operational KPI hierarchy is live and browser-verified in production. The customer-facing card now contains the `Business snapshot` title and business figures only, Total Sales and Paint Sales remain selectable trends without target controls, and the eight genuine operational KPIs drive the Performance Pulse. The latest source commit `bed17b8` is pushed to GitHub and Vercel production deployment `dpl_6TCVFrMDUDVqeqkwrLBrkCWVT1Ti` is `READY` on the public domain.
 
-The next local change renames the snapshot's informational rolling-quarter labels to `Daily actual` and `Daily budget`; the calculations remain unchanged and are not yet deployed to production.
+The Business Snapshot now labels the rolling-quarter figures `Daily actual` and `Daily budget`; the underlying calculations remain unchanged. The authenticated production dashboard was rechecked after release and showed the expected labels and live values.
 
 ## Live and review links
 
 - Current production: https://bodyshop-dashboard.vercel.app
+- Latest production deployment: `dpl_6TCVFrMDUDVqeqkwrLBrkCWVT1Ti` (source commit `bed17b8`)
 - Current production deployment ID: `dpl_2HGdoxTGysR91weLUPn54nKVJpUf`
 - Current production source commit: `2d6e55a`
 - Immutable production URL: https://bodyshop-dashboard-4bzn6cq2a-cpr-analytics.vercel.app
