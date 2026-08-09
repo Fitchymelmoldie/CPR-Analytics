@@ -4,6 +4,10 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Business Snapshot Labels (9 August 2026)**
+  - Renamed the rolling-quarter `Daily sales pace` and `3.3x reference` labels to `Daily actual` and `Daily budget` so the customer-facing snapshot matches the source spreadsheet's budget-versus-actual terminology.
+  - Kept both calculations and their rolling-quarter data source unchanged.
+
 - **Production Release - Business Snapshot and Operational KPI Hierarchy (9 August 2026)**
   - Deployed approved source commit `2d6e55a` to `https://bodyshop-dashboard.vercel.app` as production deployment `dpl_2HGdoxTGysR91weLUPn54nKVJpUf`.
   - Released the title-only Business Snapshot, two non-targetable sales trend controls, and the balanced eight-card operational KPI grid.

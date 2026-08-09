@@ -25,6 +25,8 @@ describe('Layout preview parity', () => {
     expect(totalSales).not.toHaveAccessibleName(/not included in the Performance Pulse/i);
     expect(totalSales).toHaveAttribute('aria-pressed', 'true');
     expect(within(businessSnapshot).getByText('$1,080,528')).toBeInTheDocument();
+    expect(within(businessSnapshot).getByText('Daily actual')).toBeInTheDocument();
+    expect(within(businessSnapshot).getByText('Daily budget')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Set target for Total Sales' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Set target for Paint Sales' })).not.toBeInTheDocument();
 

@@ -54,11 +54,11 @@ export default function BusinessSnapshot({
 
       <div className="business-pace mt-2.5 grid grid-cols-2 gap-x-3 rounded-2xl px-3 py-2.5">
         <div className="min-w-0">
-          <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-surface-600">Daily sales pace</span>
+          <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-surface-600">Daily actual</span>
           <strong className="mt-1 block truncate text-xs text-surface-200">{fmt(dailyActual, 'currency')}</strong>
         </div>
         <div className="min-w-0 border-l border-white/[0.05] pl-3">
-          <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-surface-600">3.3x reference</span>
+          <span className="block text-[8px] font-bold uppercase tracking-[0.12em] text-surface-600">Daily budget</span>
           <strong className="mt-1 block truncate text-xs text-surface-200">{referenceReady ? fmt(dailyReference, 'currency') : 'Building'}</strong>
         </div>
       </div>

@@ -1,10 +1,12 @@
 # Current Handoff
 
-Last updated: 9 August 2026, 8:12 PM AEST
+Last updated: 9 August 2026, 8:30 PM AEST
 
 ## Current status
 
 The approved Business Snapshot and operational KPI hierarchy is live and browser-verified in production. The customer-facing card now contains the `Business snapshot` title and business figures only, Total Sales and Paint Sales remain selectable trends without target controls, and the eight genuine operational KPIs drive the Performance Pulse. Release source commit `2d6e55a` is pushed to GitHub and Vercel production deployment `dpl_2HGdoxTGysR91weLUPn54nKVJpUf` is `READY` on the public domain.
+
+The next local change renames the snapshot's informational rolling-quarter labels to `Daily actual` and `Daily budget`; the calculations remain unchanged and are not yet deployed to production.
 
 ## Live and review links
 
