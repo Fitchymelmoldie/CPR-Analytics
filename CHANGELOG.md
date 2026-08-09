@@ -4,12 +4,15 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
-- **Percentage-Aware Performance Rhythm (9 August 2026)**
+- **Production Release - Percentage-Aware Performance Rhythm (9 August 2026)**
+  - Deployed approved source commit `1ee4927` to `https://bodyshop-dashboard.vercel.app` as production deployment `dpl_HzRBSLMmhkkJRZcr7dGMmTWX18Ua`.
   - Added an adaptive percentage chart mode for low-range ratio KPIs such as Paint Cost / Total Sales and Liquid Cost to Refinish.
   - Percentage values are now plotted in percentage points with readable axis labels, while the target line and accessible month tooltips retain the underlying values.
   - Kept the existing absolute-value bar treatment for sales, counts and currency KPIs so the chart remains familiar where it already works well.
   - Added regression coverage for the percentage scale and target line; verified the local desktop/mobile preview, full 48-test suite and production build.
-  - Production remains unchanged pending approval.
+  - Repeated the release gate: lint passed with only existing non-blocking warnings, the production dependency audit found zero high-severity vulnerabilities, the native-dialog scan was clean and `git diff --check` passed.
+  - Browser-verified the authenticated production dashboard at desktop and 390 x 844 mobile widths: percentage scale, target line, Metric Detail rolling average, no horizontal overflow, no console errors/warnings and no native dialogs.
+  - Vercel reported no production runtime errors; verification was read-only and did not mutate targets or customer data.
 
 - **Performance Pulse Callout Cleanup (9 August 2026)**
   - Removed the `Strongest movement` and `Watch this period` callouts from the Performance Pulse because the new Metric Detail panel is now the single place for KPI movement and target context.

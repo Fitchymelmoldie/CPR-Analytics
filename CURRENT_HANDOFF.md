@@ -1,26 +1,22 @@
 # Current Handoff
 
-Last updated: 9 August 2026, 10:32 PM AEST
+Last updated: 9 August 2026, 11:11 PM AEST
 
 ## Current status
 
-The approved Business Snapshot and operational KPI hierarchy is live and browser-verified in production. The customer-facing card now contains the `Business snapshot` title and business figures only, Total Sales and Paint Sales remain selectable trends without target controls, and the eight genuine operational KPIs drive the Performance Pulse. The latest source commit `bed17b8` is pushed to GitHub and Vercel production deployment `dpl_6TCVFrMDUDVqeqkwrLBrkCWVT1Ti` is `READY` on the public domain.
+The approved Business Snapshot, operational KPI hierarchy, Metric Detail panel, pulse-callout cleanup and percentage-aware Performance Rhythm are live and browser-verified in production. The customer-facing card contains the `Business snapshot` title and business figures only, Total Sales and Paint Sales remain selectable trends without target controls, and the eight genuine operational KPIs drive the Performance Pulse. The latest deployed source commit is `1ee4927`; Vercel production deployment `dpl_HzRBSLMmhkkJRZcr7dGMmTWX18Ua` is `READY` and owns the public domain.
 
 The Business Snapshot now labels the rolling-quarter figures `Daily actual` and `Daily budget`; the underlying calculations remain unchanged. The authenticated production dashboard was rechecked after release and showed the expected labels and live values.
 
-The current local release candidate replaces the confusing chart-side `What changed` box with a `Metric detail` panel. It follows the selected KPI and reporting period, showing the current value, previous value, selected-period rolling average, movement wording and target status. The panel is wired through the shared dashboard component used by both the authenticated app and the demonstration preview. It has passed the full local test/build/lint checks and desktop/mobile browser review, but it has not been deployed to production.
+The production dashboard now replaces the confusing chart-side `What changed` box with a `Metric detail` panel. It follows the selected KPI and reporting period, showing the current value, previous value, selected-period rolling average, movement wording and target status. The redundant `Strongest movement` and `Watch this period` pulse callouts have also been removed so this panel is the single place for movement and target context.
 
-The latest local refinement removes the redundant `Strongest movement` and `Watch this period` callouts from the Performance Pulse. Movement and target context now live in the selected Metric Detail panel, while the pulse score and Business Snapshot remain intact. This refinement is validated locally and has not been deployed.
-
-The latest local release candidate adds a percentage-aware Performance Rhythm mode. Low-range percentage KPIs now use percentage-point values and readable local axis labels, with the target line retained; sales, counts and currency KPIs keep the existing bar scale. Paint Cost / Total Sales and Liquid Cost to Refinish were checked in the local preview at desktop and mobile widths. This change has not been deployed to production.
+Low-range percentage KPIs now use percentage-point values and readable local axis labels, with the target line retained; sales, counts and currency KPIs keep the existing bar scale. Paint Cost / Total Sales was verified live at desktop and mobile widths with distinct bars, a visible percentage scale and the configured target line.
 
 ## Live and review links
 
 - Current production: https://bodyshop-dashboard.vercel.app
-- Latest production deployment: `dpl_6TCVFrMDUDVqeqkwrLBrkCWVT1Ti` (source commit `bed17b8`)
-- Current production deployment ID: `dpl_2HGdoxTGysR91weLUPn54nKVJpUf`
-- Current production source commit: `2d6e55a`
-- Immutable production URL: https://bodyshop-dashboard-4bzn6cq2a-cpr-analytics.vercel.app
+- Current production deployment: `dpl_HzRBSLMmhkkJRZcr7dGMmTWX18Ua` (source commit `1ee4927`, `READY`)
+- Immutable production URL: https://bodyshop-dashboard-c8zhh42tt-cpr-analytics.vercel.app
 - Superseded Business Snapshot preview: https://bodyshop-dashboard-6fhx4afi9-cpr-analytics.vercel.app/?layout-preview=1
 - Hosted Business Snapshot preview deployment ID: `dpl_9vXkoGzRcTkKgyGSwVJbMg3oEP1v` (`READY`, preview target `null`)
 - Superseded target-editor preview: https://bodyshop-dashboard-5l6watss2-cpr-analytics.vercel.app/?layout-preview=1 (`dpl_HnqWfk4BQG9vgsSFAmpWqZWc2mLy`)
@@ -126,7 +122,7 @@ The protected preview was reviewed and explicitly approved before this productio
 - The public production URL returned HTTP 200; browser diagnostics and Vercel runtime scans reported no warnings, errors, fatal logs or native JavaScript dialogs.
 - No target, review, upload, invitation, deletion or other customer-data change was saved during production verification.
 
-### Metric Detail panel release candidate (9 August 2026)
+### Metric Detail panel and percentage chart production release (9 August 2026)
 
 - Replaced the old `What changed` panel with a selected-metric `Metric detail` panel so the chart and its explanation refer to the same KPI.
 - The panel shows current period, previous period, selected-period rolling average, movement versus the previous period and target status/gap.
@@ -134,7 +130,10 @@ The protected preview was reviewed and explicitly approved before this productio
 - Business Snapshot metrics intentionally show `No target set`; operational metrics retain their configured health targets and plain-language gap wording.
 - Local browser verification passed at desktop and 390 x 844 mobile sizes. Selecting `Booth Cycle Time` updated the chart and panel together, including its rolling average and target status.
 - Local automated verification passed: 6 test files, 48 tests, production build, lint (existing non-blocking warnings only) and `git diff --check`.
-- Production remains on `dpl_6TCVFrMDUDVqeqkwrLBrkCWVT1Ti` / `bed17b8` until the user explicitly approves this release.
+- Production release `dpl_HzRBSLMmhkkJRZcr7dGMmTWX18Ua` / `1ee4927` is `READY` on the public domain after explicit approval.
+- The release gate passed: 48 tests, production build, lint with only existing non-blocking warnings, zero high-severity production dependency vulnerabilities, native-dialog scan, and Git whitespace checks.
+- Live desktop and 390 x 844 mobile verification confirmed the percentage scale, target line, Metric Detail rolling average, no horizontal overflow, no browser console errors/warnings, no native dialogs and no Vercel runtime errors.
+- Production verification was read-only; no live target, upload, invitation, deletion or other customer-data mutation was performed.
 - Review candidate source commits `5f3bc74` (`feat: add metric detail rolling average panel`), `886b4a5` (`refine: remove redundant pulse callouts`) and `f094d51` (`feat: add percentage-aware chart scaling`), plus handoff metadata, are pushed to `origin/agent/bodyshop-audit-hardening`.
 
 ## Permanent release guardrails
@@ -149,8 +148,8 @@ The protected preview was reviewed and explicitly approved before this productio
 ## Source-control state
 
 - Working branch: `agent/bodyshop-audit-hardening`
-- Latest review candidate source: `f094d51` (`feat: add percentage-aware chart scaling`), building on `886b4a5` and `5f3bc74`; all review commits are pushed to `origin/agent/bodyshop-audit-hardening`.
-- Production remains on deployment `dpl_6TCVFrMDUDVqeqkwrLBrkCWVT1Ti`, built from source commit `bed17b8`; the review candidate has not been deployed.
+- Latest production source: `1ee4927` (`docs: record percentage chart refinement`), building on `f094d51`, `886b4a5` and `5f3bc74`; all review commits are pushed to `origin/agent/bodyshop-audit-hardening`.
+- Production deployment `dpl_HzRBSLMmhkkJRZcr7dGMmTWX18Ua` is `READY` and serves `https://bodyshop-dashboard.vercel.app`.
 - `origin/main` was not changed; the production deployment was made directly from the approved working branch.
 - Only the three user-owned preview PNG files remain untracked; they were not committed or uploaded.
 - Preserve the three untracked preview PNG files; they are user-owned artifacts and are excluded from Vercel uploads by `.vercelignore`.
