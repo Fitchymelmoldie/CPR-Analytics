@@ -30,6 +30,9 @@ describe('Layout preview parity', () => {
     expect(screen.getByText('Metric detail')).toBeInTheDocument();
     expect(screen.getByText('3M rolling average')).toBeInTheDocument();
     expect(screen.getByText('Target status')).toBeInTheDocument();
+    expect(screen.queryByText(/Movement compares the selected period/i)).not.toBeInTheDocument();
+    expect(document.querySelector('.performance-insights')).toHaveClass('h-full');
+    expect(document.querySelector('.performance-rhythm')).toHaveClass('h-full');
     expect(screen.queryByText('Strongest movement')).not.toBeInTheDocument();
     expect(screen.queryByText('Watch this period')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Set target for Total Sales' })).not.toBeInTheDocument();

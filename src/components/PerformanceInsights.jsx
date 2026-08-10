@@ -61,7 +61,7 @@ export default function PerformanceInsights({ items, selectedTitle, reportingPer
     : 'Waiting for enough reporting periods';
 
   return (
-    <aside className="performance-insights rounded-[28px] p-5 sm:p-6" aria-labelledby="performance-insights-title">
+    <aside className="performance-insights h-full rounded-[28px] p-5 sm:p-6" aria-labelledby="performance-insights-title">
       <div>
         <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-surface-500">Metric detail</span>
         <h3 id="performance-insights-title" className="mt-2 text-xl font-bold tracking-tight text-white">{selected?.title || 'Choose a KPI'}</h3>
@@ -95,9 +95,6 @@ export default function PerformanceInsights({ items, selectedTitle, reportingPer
             <p>{target.detail}</p>
           </div>
 
-          <p className="px-1 pt-1 text-[10px] leading-relaxed text-surface-600">
-            Movement compares the selected period with the previous period. The rolling average uses the selected period and the two preceding available periods.
-          </p>
         </div>
       ) : null}
     </aside>

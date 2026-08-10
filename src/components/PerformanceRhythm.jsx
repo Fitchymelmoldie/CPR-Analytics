@@ -33,7 +33,7 @@ export default function PerformanceRhythm({ data, title, timeframe, onTimeframeC
     : [];
 
   return (
-    <section className="performance-rhythm min-w-0 rounded-[28px] p-5 sm:p-6" aria-labelledby="performance-rhythm-title">
+    <section className="performance-rhythm h-full min-w-0 rounded-[28px] p-5 sm:p-6" aria-labelledby="performance-rhythm-title">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">

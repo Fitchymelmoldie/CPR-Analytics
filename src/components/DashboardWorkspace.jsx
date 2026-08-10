@@ -189,8 +189,8 @@ export default function DashboardWorkspace({
 
       <section className="pb-4" id="charts">
         {trendData ? (
-          <div className="grid gap-3.5 xl:grid-cols-[minmax(0,1.65fr)_minmax(290px,.7fr)]">
-            <div className="min-w-0 overflow-x-auto rounded-[28px]">
+          <div className="grid items-stretch gap-3.5 xl:grid-cols-[minmax(0,1.65fr)_minmax(290px,.7fr)]">
+            <div className="h-full min-w-0 overflow-x-auto rounded-[28px]">
               <PerformanceRhythm
                 key={`${selectedKpi}-${timeframe}`}
                 data={trendData}
