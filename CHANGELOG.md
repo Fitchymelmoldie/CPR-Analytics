@@ -4,6 +4,15 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Production Release - Metric Detail Panel Alignment (10 August 2026)**
+  - Deployed approved source commit `34dcb47` to `https://bodyshop-dashboard.vercel.app` as production deployment `dpl_3AQ3TRxHb4ECSfCq2JurybaWV3sr`.
+  - Matched the Metric Detail panel height and outer alignment to the adjacent Performance Rhythm panel at desktop widths while preserving the stacked mobile layout.
+  - Removed the redundant explanatory note from the bottom of Metric Detail; the selected KPI value, previous period, rolling average and target status remain intact.
+  - Added regression coverage for the removed note and shared panel sizing classes; all 48 tests and the production build passed.
+  - Lint passed with only existing non-blocking warnings, the production dependency audit found zero high-severity vulnerabilities and `git diff --check` passed.
+  - Browser-verified authenticated production at desktop and 390 x 844 mobile widths: panels align or stack correctly, no horizontal overflow, no console errors/warnings and no native dialogs.
+  - Vercel reported no production runtime errors; verification was read-only and did not mutate targets or customer data.
+
 - **Production Release - Percentage-Aware Performance Rhythm (9 August 2026)**
   - Deployed approved source commit `1ee4927` to `https://bodyshop-dashboard.vercel.app` as production deployment `dpl_HzRBSLMmhkkJRZcr7dGMmTWX18Ua`.
   - Added an adaptive percentage chart mode for low-range ratio KPIs such as Paint Cost / Total Sales and Liquid Cost to Refinish.

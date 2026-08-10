@@ -1,10 +1,10 @@
 # Current Handoff
 
-Last updated: 9 August 2026, 11:11 PM AEST
+Last updated: 10 August 2026, 7:13 PM AEST
 
 ## Current status
 
-The approved Business Snapshot, operational KPI hierarchy, Metric Detail panel, pulse-callout cleanup and percentage-aware Performance Rhythm are live and browser-verified in production. The customer-facing card contains the `Business snapshot` title and business figures only, Total Sales and Paint Sales remain selectable trends without target controls, and the eight genuine operational KPIs drive the Performance Pulse. The latest deployed source commit is `1ee4927`; Vercel production deployment `dpl_HzRBSLMmhkkJRZcr7dGMmTWX18Ua` is `READY` and owns the public domain.
+The approved Business Snapshot, operational KPI hierarchy, Metric Detail panel, pulse-callout cleanup and percentage-aware Performance Rhythm are live and browser-verified in production. The customer-facing card contains the `Business snapshot` title and business figures only, Total Sales and Paint Sales remain selectable trends without target controls, and the eight genuine operational KPIs drive the Performance Pulse. The latest deployed source commit is `34dcb47`; Vercel production deployment `dpl_3AQ3TRxHb4ECSfCq2JurybaWV3sr` is `READY` and owns the public domain.
 
 The Business Snapshot now labels the rolling-quarter figures `Daily actual` and `Daily budget`; the underlying calculations remain unchanged. The authenticated production dashboard was rechecked after release and showed the expected labels and live values.
 
@@ -12,11 +12,13 @@ The production dashboard now replaces the confusing chart-side `What changed` bo
 
 Low-range percentage KPIs now use percentage-point values and readable local axis labels, with the target line retained; sales, counts and currency KPIs keep the existing bar scale. Paint Cost / Total Sales was verified live at desktop and mobile widths with distinct bars, a visible percentage scale and the configured target line.
 
+The Metric Detail panel now shares the Performance Rhythm panel's height and outer alignment, so the two windows read as one coordinated analysis area. The redundant explanatory note at the bottom of Metric Detail has been removed; the panel keeps the selected KPI's current value, previous period, rolling average and target status.
+
 ## Live and review links
 
 - Current production: https://bodyshop-dashboard.vercel.app
-- Current production deployment: `dpl_HzRBSLMmhkkJRZcr7dGMmTWX18Ua` (source commit `1ee4927`, `READY`)
-- Immutable production URL: https://bodyshop-dashboard-c8zhh42tt-cpr-analytics.vercel.app
+- Current production deployment: `dpl_3AQ3TRxHb4ECSfCq2JurybaWV3sr` (source commit `34dcb47`, `READY`)
+- Immutable production URL: https://bodyshop-dashboard-iw2d3ob6r-cpr-analytics.vercel.app
 - Superseded Business Snapshot preview: https://bodyshop-dashboard-6fhx4afi9-cpr-analytics.vercel.app/?layout-preview=1
 - Hosted Business Snapshot preview deployment ID: `dpl_9vXkoGzRcTkKgyGSwVJbMg3oEP1v` (`READY`, preview target `null`)
 - Superseded target-editor preview: https://bodyshop-dashboard-5l6watss2-cpr-analytics.vercel.app/?layout-preview=1 (`dpl_HnqWfk4BQG9vgsSFAmpWqZWc2mLy`)
@@ -122,6 +124,15 @@ The protected preview was reviewed and explicitly approved before this productio
 - The public production URL returned HTTP 200; browser diagnostics and Vercel runtime scans reported no warnings, errors, fatal logs or native JavaScript dialogs.
 - No target, review, upload, invitation, deletion or other customer-data change was saved during production verification.
 
+### Metric Detail panel alignment production release (10 August 2026)
+
+- Matched the Metric Detail panel height and outer alignment to the adjacent Performance Rhythm panel at desktop widths while preserving the stacked mobile layout.
+- Removed the redundant explanatory note from the bottom of Metric Detail; the selected KPI value, previous period, rolling average and target status remain intact.
+- Added regression coverage for the removed note and shared panel sizing classes.
+- Local and authenticated production browser checks passed at desktop and 390 x 844 mobile sizes: panels align or stack correctly, no horizontal overflow, no console errors/warnings and no native dialogs.
+- Production release `dpl_3AQ3TRxHb4ECSfCq2JurybaWV3sr` / `34dcb47` is `READY` on the public domain after explicit approval.
+- Production verification was read-only; no live target, upload, invitation, deletion or other customer-data mutation was performed.
+
 ### Metric Detail panel and percentage chart production release (9 August 2026)
 
 - Replaced the old `What changed` panel with a selected-metric `Metric detail` panel so the chart and its explanation refer to the same KPI.
@@ -148,8 +159,8 @@ The protected preview was reviewed and explicitly approved before this productio
 ## Source-control state
 
 - Working branch: `agent/bodyshop-audit-hardening`
-- Latest production source: `1ee4927` (`docs: record percentage chart refinement`), building on `f094d51`, `886b4a5` and `5f3bc74`; all review commits are pushed to `origin/agent/bodyshop-audit-hardening`.
-- Production deployment `dpl_HzRBSLMmhkkJRZcr7dGMmTWX18Ua` is `READY` and serves `https://bodyshop-dashboard.vercel.app`.
+- Latest production source: `34dcb47` (`refine: align metric detail panel`), building on `1ee4927`, `f094d51`, `886b4a5` and `5f3bc74`; all review commits are pushed to `origin/agent/bodyshop-audit-hardening`.
+- Production deployment `dpl_3AQ3TRxHb4ECSfCq2JurybaWV3sr` is `READY` and serves `https://bodyshop-dashboard.vercel.app`.
 - `origin/main` was not changed; the production deployment was made directly from the approved working branch.
 - Only the three user-owned preview PNG files remain untracked; they were not committed or uploaded.
 - Preserve the three untracked preview PNG files; they are user-owned artifacts and are excluded from Vercel uploads by `.vercelignore`.
