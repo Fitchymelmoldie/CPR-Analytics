@@ -1,22 +1,22 @@
 # Current Handoff
 
-Last updated: 21 August 2026, 10:45 PM AEST
+Last updated: 21 August 2026, 11:46 PM AEST
 
 This document is the authoritative current-state snapshot. Historical implementation and Preview details belong in `CHANGELOG.md`.
 
 ## Release status
 
-- Stage: pre-production release candidate under review.
+- Stage: production release completed; post-release verification complete.
 - Working branch: `agent/bodyshop-audit-hardening`.
-- Working-tree base: `9e57ca3`.
-- Candidate state: intentionally uncommitted and unpushed.
-- Production: `https://bodyshop-dashboard.vercel.app`, deployment `dpl_3AQ3TRxHb4ECSfCq2JurybaWV3sr`, source commit `34dcb47`.
+- Working-tree base: `7757e60` (`feat: finalize dashboard production release`).
+- Candidate state: committed locally. GitHub branch push was blocked by the environment's full-source export safeguard; no workaround was used.
+- Production: `https://bodyshop-dashboard.vercel.app`, deployment `dpl_75WAHNYY2GR3BTUbygqBHE9vcoVk`, `READY`, target `production`, source deployed from the verified local release commit.
 - Latest protected Preview: `https://bodyshop-dashboard-il59n1e5d-cpr-analytics.vercel.app/?layout-preview=1`, deployment `dpl_FWkY7hXqSYk6A1ULd1y9qQgyjCXW`, `READY`, target `preview`.
-- Local candidate follow-up: Data & Imports now offers bulk CSV import and Quick KPI Entry for one metric/month, using a dark in-app year/month picker that stays consistent with the dashboard instead of opening the browser's native calendar. The entry flow preserves every other value in an existing period. Missing values remain visibly incomplete rather than becoming false zero KPIs. Gamified Leaderboards is deferred behind a disabled feature flag and removed from active navigation. The site-wide content hierarchy pass also removes repeated subtitles and instructions while preserving labels, meaningful states and contextual help. These 21 August changes are covered by the 76-test local gate and included in the latest protected Preview; the source remains intentionally uncommitted and unpushed.
+- Release follow-up: Data & Imports now offers bulk CSV import and Quick KPI Entry for one metric/month, using a dark in-app year/month picker that stays consistent with the dashboard instead of opening the browser's native calendar. The entry flow preserves every other value in an existing period. Missing values remain visibly incomplete rather than becoming false zero KPIs. Gamified Leaderboards is deferred behind a disabled feature flag and removed from active navigation. The site-wide content hierarchy pass also removes repeated subtitles and instructions while preserving labels, meaningful states and contextual help. These 21 August changes passed the final 77-test local gate and are live in the production deployment above.
 - Earlier review follow-up: the entire product uses one Codex-native visual and interaction system across Customer Management, Data & Imports, profile, reviews, authentication, dialogs and KPI reporting. KPI reordering is deterministic on pointer, touch and keyboard. KPI charts use clean adaptive Y scales, year-aware X labels, directional external goal keys and one compact target-aware tooltip that previews on hover/focus and pins on click/tap; browser-native duplicate tooltips have been removed. The plot uses one stable crosshair and continuous nearest-month hover regions, eliminating the arrow/hand flicker and dead zones between points.
-- Production has not been changed, promoted or re-aliased during this candidate cycle.
+- Production was promoted and aliased only after the local test/build/lint gates, Supabase audit, Vercel inspection, desktop/mobile smoke checks and hosted browser checks were green.
 
-Do not commit, push or deploy to production without the user's explicit approval.
+Do not make another production deployment without explicit approval.
 
 ## What is in the release candidate
 
