@@ -9,7 +9,7 @@ This document is the authoritative current-state snapshot. Historical implementa
 - Stage: production release completed; post-release verification complete.
 - Working branch: `agent/bodyshop-audit-hardening`.
 - Working-tree base: `7757e60` (`feat: finalize dashboard production release`).
-- Candidate state: committed locally. GitHub branch push was blocked by the environment's full-source export safeguard; no workaround was used.
+- Candidate state: committed and pushed to `origin/agent/bodyshop-audit-hardening`.
 - Production: `https://bodyshop-dashboard.vercel.app`, deployment `dpl_75WAHNYY2GR3BTUbygqBHE9vcoVk`, `READY`, target `production`, source deployed from the verified local release commit.
 - Latest protected Preview: `https://bodyshop-dashboard-il59n1e5d-cpr-analytics.vercel.app/?layout-preview=1`, deployment `dpl_FWkY7hXqSYk6A1ULd1y9qQgyjCXW`, `READY`, target `preview`.
 - Release follow-up: Data & Imports now offers bulk CSV import and Quick KPI Entry for one metric/month, using a dark in-app year/month picker that stays consistent with the dashboard instead of opening the browser's native calendar. The entry flow preserves every other value in an existing period. Missing values remain visibly incomplete rather than becoming false zero KPIs. Gamified Leaderboards is deferred behind a disabled feature flag and removed from active navigation. The site-wide content hierarchy pass also removes repeated subtitles and instructions while preserving labels, meaningful states and contextual help. These 21 August changes passed the final 77-test local gate and are live in the production deployment above.
@@ -135,7 +135,7 @@ Protected Preview `dpl_C7Zow3v7edU2DaJWC445bwWL67ti` returned HTTP 200 through a
 1. The verified application source is committed locally as `7757e60`; the documentation follow-up is recorded in `623a3de`.
 2. Production is live at `https://bodyshop-dashboard.vercel.app` as `dpl_75WAHNYY2GR3BTUbygqBHE9vcoVk` (`READY`, target `production`).
 3. The final 77-test, build, lint, dependency, Supabase, Vercel, desktop and mobile checks are recorded in `CHANGELOG.md`.
-4. GitHub push was attempted and stopped by the environment's full-source export safeguard. No workaround was used; the commits remain available locally for a later approved push.
+4. GitHub now contains the verified release branch at `origin/agent/bodyshop-audit-hardening`; production was already deployed from the same verified source sequence.
 
 ## Release guardrails
 
