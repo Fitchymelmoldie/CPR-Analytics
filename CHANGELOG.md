@@ -5,7 +5,7 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 ## Production release — 21 August 2026
 
 - Promoted the verified release commit `7757e60` to `https://bodyshop-dashboard.vercel.app` as deployment `dpl_75WAHNYY2GR3BTUbygqBHE9vcoVk` (`READY`, target `production`).
-- Final gates: 77 Vitest tests passed; Vite build passed; lint completed with one existing Fast Refresh warning and no errors; Supabase project `ACTIVE_HEALTHY` with the three release migrations applied, RLS enabled on all public tables, authenticated-only grants, active JWT-protected edge functions and successful recent API/Auth requests; production desktop and 390 x 844 mobile smoke checks passed with no overflow, native month inputs or native KPI selects; no recent Vercel logs were present.
+- Final gates: 77 Vitest tests passed; Vite build passed; lint completed with one existing Fast Refresh warning and no errors; `npm audit --omit=dev --audit-level=high` found 0 vulnerabilities; Supabase project `ACTIVE_HEALTHY` with the three release migrations applied, RLS enabled on all public tables, authenticated-only grants, active JWT-protected edge functions and successful recent API/Auth requests; production desktop and 390 x 844 mobile smoke checks passed with no overflow, native month inputs or native KPI selects; no recent Vercel logs were present.
 - Supabase security advisory remains open for leaked-password protection being disabled. It is a dashboard-level Auth setting and was not silently changed during this release.
 - GitHub push was attempted and blocked by the environment's full-source export safeguard; the release commit remains recorded locally and no workaround was used.
 
