@@ -80,7 +80,7 @@ export default function BenchmarkTargetModal({
 
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
+      className="codex-dialog-backdrop fixed inset-0 z-[80] flex items-center justify-center p-4"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget && !isSaving) onClose();
       }}
@@ -90,13 +90,13 @@ export default function BenchmarkTargetModal({
         aria-modal="true"
         aria-labelledby="benchmark-target-title"
         aria-describedby="benchmark-target-description"
-        className="glass relative w-full max-w-lg rounded-[28px] border border-brand-500/20 p-6 shadow-[0_30px_90px_rgba(0,0,0,.5)] sm:p-7 animate-scale-in"
+        className="codex-dialog relative w-full max-w-lg p-6 sm:p-7"
       >
         <button
           type="button"
           onClick={onClose}
           disabled={isSaving}
-          className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-xl text-surface-400 transition-colors hover:bg-white/[0.05] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300/70 disabled:opacity-40"
+          className="codex-icon-button absolute right-4 top-4 grid h-9 w-9 place-items-center disabled:opacity-40"
           aria-label="Close target editor"
         >
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">

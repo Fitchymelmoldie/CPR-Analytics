@@ -54,11 +54,11 @@ export default function ReportingPeriodModal({ isOpen, companyName, latestPeriod
 
   return (
     <div
-      className="fixed inset-0 z-[80] flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
+      className="codex-dialog-backdrop fixed inset-0 z-[80] flex items-center justify-center p-4"
       onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
     >
-      <section role="dialog" aria-modal="true" aria-labelledby="reporting-period-title" className="glass relative w-full max-w-md rounded-[28px] border border-brand-500/20 p-6 shadow-[0_30px_90px_rgba(0,0,0,.5)] sm:p-7 animate-scale-in">
-        <button type="button" onClick={onClose} className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-xl text-surface-400 hover:bg-white/[0.05] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300/70" aria-label="Close reporting period editor">
+      <section role="dialog" aria-modal="true" aria-labelledby="reporting-period-title" className="codex-dialog relative w-full max-w-md p-6 sm:p-7">
+        <button type="button" onClick={onClose} className="codex-icon-button absolute right-4 top-4 grid h-9 w-9 place-items-center" aria-label="Close reporting period editor">
           <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18 18 6M6 6l12 12" /></svg>
         </button>
         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-400">Data & imports</p>
@@ -69,19 +69,19 @@ export default function ReportingPeriodModal({ isOpen, companyName, latestPeriod
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label htmlFor="reporting-period-month" className="block text-xs font-bold uppercase tracking-[0.14em] text-surface-400">Month</label>
-              <select id="reporting-period-month" value={month} onChange={(event) => { setMonth(event.target.value); setError(''); }} className="mt-2 w-full rounded-2xl border border-surface-700 bg-surface-900/80 px-4 py-3 text-sm font-semibold text-white outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20">
+              <select id="reporting-period-month" value={month} onChange={(event) => { setMonth(event.target.value); setError(''); }} className="codex-input mt-2 w-full px-4 py-3 text-sm font-semibold">
                 {MONTH_NAMES.slice(1).map((name, index) => <option key={name} value={index + 1}>{name}</option>)}
               </select>
             </div>
             <div>
               <label htmlFor="reporting-period-year" className="block text-xs font-bold uppercase tracking-[0.14em] text-surface-400">Year</label>
-              <input ref={yearRef} id="reporting-period-year" type="number" min="2000" max="2100" step="1" value={year} onChange={(event) => { setYear(event.target.value); setError(''); }} className="mt-2 w-full rounded-2xl border border-surface-700 bg-surface-900/80 px-4 py-3 text-sm font-semibold text-white outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20" />
+              <input ref={yearRef} id="reporting-period-year" type="number" min="2000" max="2100" step="1" value={year} onChange={(event) => { setYear(event.target.value); setError(''); }} className="codex-input mt-2 w-full px-4 py-3 text-sm font-semibold" />
             </div>
           </div>
           <p className="min-h-5 text-sm text-danger-400" aria-live="polite">{error}</p>
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={onClose} className="rounded-xl px-4 py-2.5 text-sm font-semibold text-surface-300 hover:bg-white/[0.04] hover:text-white">Cancel</button>
-            <button type="submit" className="rounded-xl bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(0,168,150,.2)] hover:bg-brand-500">Add period</button>
+            <button type="button" onClick={onClose} className="codex-button codex-button-secondary px-4 py-2.5 text-xs">Cancel</button>
+            <button type="submit" className="codex-button codex-button-primary px-4 py-2.5 text-xs">Add period</button>
           </div>
         </form>
       </section>

@@ -36,13 +36,12 @@ export default function SetPasswordScreen({ onComplete }) {
   };
 
   return (
-    <div className="min-h-screen bg-surface-900 flex flex-col justify-center items-center p-4 relative overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+    <div className="min-h-screen bg-[#101112] flex flex-col justify-center items-center p-4 relative overflow-hidden">
       
-      <div className="glass rounded-2xl p-8 sm:p-10 w-full max-w-md relative z-10 animate-float-in border border-white/10 shadow-2xl">
+      <div className="codex-dialog w-full max-w-sm p-6 sm:p-7 relative z-10">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-danger-500 flex items-center justify-center shadow-lg shadow-brand-500/20 mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <div className="w-11 h-11 rounded-xl border border-brand-400/20 bg-brand-400/[0.08] flex items-center justify-center mb-4">
+            <svg className="w-6 h-6 text-brand-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
             </svg>
           </div>
@@ -53,7 +52,7 @@ export default function SetPasswordScreen({ onComplete }) {
         </div>
         
         <form onSubmit={handleSetPassword} className="space-y-4">
-          <div className="bg-surface-800/50 border border-surface-700 rounded-xl p-4 space-y-4">
+          <div className="space-y-4">
             <div>
               <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-2">New Password</label>
               <input 
@@ -62,7 +61,7 @@ export default function SetPasswordScreen({ onComplete }) {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setError(''); }}
-                className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors placeholder-surface-500"
+                className="codex-input w-full px-3 py-2.5 text-sm"
               />
             </div>
             
@@ -74,7 +73,7 @@ export default function SetPasswordScreen({ onComplete }) {
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => { setConfirmPassword(e.target.value); setError(''); }}
-                className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors placeholder-surface-500"
+                className="codex-input w-full px-3 py-2.5 text-sm"
               />
             </div>
 
@@ -83,7 +82,7 @@ export default function SetPasswordScreen({ onComplete }) {
             <button 
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg py-2.5 px-4 font-semibold transition-all text-sm shadow-[0_0_15px_rgba(0,168,150,0.4)] hover:shadow-[0_0_25px_rgba(0,168,150,0.6)] disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              className="codex-button codex-button-primary mt-2 w-full gap-2 px-4 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

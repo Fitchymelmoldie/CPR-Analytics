@@ -1,44 +1,75 @@
-# CPR Analytics Dashboard
+# CPR Analytics Bodyshop Dashboard
 
-A modern, high-performance React prototype built for the CPR (Correct Protect Restore) Consultancy team.
+CPR Analytics is a React dashboard for collision-repair businesses and their consultants. It turns imported monthly operating data into a customer-scoped performance workspace, with a separate administration area for managing bodyshops, imports, users, reviews, benchmarks and leaderboard groups.
 
-## Overview
-This application serves as a gamified data analytics dashboard specifically designed for the collision repair (bodyshop) industry. It enables consultants to load CSV datasets and instantly generate insights on key performance indicators (KPIs) such as `Completed RO`, `Paint Sales`, `Return on Paint Labour`, and `Booth Cycle Time`.
+## Current product behavior
 
-### Core Features
-- **CSV Data Ingestion**: Parses proprietary Excel/CSV data dynamically using `papaparse`.
-- **Role-Based Authentication**: Mock authentication separating `ADMIN` (consultants) from `CUSTOMER` (bodyshops).
-- **Gamified Leaderboards**: Automatically compares metrics across cohorts and generates percent-rankings to drive engagement.
-- **Consultant Reviews**: A localized notification bell system allowing admins to leave actionable feedback and historical reviews for specific bodyshops in specific months.
-- **Dynamic Trend Visualization**: Charts and graphs powered by `chart.js` rendering multi-month performance trends.
+- Supabase authentication with `ADMIN` and `CUSTOMER` roles.
+- Customer accounts see only their assigned bodyshop workspace.
+- Administrators enter a customer's workspace from Customer Management and can return to the admin area without changing identity or permissions.
+- Eight configurable operational KPI cards drive the Performance Pulse.
+- A Metric Library drawer supports add, remove, reorder and reset, with bodyshop-level layout persistence.
+- Performance Story provides 3M, 6M, 12M, Australian FYTD and custom date ranges with selectable data points.
+- Business Snapshot presents Total Sales, Paint Sales, Daily actual and Daily budget in a compact financial summary.
+- Reporting-period changes update the snapshot, KPI cards, movement, targets, rolling figures and story data together.
+- Desktop and mobile use the same production component tree.
 
-## Tech Stack
-- React 19 (via Vite)
-- Tailwind CSS v4 (for rapid, glassmorphic styling)
-- Chart.js & React-ChartJS-2 (for analytics)
-- PapaParse (for CSV ingestion)
+## Technology
 
-## Getting Started
+- React 19 and Vite
+- Tailwind CSS 4
+- Supabase Auth, Postgres, Row Level Security and Edge Functions
+- Chart.js and React Chart.js 2
+- Papa Parse for CSV ingestion
+- Vitest and Testing Library
+- Playwright for browser smoke tests
+- Vercel for protected Preview and production hosting
 
-### Prerequisites
-Make sure you have [Node.js](https://nodejs.org/) installed on your machine.
+## Local setup
 
-### Installation
-1. Open a terminal in this directory.
-2. Run `npm install` to install all dependencies.
+Prerequisite: a current Node.js LTS release. Python is not required.
 
-### Running the App
-To start the local development server:
+1. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+2. Create `.env.local` with the browser-safe Supabase values:
+
+   ```text
+   VITE_SUPABASE_URL=your-project-url
+   VITE_SUPABASE_ANON_KEY=your-anon-key
+   ```
+
+3. Start the app:
+
+   ```bash
+   npm run dev
+   ```
+
+Vite embeds `VITE_*` variables in the browser bundle. Never place a Supabase service-role key or another server secret in a `VITE_*` variable.
+
+## Commands
+
 ```bash
-npm run dev
-```
-Then, open the URL provided in the terminal (usually `http://localhost:5173`) in your web browser.
-
-### Building for Production
-To create a minified, production-ready build:
-```bash
-npm run build
+npm run dev          # local development server
+npm test -- --run    # unit and integration suite
+npm run test:e2e     # Playwright browser smoke tests
+npm run lint         # static checks
+npm run build        # production build
+npm run preview      # serve the built app locally
 ```
 
-## Backups
-If you do not have Git installed, a PowerShell script (`backup.ps1`) is included. You can double-click it or run it from the terminal to instantly generate a zipped backup of the entire source code (excluding `node_modules`).
+## Safe visual Preview
+
+The shared demo route is enabled only when `VITE_UI_PREVIEW=true` and the URL includes `?layout-preview=1`. It renders the production dashboard components with deterministic demo data for visual review. This flag must remain disabled in production.
+
+Release work follows this order:
+
+1. Run the local test, E2E, lint, build, audit and whitespace gates.
+2. Deploy the current source to a protected Vercel Preview.
+3. Verify desktop and mobile behavior.
+4. Obtain explicit approval before any commit, push or production deployment.
+
+See [CURRENT_HANDOFF.md](CURRENT_HANDOFF.md) for the authoritative current state and [CHANGELOG.md](CHANGELOG.md) for the historical record.

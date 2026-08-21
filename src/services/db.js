@@ -46,6 +46,34 @@ const KEY_TO_DB = {
 
 const DB_TO_KEY = Object.fromEntries(Object.entries(KEY_TO_DB).map(([k, v]) => [v, k]));
 
+const ANALYTICS_METADATA_KEYS = new Set(['Company Id', 'Company Name', 'State', 'Year', 'Month']);
+const PERCENTAGE_INPUT_KEYS = new Set([
+  'Parts to Labour Sales',
+  'Total Labour Gross Profit %',
+  'Parts Gross Profit %',
+  'Total Gross Profit %',
+  'Panel Utilisation',
+  'Paint Utilisation',
+  'Panel Productive Efficiency',
+  'Paint Productive Efficiency',
+  'Overall Efficiency',
+  'Labour Diversion',
+  'Liquid Cost to Refinish Labour Sales',
+  'Paint Cost to Total Sales'
+]);
+const CURRENCY_INPUT_PATTERN = /Sales|Costs?|Rate|Profit \$|Consumables/i;
+
+export const ANALYTICS_INPUT_FIELDS = Object.freeze(
+  Object.keys(KEY_TO_DB)
+    .filter(key => !ANALYTICS_METADATA_KEYS.has(key))
+    .map(key => ({
+      key,
+      label: key,
+      format: PERCENTAGE_INPUT_KEYS.has(key) ? 'percent' : CURRENCY_INPUT_PATTERN.test(key) ? 'currency' : 'number'
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label))
+);
+
 /**
  * Upload parsed CSV data to Supabase
  * @param {Array<Object>} csvData - Array of objects parsed from CSV by PapaParse
@@ -79,7 +107,7 @@ export const uploadAnalytics = async (csvData) => {
 
   // 2. Prepare Analytics rows by stripping non-analytics explicit columns mapped to 'companies' table
   const analyticsRows = rows.map(r => {
-    const { company_name, state, ...rest } = r;
+    const { company_name: _companyName, state: _state, ...rest } = r;
     return rest;
   });
 
@@ -95,6 +123,38 @@ export const uploadAnalytics = async (csvData) => {
   }
   
   return true;
+};
+
+/**
+ * Add or update one KPI for one bodyshop reporting month without replacing
+ * any of the other values already stored for that month.
+ */
+export const upsertAnalyticsValue = async (companyId, year, month, metricKey, value) => {
+  const databaseColumn = KEY_TO_DB[metricKey];
+  const parsedYear = Number(year);
+  const parsedMonth = Number(month);
+  const parsedValue = Number(value);
+
+  if (!companyId) throw new Error('A bodyshop is required.');
+  if (!databaseColumn || ANALYTICS_METADATA_KEYS.has(metricKey)) throw new Error('Choose a valid KPI.');
+  if (!Number.isInteger(parsedYear) || parsedYear < 2000 || parsedYear > 2100 || !Number.isInteger(parsedMonth) || parsedMonth < 1 || parsedMonth > 12) {
+    throw new Error('Choose a valid reporting month.');
+  }
+  if (!Number.isFinite(parsedValue)) throw new Error('Enter a valid numeric KPI value.');
+
+  const { data, error } = await supabase
+    .from('analytics_data')
+    .upsert({
+      company_id: companyId,
+      year: parsedYear,
+      month: parsedMonth,
+      [databaseColumn]: parsedValue
+    }, { onConflict: 'company_id, year, month' })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
 };
 
 /**
@@ -181,6 +241,45 @@ export const getBenchmarks = async (companyId) => {
 
   if (error) throw error;
   return data || [];
+};
+
+/**
+ * Fetch the saved KPI card order for a bodyshop. A null result means the
+ * bodyshop has not customized its dashboard yet.
+ */
+export const getDashboardKpiLayout = async (companyId) => {
+  if (!companyId) return null;
+
+  const { data, error } = await supabase
+    .from('dashboard_kpi_layouts')
+    .select('company_id, visible_kpis, updated_at')
+    .eq('company_id', companyId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+};
+
+/**
+ * Save a bodyshop's ordered KPI card selection. Row-level security limits a
+ * customer to their own bodyshop while allowing admins to manage any shop.
+ */
+export const upsertDashboardKpiLayout = async (companyId, visibleKpis) => {
+  if (!companyId) throw new Error('A bodyshop is required to save a dashboard layout.');
+  if (!Array.isArray(visibleKpis)) throw new Error('Dashboard KPI titles must be an array.');
+
+  const { data, error } = await supabase
+    .from('dashboard_kpi_layouts')
+    .upsert({
+      company_id: companyId,
+      visible_kpis: visibleKpis,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'company_id' })
+    .select('company_id, visible_kpis, updated_at')
+    .single();
+
+  if (error) throw error;
+  return data;
 };
 
 /**

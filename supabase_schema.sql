@@ -206,6 +206,60 @@ CREATE POLICY "Admins can delete benchmarks"
 ON kpi_benchmarks FOR DELETE TO authenticated
 USING ((SELECT role FROM profiles WHERE id = (SELECT auth.uid())) = 'ADMIN');
 
+-- Persisted, ordered KPI card selection for each bodyshop dashboard
+CREATE TABLE IF NOT EXISTS dashboard_kpi_layouts (
+    company_id VARCHAR(50) PRIMARY KEY REFERENCES companies(id) ON DELETE CASCADE,
+    visible_kpis TEXT[] NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT dashboard_kpi_layouts_card_limit
+      CHECK (cardinality(visible_kpis) BETWEEN 0 AND 12),
+    CONSTRAINT dashboard_kpi_layouts_no_null_titles
+      CHECK (array_position(visible_kpis, NULL) IS NULL)
+);
+
+ALTER TABLE dashboard_kpi_layouts ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON TABLE dashboard_kpi_layouts FROM anon, authenticated;
+GRANT SELECT, INSERT, UPDATE ON TABLE dashboard_kpi_layouts TO authenticated;
+
+CREATE POLICY "Users can view accessible dashboard layouts"
+ON dashboard_kpi_layouts FOR SELECT TO authenticated
+USING (
+    company_id = (
+      SELECT profiles.company_id
+      FROM profiles
+      WHERE profiles.id = (SELECT auth.uid())
+    ) OR (SELECT private.is_admin())
+);
+
+CREATE POLICY "Users can insert accessible dashboard layouts"
+ON dashboard_kpi_layouts FOR INSERT TO authenticated
+WITH CHECK (
+    company_id = (
+      SELECT profiles.company_id
+      FROM profiles
+      WHERE profiles.id = (SELECT auth.uid())
+    ) OR (SELECT private.is_admin())
+);
+
+CREATE POLICY "Users can update accessible dashboard layouts"
+ON dashboard_kpi_layouts FOR UPDATE TO authenticated
+USING (
+    company_id = (
+      SELECT profiles.company_id
+      FROM profiles
+      WHERE profiles.id = (SELECT auth.uid())
+    ) OR (SELECT private.is_admin())
+)
+WITH CHECK (
+    company_id = (
+      SELECT profiles.company_id
+      FROM profiles
+      WHERE profiles.id = (SELECT auth.uid())
+    ) OR (SELECT private.is_admin())
+);
+
 -- Create leaderboard_groups table
 CREATE TABLE IF NOT EXISTS leaderboard_groups (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

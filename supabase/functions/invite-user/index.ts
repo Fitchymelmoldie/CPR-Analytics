@@ -1,15 +1,38 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS') ?? [
+  'https://bodyshop-dashboard.vercel.app',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+]).split(',').map((origin) => origin.trim()).filter(Boolean);
+
+const previewOriginPattern = /^https:\/\/bodyshop-dashboard-[a-z0-9-]+-cpr-analytics\.vercel\.app$/;
+const allowedOriginFor = (origin: string | null) => origin && (allowedOrigins.includes(origin) || previewOriginPattern.test(origin))
+  ? origin
+  : allowedOrigins[0];
+
+const corsFor = (origin: string | null) => ({
+  'Access-Control-Allow-Origin': allowedOriginFor(origin),
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Max-Age': '86400',
+  'Vary': 'Origin',
+});
 
 serve(async (req) => {
   // Handle CORS preflight
+  const corsHeaders = corsFor(req.headers.get('origin'));
+
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders, status: 204 });
+  }
+
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 405,
+    });
   }
 
   try {
@@ -23,7 +46,8 @@ serve(async (req) => {
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) throw new Error('Missing Authorization header');
 
-    const token = authHeader.replace('Bearer ', '');
+    if (!authHeader.startsWith('Bearer ')) throw new Error('Invalid Authorization header');
+    const token = authHeader.slice('Bearer '.length).trim();
     const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
     
     if (authError || !user) throw new Error('Invalid token');
@@ -46,7 +70,7 @@ serve(async (req) => {
       throw new Error('Missing required fields: email or companyId');
     }
 
-    const origin = req.headers.get('origin') || 'https://bodyshop-dashboard.vercel.app';
+    const origin = allowedOriginFor(req.headers.get('origin'));
 
     // Send the actual invite email via Supabase
     const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
@@ -74,10 +98,9 @@ serve(async (req) => {
       throw profileError;
     }
 
-    return new Response(
-      JSON.stringify({ 
-        message: 'User invited successfully', 
-        user: invitedUser
+    return new Response(JSON.stringify({
+        message: 'User invited successfully',
+        userId: invitedUser.id,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -85,9 +108,16 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message || String(error) }), {
+    const status = /Unauthorized:/.test(error.message || '')
+      ? 403
+      : /Invalid token|Missing Authorization|Invalid Authorization/.test(error.message || '')
+        ? 401
+      : /Missing required fields/.test(error.message || '')
+        ? 400
+        : 500;
+    return new Response(JSON.stringify({ error: error.message || 'Invite failed' }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
+      status,
     });
   }
 });

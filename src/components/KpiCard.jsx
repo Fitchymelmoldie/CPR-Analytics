@@ -1,24 +1,25 @@
 import React from 'react';
 import { fmt } from '../utils/metrics';
 
-function ordinal(value) {
-  if (value % 100 >= 11 && value % 100 <= 13) return `${value}th`;
-  if (value % 10 === 1) return `${value}st`;
-  if (value % 10 === 2) return `${value}nd`;
-  if (value % 10 === 3) return `${value}rd`;
-  return `${value}th`;
-}
-
 function formatTargetGap(value, format) {
   if (format === 'percent') return `${(Number(value) * 100).toFixed(2)} pts`;
   if (format === 'percentWhole') return `${(Number(value) * 100).toFixed(0)} pts`;
   return fmt(value, format === 'currency' ? 'currency' : undefined);
 }
 
-function targetSummary(value, benchmark, benchmarkType, format) {
+function targetSummary(value, benchmark, benchmarkType, format, targetable) {
   const numericValue = Number(value);
   const numericBenchmark = Number(benchmark);
   const hasBenchmark = benchmark !== undefined && benchmark !== null && Number.isFinite(numericBenchmark);
+
+  if (targetable === false) {
+    return {
+      status: 'reference',
+      label: 'Reference metric',
+      detail: null,
+      description: 'Reference metric; it does not change the Performance Pulse.'
+    };
+  }
 
   if (!hasBenchmark || !Number.isFinite(numericValue)) {
     return {
@@ -60,33 +61,52 @@ export default function KpiCard({
   onClick,
   benchmark,
   benchmarkType,
+  targetable = true,
   onSetBenchmark,
   isAdmin,
-  rank: rankProp,
-  cohortSize
+  customizing = false,
+  position = 0,
+  totalCards = 0,
+  onMove,
+  onRemove,
+  onDragStart,
+  onDragOver,
+  onDrop,
+  onDragEnd,
+  isDragging = false,
+  dropPlacement = null
 }) {
-  const rank = typeof rankProp === 'object' && rankProp !== null ? rankProp.rank : rankProp;
-  const displayVal = format === 'currency' ? fmt(value, 'currency')
-    : format === 'percent' ? fmt(value, 'percent')
-    : format === 'percentWhole' ? fmt(value, 'percentWhole')
-    : fmt(value);
-  const hasVariance = variance !== null && variance !== undefined;
+  const hasValue = Number.isFinite(value);
+  const displayVal = !hasValue ? 'Not entered'
+    : format === 'currency' ? fmt(value, 'currency')
+      : format === 'percent' ? fmt(value, 'percent')
+        : format === 'percentWhole' ? fmt(value, 'percentWhole')
+          : fmt(value);
+  const hasVariance = Number.isFinite(variance);
   const isGood = hasVariance && (benchmarkType === 'max' ? variance <= 0 : variance >= 0);
   const movementArrow = variance > 0 ? '↗' : variance < 0 ? '↘' : '→';
-  const target = targetSummary(value, benchmark, benchmarkType, format);
+  const target = targetSummary(value, benchmark, benchmarkType, format, targetable);
   const targetClass = target.status === 'met'
     ? 'bg-success-500/10 text-success-400'
     : target.status === 'attention'
       ? 'bg-amber-300/10 text-amber-300'
-      : 'bg-white/[0.04] text-surface-500';
-  const rankDescription = rank ? ` Ranked ${ordinal(rank)}${cohortSize ? ` of ${cohortSize}` : ''}.` : '';
-  const cardDescription = `View ${title} performance${isActive ? ', currently selected' : ''}. Current result: ${displayVal}. ${target.description}${rankDescription}`;
+      : target.status === 'reference'
+        ? 'bg-brand-400/[0.08] text-brand-300'
+        : 'bg-white/[0.04] text-surface-500';
+  const cardDescription = `View ${title} performance${isActive ? ', currently selected' : ''}. Current result: ${displayVal}. ${target.description}`;
 
   return (
-    <article className={`kpi-tile group relative overflow-hidden rounded-[22px] ${delayClass || ''} ${isActive ? 'kpi-tile-active' : ''}`}>
+    <article
+      onDragOver={(event) => onDragOver?.(title, event)}
+      onDrop={(event) => onDrop?.(title, event)}
+      onDragEnd={onDragEnd}
+      className={`kpi-tile group relative overflow-hidden rounded-xl border border-white/[0.07] ${delayClass || ''} ${isActive ? 'kpi-tile-active' : ''} ${customizing ? 'kpi-tile-customizing' : ''} ${isDragging ? 'kpi-tile-dragging' : ''}`}
+    >
+      {dropPlacement ? <span className={`kpi-insertion-marker kpi-insertion-marker-${dropPlacement}`} aria-hidden="true" /> : null}
       <button
         type="button"
-        onClick={onClick}
+        onClick={customizing ? undefined : onClick}
+        tabIndex={customizing ? -1 : 0}
         aria-pressed={Boolean(isActive)}
         aria-label={cardDescription}
         className="relative z-10 flex min-h-[168px] w-full flex-col p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand-300/70 sm:min-h-[154px]"
@@ -114,11 +134,6 @@ export default function KpiCard({
                 </span>
               ) : <span className="text-[10px] font-medium text-surface-600">No prior comparison</span>}
             </div>
-            {rank ? (
-              <span className={`shrink-0 rounded-full px-2 py-1 text-[9px] font-bold uppercase tracking-wider ${rank === 1 ? 'bg-amber-300/15 text-amber-300' : 'bg-white/[0.04] text-surface-400'}`} title={cohortSize ? `Ranked ${ordinal(rank)} of ${cohortSize}` : `Ranked ${ordinal(rank)}`}>
-                {ordinal(rank)}{cohortSize ? ` / ${cohortSize}` : ''}
-              </span>
-            ) : null}
           </div>
           <div className="mt-2 flex min-w-0 flex-col items-start gap-1 border-t border-white/[0.035] pt-2 sm:flex-row sm:items-center sm:justify-between sm:gap-1.5">
             <span
@@ -136,10 +151,10 @@ export default function KpiCard({
           </div>
         </div>
 
-        {isActive ? <span className="kpi-active-rail absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-brand-400" /> : null}
+        {isActive && !customizing ? <span className="kpi-active-rail absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-brand-400" /> : null}
       </button>
 
-      {isAdmin ? (
+      {isAdmin && !customizing ? (
         <button
           type="button"
           onClick={(event) => { event.stopPropagation(); onSetBenchmark(title); }}
@@ -151,6 +166,32 @@ export default function KpiCard({
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 3a9 9 0 109 9M12 3v9l6-6M12 12h9" />
           </svg>
         </button>
+      ) : null}
+
+      {customizing ? (
+        <div className="absolute inset-x-3 top-3 z-30 flex items-center justify-between gap-2">
+          <span
+            draggable
+            onDragStart={(event) => onDragStart?.(title, event)}
+            onDragEnd={onDragEnd}
+            title={`Drag ${title} to a new position`}
+            className="inline-flex h-8 cursor-grab items-center gap-1.5 rounded-full border border-white/[0.08] bg-surface-900/90 px-2.5 text-[9px] font-bold uppercase tracking-wider text-surface-400 shadow-lg backdrop-blur-xl active:cursor-grabbing"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true"><path strokeLinecap="round" d="M8 6h.01M8 12h.01M8 18h.01M16 6h.01M16 12h.01M16 18h.01" /></svg>
+            Drag
+          </span>
+          <div className="flex items-center gap-1 rounded-full border border-white/[0.08] bg-surface-900/90 p-1 shadow-lg backdrop-blur-xl">
+            <button type="button" disabled={position === 0} onClick={() => onMove?.(title, -1)} aria-label={`Move ${title} earlier`} className="grid h-7 w-7 place-items-center rounded-full text-surface-400 transition-colors hover:bg-white/[0.07] hover:text-white disabled:opacity-25">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true"><path strokeLinecap="round" d="m15 18-6-6 6-6" /></svg>
+            </button>
+            <button type="button" disabled={position === totalCards - 1} onClick={() => onMove?.(title, 1)} aria-label={`Move ${title} later`} className="grid h-7 w-7 place-items-center rounded-full text-surface-400 transition-colors hover:bg-white/[0.07] hover:text-white disabled:opacity-25">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true"><path strokeLinecap="round" d="m9 18 6-6-6-6" /></svg>
+            </button>
+            <button type="button" onClick={() => onRemove?.(title)} aria-label={`Remove ${title} from dashboard`} className="grid h-7 w-7 place-items-center rounded-full text-rose-300 transition-colors hover:bg-rose-500/15 hover:text-rose-200">
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true"><path strokeLinecap="round" d="M6 6l12 12M18 6 6 18" /></svg>
+            </button>
+          </div>
+        </div>
       ) : null}
     </article>
   );

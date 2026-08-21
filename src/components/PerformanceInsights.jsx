@@ -26,7 +26,10 @@ function targetGap(item) {
 }
 
 function targetDetail(item) {
-  if (!item || item.targetable === false || item.benchmark === undefined || item.benchmark === null) {
+  if (item?.targetable === false) {
+    return { title: 'Reference metric', detail: 'Shown for context and kept outside the Performance Pulse score.' };
+  }
+  if (!item || item.benchmark === undefined || item.benchmark === null) {
     return { title: 'No target set', detail: 'Add a target to compare this metric with a health threshold.' };
   }
 
@@ -69,32 +72,27 @@ export default function PerformanceInsights({ items, selectedTitle, reportingPer
       </div>
 
       {selected ? (
-        <div className="mt-5 space-y-2.5">
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="insight-row insight-row-selected min-w-0" style={{ animationDelay: '120ms' }}>
-              <span>Current period</span>
-              <strong className="truncate">{displayValue(selected.value, selected.format)}</strong>
-              <p className={movement > 0 ? 'text-success-400' : movement < 0 ? 'text-rose-300' : undefined}>{movementCopy(selected)}</p>
-            </div>
-            <div className="insight-row insight-row-selected min-w-0" style={{ animationDelay: '200ms' }}>
-              <span>{previousPeriod || 'Previous period'}</span>
-              <strong className="truncate">{displayValue(selected.previousValue, selected.format)}</strong>
-              <p>{previousPeriod ? 'Prior reporting period' : 'No earlier period available'}</p>
-            </div>
+        <div className="mt-5 grid grid-cols-2 gap-2.5">
+          <div className="insight-row insight-row-selected min-w-0" style={{ animationDelay: '120ms' }}>
+            <span>Current period</span>
+            <strong className="truncate">{displayValue(selected.value, selected.format)}</strong>
+            <p className={movement > 0 ? 'text-success-400' : movement < 0 ? 'text-rose-300' : undefined}>{movementCopy(selected)}</p>
           </div>
-
-          <div className="insight-row insight-row-selected" style={{ animationDelay: '280ms' }}>
+          <div className="insight-row insight-row-selected min-w-0" style={{ animationDelay: '200ms' }}>
+            <span>{previousPeriod || 'Previous period'}</span>
+            <strong className="truncate">{displayValue(selected.previousValue, selected.format)}</strong>
+            <p>{previousPeriod ? 'Prior reporting period' : 'No earlier period available'}</p>
+          </div>
+          <div className="insight-row insight-row-selected min-w-0" style={{ animationDelay: '280ms' }}>
             <span>{rollingLabel}</span>
-            <strong>{displayValue(selected.rollingAverage, selected.format)}</strong>
+            <strong className="truncate">{displayValue(selected.rollingAverage, selected.format)}</strong>
             <p>{rollingDetail}</p>
           </div>
-
-          <div className={`insight-row insight-row-${targetTone}`} style={{ animationDelay: '360ms' }}>
-            <span>Target status</span>
-            <strong>{target.title}</strong>
+          <div className={`insight-row insight-row-${targetTone} min-w-0`} style={{ animationDelay: '360ms' }}>
+            <span>{selected.targetable === false ? 'Pulse treatment' : 'Target status'}</span>
+            <strong className="truncate">{target.title}</strong>
             <p>{target.detail}</p>
           </div>
-
         </div>
       ) : null}
     </aside>

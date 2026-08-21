@@ -21,6 +21,8 @@ export default function LoginScreen() {
         friendlyMsg = 'The email or password you entered is incorrect. Please try again.';
       } else if (friendlyMsg.toLowerCase().includes('email not confirmed')) {
         friendlyMsg = 'Please verify your email address before logging in.';
+      } else if (friendlyMsg.toLowerCase().includes('failed to fetch')) {
+        friendlyMsg = 'We could not reach the login service. Check your connection and try again.';
       }
       setError(friendlyMsg);
     }
@@ -29,45 +31,46 @@ export default function LoginScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-900 flex flex-col justify-center items-center p-4 relative overflow-hidden">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+    <div className="min-h-screen bg-[#101112] flex flex-col justify-center items-center p-4 relative overflow-hidden">
       
-      <div className="glass rounded-2xl p-8 sm:p-10 w-full max-w-md relative z-10 animate-float-in border border-white/10 shadow-2xl">
+      <div className="codex-dialog w-full max-w-sm p-6 sm:p-7 relative z-10">
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-brand-500 to-danger-500 flex items-center justify-center shadow-lg shadow-brand-500/20 mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+          <div className="w-11 h-11 rounded-xl border border-brand-400/20 bg-brand-400/[0.08] flex items-center justify-center mb-4">
+            <svg className="w-6 h-6 text-brand-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 12h4l2-5 3.5 11 2.5-6h6" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white mb-1">
+          <h1 className="text-xl font-semibold tracking-tight text-white mb-1">
             <span className="gradient-text">CPR</span> Analytics
           </h1>
           <p className="text-surface-400 text-sm">Consultancy Dashboard Access</p>
         </div>
         
         <form onSubmit={handleLogin} className="space-y-4">
-          <div className="bg-surface-800/50 border border-surface-700 rounded-xl p-4 space-y-4">
+          <div className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-2">Email</label>
+              <label htmlFor="login-email" className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-2">Email</label>
               <input 
+                id="login-email"
                 type="email"
                 required
                 placeholder="name@company.com"
                 value={email}
                 onChange={(e) => { setEmail(e.target.value); setError(''); }}
-                className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors placeholder-surface-500"
+                className="codex-input w-full px-3 py-2.5 text-sm"
               />
             </div>
             
             <div>
-              <label className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-2">Password</label>
+              <label htmlFor="login-password" className="block text-xs font-medium text-surface-400 uppercase tracking-wider mb-2">Password</label>
               <input 
+                id="login-password"
                 type="password"
                 required
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setError(''); }}
-                className="w-full bg-surface-900 border border-surface-600 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-brand-500 transition-colors placeholder-surface-500"
+                className="codex-input w-full px-3 py-2.5 text-sm"
               />
             </div>
 
@@ -76,7 +79,7 @@ export default function LoginScreen() {
             <button 
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg py-2.5 px-4 font-semibold transition-all text-sm shadow-[0_0_15px_rgba(0,168,150,0.4)] hover:shadow-[0_0_25px_rgba(0,168,150,0.6)] disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+              className="codex-button codex-button-primary mt-2 w-full gap-2 px-4 py-2.5 text-sm disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? (
                 <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

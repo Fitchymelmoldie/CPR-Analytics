@@ -1,172 +1,160 @@
 # Current Handoff
 
-Last updated: 10 August 2026, 7:13 PM AEST
+Last updated: 21 August 2026, 10:45 PM AEST
 
-## Current status
+This document is the authoritative current-state snapshot. Historical implementation and Preview details belong in `CHANGELOG.md`.
 
-The approved Business Snapshot, operational KPI hierarchy, Metric Detail panel, pulse-callout cleanup and percentage-aware Performance Rhythm are live and browser-verified in production. The customer-facing card contains the `Business snapshot` title and business figures only, Total Sales and Paint Sales remain selectable trends without target controls, and the eight genuine operational KPIs drive the Performance Pulse. The latest deployed source commit is `34dcb47`; Vercel production deployment `dpl_3AQ3TRxHb4ECSfCq2JurybaWV3sr` is `READY` and owns the public domain.
+## Release status
 
-The Business Snapshot now labels the rolling-quarter figures `Daily actual` and `Daily budget`; the underlying calculations remain unchanged. The authenticated production dashboard was rechecked after release and showed the expected labels and live values.
+- Stage: pre-production release candidate under review.
+- Working branch: `agent/bodyshop-audit-hardening`.
+- Working-tree base: `9e57ca3`.
+- Candidate state: intentionally uncommitted and unpushed.
+- Production: `https://bodyshop-dashboard.vercel.app`, deployment `dpl_3AQ3TRxHb4ECSfCq2JurybaWV3sr`, source commit `34dcb47`.
+- Latest protected Preview: `https://bodyshop-dashboard-il59n1e5d-cpr-analytics.vercel.app/?layout-preview=1`, deployment `dpl_FWkY7hXqSYk6A1ULd1y9qQgyjCXW`, `READY`, target `preview`.
+- Local candidate follow-up: Data & Imports now offers bulk CSV import and Quick KPI Entry for one metric/month, using a dark in-app year/month picker that stays consistent with the dashboard instead of opening the browser's native calendar. The entry flow preserves every other value in an existing period. Missing values remain visibly incomplete rather than becoming false zero KPIs. Gamified Leaderboards is deferred behind a disabled feature flag and removed from active navigation. The site-wide content hierarchy pass also removes repeated subtitles and instructions while preserving labels, meaningful states and contextual help. These 21 August changes are covered by the 76-test local gate and included in the latest protected Preview; the source remains intentionally uncommitted and unpushed.
+- Earlier review follow-up: the entire product uses one Codex-native visual and interaction system across Customer Management, Data & Imports, profile, reviews, authentication, dialogs and KPI reporting. KPI reordering is deterministic on pointer, touch and keyboard. KPI charts use clean adaptive Y scales, year-aware X labels, directional external goal keys and one compact target-aware tooltip that previews on hover/focus and pins on click/tap; browser-native duplicate tooltips have been removed. The plot uses one stable crosshair and continuous nearest-month hover regions, eliminating the arrow/hand flicker and dead zones between points.
+- Production has not been changed, promoted or re-aliased during this candidate cycle.
 
-The production dashboard now replaces the confusing chart-side `What changed` box with a `Metric detail` panel. It follows the selected KPI and reporting period, showing the current value, previous value, selected-period rolling average, movement wording and target status. The redundant `Strongest movement` and `Watch this period` pulse callouts have also been removed so this panel is the single place for movement and target context.
+Do not commit, push or deploy to production without the user's explicit approval.
 
-Low-range percentage KPIs now use percentage-point values and readable local axis labels, with the target line retained; sales, counts and currency KPIs keep the existing bar scale. Paint Cost / Total Sales was verified live at desktop and mobile widths with distinct bars, a visible percentage scale and the configured target line.
+## What is in the release candidate
 
-The Metric Detail panel now shares the Performance Rhythm panel's height and outer alignment, so the two windows read as one coordinated analysis area. The redundant explanatory note at the bottom of Metric Detail has been removed; the panel keeps the selected KPI's current value, previous period, rolling average and target status.
+### Dashboard and navigation
 
-## Live and review links
+- The entire application uses a restrained Codex-native product system: near-black and graphite surfaces, compact controls, quiet one-pixel borders, consistent `10-14px` radii, accessible focus states and deliberate `160-220ms` motion. Decorative glows, oversized glass, large radii and hover lifting have been removed or reduced.
+- The Workspace and Metrics panels follow the requested Codex-style toggle pattern: each persistent top-bar button changes its expanded state and direction, opens on the first click and closes on the second click. Desktop panels use `272px` / `384px` layout space and can remain open independently. Below the desktop breakpoint they become mutually exclusive slide-over panels beginning beneath the persistent `56px` header, so the same toggle remains visible and usable while its panel is open.
+- The dashboard welcomes the selected bodyshop and removes the redundant current-bodyshop and data-status strips.
+- Administrators open a bodyshop from Customer Management, inspect the same customer-facing workspace and return through a clear `Return to Admin` action.
+- The duplicate `Active bodyshop` selector is removed from the sidebar.
+- The account area is integrated into the sidebar hierarchy instead of appearing as a floating pill.
+- Reporting period is a compact toolbar control, not a nested card.
 
-- Current production: https://bodyshop-dashboard.vercel.app
-- Current production deployment: `dpl_3AQ3TRxHb4ECSfCq2JurybaWV3sr` (source commit `34dcb47`, `READY`)
-- Immutable production URL: https://bodyshop-dashboard-iw2d3ob6r-cpr-analytics.vercel.app
-- Superseded Business Snapshot preview: https://bodyshop-dashboard-6fhx4afi9-cpr-analytics.vercel.app/?layout-preview=1
-- Hosted Business Snapshot preview deployment ID: `dpl_9vXkoGzRcTkKgyGSwVJbMg3oEP1v` (`READY`, preview target `null`)
-- Superseded target-editor preview: https://bodyshop-dashboard-5l6watss2-cpr-analytics.vercel.app/?layout-preview=1 (`dpl_HnqWfk4BQG9vgsSFAmpWqZWc2mLy`)
-- Latest KPI-indicator visual review: https://bodyshop-dashboard-jo951am48-cpr-analytics.vercel.app/?layout-preview=1
-- Latest real authentication preview: https://bodyshop-dashboard-jo951am48-cpr-analytics.vercel.app/
-- Latest preview deployment ID: `dpl_95MxgAQbvh1QoxyS7fWx3xKhEp6m`
+### Administration and supporting workspaces
 
-The protected preview was reviewed and explicitly approved before this production deployment. Future releases must follow the same approval boundary. The `?layout-preview=1` route is demonstration-only and is available only when the preview environment enables `VITE_UI_PREVIEW=true`; the switch is disabled on production.
+- Customer Management is a dense administrative index with search, result count, stable actions and a right-side customer account inspector. Technical identity, assignment, workspace access and the existing delete actions are progressively disclosed without depending on hover-only discovery.
+- Data & Imports presents two primary monthly-update paths: bulk CSV import and Quick KPI Entry with a month picker, KPI selector, current-value disclosure and a one-field-only save. The Full Month Editor remains available underneath for broad review and correction.
+- Gamified Leaderboards is deferred behind `FEATURE_FLAGS.leaderboards = false`; its code and data structures are preserved, but it is absent from active navigation and Preview journeys.
+- Shop Profile, Consultant Reviews, login, password setup, target editing, reporting-period creation, confirmations, notifications and empty/error states share the same surface, form and dialog language.
+- KPI calculations, CSV parsing, Supabase service interfaces, permissions, roles, saved layouts and persistence contracts are unchanged by the design pass.
 
-## What went wrong
+### KPI experience
 
-1. The benchmark button used the browser's built-in `window.prompt()` box. The Codex in-app browser does not support that interaction, so clicking the button appeared to do nothing and the Supabase save request was never reached.
-2. The approved visual mock-up was implemented in a separate `LayoutPreview` dashboard instead of rendering the exact dashboard component used by the authenticated application. That allowed the mock-up and the real production interface to drift apart even though each one worked independently.
-3. The previous release checks verified the mock-up's appearance and the real app's general navigation, but did not exercise this exact target-editing action in the supported in-app browser or compare the two dashboard component trees. The audit therefore missed both issues.
+- Eight operational KPIs drive the Performance Pulse; peer-group rank wording and card badges are removed.
+- The Operational KPI guide is available from a shared accessible information control immediately before Export; it uses the same glyph, visible circle, 32 x 32 pointer target and interaction states as the Daily budget help control. Its `320 x 172` fully opaque surface is anchored to the full header rather than the icon row, opens below any customer-view context bar, and stacks above the reporting-period toolbar without a translucent entrance frame.
+- Bodyshops can add, remove, reorder and reset KPI cards through the Metric Library drawer.
+- Desktop dragging uses explicit before/after insertion zones on every KPI card; the teal line is the authoritative landing position. Dropping a current card on empty grid space moves it to the end.
+- The card itself is no longer draggable. Native dragging starts only from its labelled handle, preventing accidental movement while selecting KPI content.
+- The Metric Library includes a compact ordered list with earlier/later/remove controls so phone and keyboard users can achieve the same exact order without relying on native touch dragging.
+- Card order persists by bodyshop through `dashboard_kpi_layouts`.
+- Selecting a KPI opens Performance Story with `3M`, `6M`, `12M`, Australian `FYTD` and `Custom` ranges.
+- Chart points are mouse, touch and keyboard targets and can pin a month/value readout. On desktop, each available month owns the plot region halfway to its neighbours, producing continuous nearest-month hover coverage without overlapping targets or dead gaps.
+- KPI trend lines use bounded cubic curves that cannot overshoot their data envelope. The previous full-path dash animation is removed, so the line cannot appear partly painted or cut off while Performance Story opens or resizes; all plot edges include clearance for the latest-point halo and selected marker.
+- Y axes use adaptive nice-number ranges with four to six equal steps; the legend explicitly identifies this as an adaptive value range so the deliberately non-zero baseline is clear. Percentage KPIs use percentage-point labels; other metrics retain their appropriate number or currency labels.
+- X axes identify reporting months, include the year on the first label and every year transition, and reduce label density before labels can collide on narrow screens.
+- Targets use a directional external key (`Goal ≥` for higher-is-better KPIs and `Goal ≤` for lower-is-better KPIs) plus one dashed plot line. The selected-month callout stays inside the plot, clears the target line and states whether that month met the goal.
+- Every plotted month previews that same callout on pointer hover or keyboard focus. Moving away removes an unpinned preview or restores the previously pinned month; click/tap remains the deliberate pin action for desktop and touch users.
+- Point values remain available through complete accessible names, but no longer use SVG `<title>` elements; this prevents the browser's native tooltip from appearing beside the designed callout.
+- The complete SVG plot uses one crosshair cursor. The area, line, point markers and transparent month hit regions therefore cannot flicker between the browser arrow and hand while the user scans the graph.
+- The point tooltip is a compact single-line surface: typically `104 x 30` instead of the previous `132 x 50`, with month, formatted value and a small green/amber goal-status dot. The full status wording remains accessible without consuming plot space.
+- Missing observations create deliberate line gaps instead of falling to the chart floor, and the active graph range is stated beneath the timeframe control.
+- Changing the dashboard reporting period resets Performance Story to `12M` and clears any stale Custom range, preventing an empty or inconsistent chart from carrying into the new reporting context.
+- Metric Detail shows current, previous, rolling-average and target context without duplicate narrative panels.
+- Performance Story now measures its chart before paint, keeps the chart mounted across timeframe changes and uses restrained non-blur motion. Mobile removes story/chart entrance animation, uses more compact proportions and abbreviates long axis values to avoid label collisions.
 
-## Corrections implemented
+### Business Snapshot and reporting period
 
-- Replaced the native benchmark prompt with an accessible in-app target editor that supports create, update, validation, cancellation, Escape/backdrop closing and two-step removal.
-- Preserved the existing Supabase benchmark upsert/delete service and permissions; only the broken browser interaction was replaced.
-- Added correct currency, number and percentage input handling, including conversion between visible percentage values and stored ratios.
-- Replaced the remaining native reporting-period prompt with a proper in-app modal.
-- Replaced all remaining `window.alert()` calls with in-app notices.
-- Added a lint error for native `alert`, `prompt` and `confirm`, preventing this browser-incompatible pattern from being reintroduced.
-- Introduced one shared `DashboardWorkspace` component. Both the authenticated dashboard and `LayoutPreview` now render this exact component; the preview supplies demonstration data through an adapter instead of maintaining a separate design.
-- Added a visible `Demo` label to the demonstration route so it cannot be mistaken for real customer data.
-- Aligned the authenticated Visual Dashboard with the approved layout: context cards, current bodyshop strip, Performance Pulse, compact KPI grid, Performance Rhythm chart and What Changed panel.
-- Preserved all other drawer destinations and administrator/bodyshop permission boundaries.
-- Replaced the tiny green/amber target dots with explicit `Target met`, `Target missed` and `No target set` labels.
-- Added a concise distance from target to every configured KPI, such as `Ahead by $80,528`, `Short by $3,971`, `Over by 0.1` and `Under by 2.50 pts`.
-- Added a responsive KPI card guide that separately explains favourable/unfavourable movement, target result, peer-group rank and the teal selected-for-chart state.
-- Kept the monthly movement colour independent from the current target result, so an improving KPI can still honestly show that its target is missed.
-- Expanded each KPI card's accessible description to include the current result, target result, target distance and peer rank.
+- Business Snapshot is a flat financial summary with Total Sales, Paint Sales, Daily actual and Daily budget; it avoids cards nested inside cards.
+- Matching information controls immediately follow Daily actual and Daily budget. Daily actual explains its estimated working-day Paint Sales pace and `average monthly Paint Sales / 19.33`; Daily budget explains its planning-benchmark purpose and `average monthly Paint Labour Costs * 3.3 / 19.33`. Each rounded opaque popover opens independently through hover or keyboard focus, remains tap-accessible on mobile and does not change the Business Snapshot or downstream layout geometry.
+- Both the Daily figures explanation and header KPI guide use fully opaque dark surfaces so underlying dashboard text cannot bleed through.
+- Changing reporting period recalculates the snapshot, all KPI cards, comparison movement, targets, rolling figures and Performance Story series from the selected month.
+- The authenticated daily calculation anchors its rolling window to the selected period, so later months cannot leak into an historical view.
 
-## Current Business Snapshot production behavior
+### Authentication and error handling
 
-- Total Sales and Paint Sales are now neutral business results inside the existing Performance Pulse hero instead of targetable KPI cards.
-- Both sales results remain clickable and continue to drive the existing Performance Rhythm chart.
-- Sales results no longer expose target buttons, target status, target gaps or target chart lines and do not contribute to the Performance Pulse score.
-- Existing stored sales benchmark records are not deleted or changed; the interface simply ignores them.
-- The daily sales pace and 3.3x amount remain visible, while the customer-facing card now shows no internal score explanation, `Not scored` badge or informational footer.
-- Performance Pulse scoring, strongest/watch signals and missed-target insights now use only operational KPIs.
-- The remaining eight KPI cards form a balanced four-by-two desktop grid and two-column mobile grid.
-- Completed RO remains targetable because it can represent a genuine production-volume goal.
+- Login fields have explicit accessible label associations.
+- Invalid credentials show customer-friendly wording.
+- Network or authentication-service unavailability shows a separate connection message instead of presenting it as a password problem.
+- Playwright intercepts the authentication request for deterministic error-path tests; the browser suite does not depend on live Supabase availability.
 
-## Verification completed
+## Data calculations
 
-- `npm.cmd test -- --run`: 6 test files and 46 tests passed.
-- `npm.cmd run build`: passed.
-- `npm.cmd run lint`: passed with no errors; only existing non-blocking warnings remain.
-- `npm.cmd audit --omit=dev --audit-level=high`: zero vulnerabilities.
-- `git diff --check`: passed; Git only reported expected LF-to-CRLF notices.
-- Confirmed there are no production `window.prompt`, `window.alert` or `window.confirm` calls left under `src`.
-- Desktop browser check at 1440 x 1000: shared dashboard rendered without horizontal overflow or application console errors.
-- Mobile browser check at 390 x 844: dashboard, target editor, mobile drawer and automatic drawer close all passed without overflow or application console errors.
-- Target flow checked end-to-end in the demonstration adapter: open, validate, update and confirmed removal all worked without a native browser dialog.
-- Navigation from Visual Dashboard to Shop Profile and back continued to work on mobile.
-- Protected source preview `dpl_HnqWfk4BQG9vgsSFAmpWqZWc2mLy` is `READY` with preview target `null`; it was not promoted to production.
-- Repeated the target update and confirmed-removal flow on the deployed preview itself; both worked and the deployed browser console remained clean.
-- The deployed preview's root route shows the real Secure Login screen, while demonstration data remains isolated behind `?layout-preview=1`.
-- Rechecked the production alias after preview deployment: it still points to production deployment `dpl_BuJKH5jSBarFoMmrKuj71bncozdC`.
-- New indicator tests cover higher-is-better, lower-is-better, favourable movement with a missed target, percentage-point gaps and unset targets.
-- Desktop indicator review at 1440 x 1000: the guide and all target labels/gaps rendered clearly with no page overflow or application console errors.
-- Mobile indicator review at 390 x 844: the guide uses a compact two-column layout, card target details stack for readability, and the page has no horizontal overflow or application console errors.
-- Local target interaction check: moving Total Sales target from $1,000,000 to $1,100,000 changed its card to `Target missed` / `Short by $19,472` and changed the Performance Pulse from 7/10 to 6/10 immediately.
-- Protected source preview `dpl_95MxgAQbvh1QoxyS7fWx3xKhEp6m` is `READY` with preview target `null`; it was not promoted to production.
-- Deployed desktop preview confirmed seven `Target met` and three `Target missed` cards, the correct Paint Sales gap, the complete KPI guide, no page overflow and no application console errors.
-- Deployed target interaction repeated successfully: the in-app target editor changed Total Sales to `Short by $19,472` and the Performance Pulse to 6/10 without invoking a native browser dialog.
-- Deployed mobile preview at 390 x 844 retained the two-column guide/card layout, readable stacked target details, no page overflow and no application console errors.
-- The latest preview root still shows the real Secure Login screen and does not expose demonstration data without `?layout-preview=1`.
-- Production alias rechecked after the latest preview: it remains on `dpl_BuJKH5jSBarFoMmrKuj71bncozdC`.
-- Final release gate repeated on the approved source: all 46 tests, production build, lint, dependency audit and Git whitespace checks passed.
-- Release source commit `6b18e3c` was pushed to `origin/agent/bodyshop-audit-hardening` before deployment.
-- Production deployment `dpl_HM7ox6Z57AxNK8d6kXqCwZV28RkH` is `READY`, owns `https://bodyshop-dashboard.vercel.app` and identifies source commit `6b18e3c` in Vercel metadata.
-- Authenticated live production rendered the real `boylesmash` workspace and Supabase-backed values, including the saved Completed RO target of 180 and its written `Target met` / `Ahead by 20` state.
-- Opened and cancelled the live Total Sales target editor without saving, confirming the in-app workflow works and does not invoke a native browser dialog.
-- Verified KPI selection, the 3M timeframe control, Shop Profile navigation and the return to Visual Dashboard on production.
-- Verified the live mobile layout at 390 x 844, including the open/close drawer flow and no horizontal page overflow.
-- Confirmed `?layout-preview=1` is ignored on the production domain: it continued to show the authenticated real workspace and exposed neither the `Demo` label nor preview customer data.
-- Live desktop, preview-query and mobile tabs reported no application console warnings/errors and no native JavaScript dialogs. Vercel reported no production runtime errors after deployment.
-- No live target was saved or removed and no upload, invitation, deletion or other customer-data mutation was performed during production verification.
-- Business Snapshot preview gate: 6 test files and 47 tests passed; production build passed; lint passed with only the pre-existing non-blocking warnings.
-- Local desktop review at 1440 x 1000 confirmed two business-result controls, eight operational KPI cards, a 6/8 demonstration pulse, no sales target controls and no horizontal overflow.
-- Local mobile review at 390 x 844 confirmed the compact Business Snapshot, readable two-column operational grid, functioning mobile drawer and no horizontal overflow.
-- Verified Total Sales and Paint Sales still select the trend chart without showing target lines; Completed RO still selects the chart and opens/cancels its in-app target editor.
-- The local preview reported no application console warnings/errors and no native JavaScript dialog.
-- The dedicated `agent-browser` command was unavailable on this machine; the equivalent checks were completed through the integrated browser.
-- The protected Business Snapshot source preview `dpl_9vXkoGzRcTkKgyGSwVJbMg3oEP1v` is `READY` with preview target `null`; it was not promoted to production.
-- Hosted desktop verification at 1440 x 1000 confirmed two business-result controls, eight operational KPI cards, a 6/8 demonstration pulse, no sales target controls and no horizontal overflow.
-- Hosted Paint Sales selection updated the trend chart without a target marker; hosted Completed RO selection displayed `Target 190` and its in-app target editor opened and cancelled correctly.
-- Hosted mobile verification at 390 x 844 confirmed the compact Business Snapshot, all eight operational cards, no horizontal overflow and a working open/close drawer.
-- The hosted preview reported no browser warnings/errors, no native JavaScript dialog and no Vercel preview runtime errors.
-- Rechecked `https://bodyshop-dashboard.vercel.app` after the preview upload: it still resolves to production deployment `dpl_HM7ox6Z57AxNK8d6kXqCwZV28RkH`.
-- Final title-only copy refinement: the focused Layout Preview tests passed, the production build passed and lint reported no errors (only the existing non-blocking warnings).
-- Local desktop and 390 x 844 mobile checks confirmed the card retains its title, two business controls and business figures while removing the score explanation, badge and informational footer; both widths remained free of horizontal overflow and browser warnings/errors.
-- Final production release gate: 6 test files and 48 tests passed; production build, lint, zero-vulnerability dependency audit, native-dialog scan and Git whitespace checks all passed.
-- Release source commit `2d6e55a` was pushed to `origin/agent/bodyshop-audit-hardening` before deployment.
-- Production deployment `dpl_2HGdoxTGysR91weLUPn54nKVJpUf` is `READY`, owns `https://bodyshop-dashboard.vercel.app` and identifies source commit `2d6e55a` in Vercel metadata.
-- Authenticated live production rendered the real `boylesmash` workspace and Supabase-backed values, including the saved Completed RO target of 180 and `Target met` / `Ahead by 20` state.
-- Verified two business trend controls, eight operational KPI cards, no Total Sales or Paint Sales target controls, title-only Business Snapshot copy, sales charts without target markers, Completed RO target marker/editor and the 3M timeframe.
-- Verified Shop Profile, Consultant Reviews open/cancel, Data & Imports, Gamified Leaderboards, Customer Management and return to Visual Dashboard without mutating live data.
-- Verified the 390 x 844 mobile layout, navigation selection/close flow, target-editor open/cancel and no horizontal page overflow.
-- Confirmed `?layout-preview=1` remains disabled on production and continued to show the real authenticated workspace with no `Demo` label.
-- The public production URL returned HTTP 200; browser diagnostics and Vercel runtime scans reported no warnings, errors, fatal logs or native JavaScript dialogs.
-- No target, review, upload, invitation, deletion or other customer-data change was saved during production verification.
+Daily figures use up to three available monthly records ending at the selected reporting period:
 
-### Metric Detail panel alignment production release (10 August 2026)
+- `Daily actual = average monthly Paint Sales / 19.33 working days`
+- `Daily budget = average monthly Paint Labour Costs * 3.3 / 19.33 working days`
 
-- Matched the Metric Detail panel height and outer alignment to the adjacent Performance Rhythm panel at desktop widths while preserving the stacked mobile layout.
-- Removed the redundant explanatory note from the bottom of Metric Detail; the selected KPI value, previous period, rolling average and target status remain intact.
-- Added regression coverage for the removed note and shared panel sizing classes.
-- Local and authenticated production browser checks passed at desktop and 390 x 844 mobile sizes: panels align or stack correctly, no horizontal overflow, no console errors/warnings and no native dialogs.
-- Production release `dpl_3AQ3TRxHb4ECSfCq2JurybaWV3sr` / `34dcb47` is `READY` on the public domain after explicit approval.
-- Production verification was read-only; no live target, upload, invitation, deletion or other customer-data mutation was performed.
+Both show `Building` until three months are available. Daily budget is a calculated estimate, not a bodyshop-entered budget. The constants `3.3` and `19.33` are currently fixed product assumptions and should become configurable if different bodyshops need different planning models.
 
-### Metric Detail panel and percentage chart production release (9 August 2026)
+## Database and security state
 
-- Replaced the old `What changed` panel with a selected-metric `Metric detail` panel so the chart and its explanation refer to the same KPI.
-- The panel shows current period, previous period, selected-period rolling average, movement versus the previous period and target status/gap.
-- The rolling window is the selected reporting period plus the two preceding available periods. Ratio metrics use weighted source totals; simple operational metrics use the available-period average.
-- Business Snapshot metrics intentionally show `No target set`; operational metrics retain their configured health targets and plain-language gap wording.
-- Local browser verification passed at desktop and 390 x 844 mobile sizes. Selecting `Booth Cycle Time` updated the chart and panel together, including its rolling average and target status.
-- Local automated verification passed: 6 test files, 48 tests, production build, lint (existing non-blocking warnings only) and `git diff --check`.
-- Production release `dpl_HzRBSLMmhkkJRZcr7dGMmTWX18Ua` / `1ee4927` is `READY` on the public domain after explicit approval.
-- The release gate passed: 48 tests, production build, lint with only existing non-blocking warnings, zero high-severity production dependency vulnerabilities, native-dialog scan, and Git whitespace checks.
-- Live desktop and 390 x 844 mobile verification confirmed the percentage scale, target line, Metric Detail rolling average, no horizontal overflow, no browser console errors/warnings, no native dialogs and no Vercel runtime errors.
-- Production verification was read-only; no live target, upload, invitation, deletion or other customer-data mutation was performed.
-- Review candidate source commits `5f3bc74` (`feat: add metric detail rolling average panel`), `886b4a5` (`refine: remove redundant pulse callouts`) and `f094d51` (`feat: add percentage-aware chart scaling`), plus handoff metadata, are pushed to `origin/agent/bodyshop-audit-hardening`.
+- Supabase project migrations in this candidate:
+  - `20260810113702_dashboard_kpi_layouts.sql`
+  - `20260812090000_security_hardening_least_privilege.sql`
+  - `20260812092000_policy_and_fk_performance_cleanup.sql`
+- Row Level Security and authenticated-only grants protect company-scoped analytics and KPI layouts.
+- Customer layout policy tests confirmed own-company writes and rejected cross-company writes; administrators can manage the selected bodyshop.
+- `invite-user` and `delete-user` Edge Functions use verified JWTs, origin-scoped CORS, POST-only handling and reduced response payloads.
+- Edge Function source now normalizes request origins against the application allowlist before using an origin for CORS or invite redirects. This source hardening is not deployed to Supabase during the Preview-only cycle.
+- Accepted limitation: Supabase leaked-password protection remains disabled because it requires a paid plan.
+- Live Supabase advisors report no RLS/security-policy findings. Two unused-index notices are informational only and the indexes remain in place while the new tables accumulate representative traffic.
 
-## Permanent release guardrails
+## Verification evidence
 
-1. Design approval must use the same production component tree as the authenticated application. Demonstration data may be substituted, but the interface component cannot be duplicated.
-2. Do not use native browser `alert`, `prompt` or `confirm` for application workflows. The lint rule now enforces this automatically.
-3. Every material button must be exercised in the actual supported browser, not inferred from rendering or unit tests alone.
-4. Before release, compare the protected preview and authenticated application at the same desktop and mobile widths.
-5. Continue the sequence: local checks -> protected source preview -> browser action audit -> explicit approval -> source-based production deployment.
-6. A production deploy is not complete until the deployed DOM, console, core actions and Supabase-backed data have been verified.
+Current cursor-continuity follow-up gate:
 
-## Source-control state
+- Vitest: all 8 files and 73 tests passed, including exact continuous month-zone coverage in the chart component.
+- Vite production build: passed.
+- Lint: no errors; one existing Fast Refresh advisory remains in `AuthProvider.jsx`.
+- `git diff --check`: passed with only Windows line-ending notices.
+- Playwright: the first full run identified only a `0.01` SVG-unit rounding false positive in the new overlap assertion; the assertion was corrected to share the continuity tolerance. Subsequent isolated reruns stalled in the local Playwright wrapper without returning another assertion result, including with an explicit test timeout. This is recorded as a harness stall, not a pass.
+- Direct hosted supported-browser verification: at `782.296875 x 320`, all eight Completed RO month regions meet with zero gaps and cover the plot exactly; the SVG, line, points, hit areas and dense samples across the plot all compute to `crosshair`. A real pointer sweep produced one designed preview for every Jan-Aug value without clicking.
 
-- Working branch: `agent/bodyshop-audit-hardening`
-- Latest production source: `34dcb47` (`refine: align metric detail panel`), building on `1ee4927`, `f094d51`, `886b4a5` and `5f3bc74`; all review commits are pushed to `origin/agent/bodyshop-audit-hardening`.
-- Production deployment `dpl_3AQ3TRxHb4ECSfCq2JurybaWV3sr` is `READY` and serves `https://bodyshop-dashboard.vercel.app`.
-- `origin/main` was not changed; the production deployment was made directly from the approved working branch.
-- Only the three user-owned preview PNG files remain untracked; they were not committed or uploaded.
-- Preserve the three untracked preview PNG files; they are user-owned artifacts and are excluded from Vercel uploads by `.vercelignore`.
+Baseline consolidation gate before this cursor follow-up:
 
-## Next steps
+- Vitest: 8 files, 73 tests passed, including hover/focus preview and pinned-value restoration, adaptive scale generation, target-aware callout placement, year-aware X labels, exact before/after KPI insertion, touch-friendly ordering, missing-observation graph gaps, graph-range reset, whole-shell preview parity and the live Customer Management right-inspector path.
+- Playwright Chromium: all 8 tests passed, including hover and keyboard-focus previews across all eight KPI types, every one of the 64 pinned callout positions, equal Y-axis steps, target-line clearance, non-overlapping X labels and point targets, native drag right/left insertion, `390 x 844` in-panel reordering, every graph range, Custom-to-reporting-period reset, correct Consultant Review month, primary workspace navigation, authentication paths and mobile chart/popover stability.
+- Vite production build: passed.
+- Lint: no errors; one existing Fast Refresh advisory remains in `AuthProvider.jsx`.
+- Production dependency audit: zero vulnerabilities at high severity or above.
+- Native-dialog and work-marker scan: no production `alert`, `prompt`, `confirm`, `TODO`, `FIXME`, `HACK` or `XXX` findings.
+- `git diff --check`: passed; Git reports only Windows line-ending notices.
 
-1. Trial the live production application across the normal administrator and bodyshop workflows.
-2. Record any confusing wording, missing information or workflow friction found during real use.
-3. Make future adjustments locally and through a protected preview before requesting another production release.
+The final shared-component desktop review passed for a stable KPI story opening, matching `755 x 320` SVG client/view-box geometry, complete non-dashed curve paint, safe first/latest point bounds, no filter flash, no horizontal overflow, fully opaque KPI-guide and Daily-figures surfaces, no application warning/error and no JavaScript dialog. All eight operational KPI graph shapes passed the hosted geometry audit. The permanent 390 x 844 Playwright check passed for maximum chart width, exact responsive SVG geometry, a complete curved line, opaque computed backgrounds, no page overflow and clean application-origin diagnostics.
+
+The latest information-control review measured all three controls at the same `32 x 32` pointer target with the same `14 x 14` SVG glyph. Hosted verification confirmed the header guide immediately precedes Export at desktop and `390 x 844`, with left-to-right order `KPI guide → Export → Metrics` and no horizontal overflow. Its revised `320 x 172` surface opens below the full header, remains inside the viewport, renders opaque from the first visible frame and uses header `z-index: 50` / popover `z-index: 70` above the reporting toolbar's `z-index: 30`; no reporting-period text bleeds through. The two Business Snapshot controls immediately follow their respective Daily actual and Daily budget labels. Their independent `320 x 178.75` and `320 x 160.875` popovers remain fully opaque and inside the viewport at desktop and `390 x 844`, only one renders at a time, and the Business Snapshot/downstream geometry remains unchanged; hover/focus, mobile tap, Escape and outside-click paths remain supported.
+
+The final local and hosted reviews directly reused each header button for every transition. Desktop Workspace changed `272px → 0px → 272px`; Metrics opened at `384px`, closed through the same button and left document overflow at zero. At `390 x 844`, Workspace occupied `[0, 56, 272, 788]` and Metrics `[0, 56, 384, 788]`, leaving both persistent controls accessible above their panels. Every primary workspace—Dashboard, Shop Profile, Data & Imports, Gamified Leaderboards and Customer Management—retained the shared shell and zero horizontal overflow at desktop and mobile widths.
+
+Protected Preview `dpl_9DdBjYWmYgMXo2kNMXMeKeYRQ4wS` returned HTTP 200 through approved Vercel CLI access with `X-Robots-Tag: noindex`. Vercel reports `READY`, `target: preview`. Hosted inspection confirmed the secure root/login boundary, a `104 x 30` May tooltip with the correct amber outside-goal dot, target-line clearance, zero native SVG title tooltips, zero horizontal overflow and no JavaScript dialog. Production was re-inspected afterward and remains deployment `dpl_3AQ3TRxHb4ECSfCq2JurybaWV3sr`.
+
+Protected Preview `dpl_C7Zow3v7edU2DaJWC445bwWL67ti` returned HTTP 200 through approved Vercel CLI access with `X-Robots-Tag: noindex`. Vercel reports `READY`, `target: preview`. Hosted inspection confirmed continuous Jan-Aug hover coverage, one stable crosshair throughout the plot and one designed value preview per real pointer position. Production was re-inspected afterward and remains deployment `dpl_3AQ3TRxHb4ECSfCq2JurybaWV3sr`.
+
+## Remaining release steps
+
+1. Review the final diff, protected Preview and this handoff with the user.
+2. Only after explicit approval: create an intentional source commit and push it.
+3. Only after separate explicit production approval: deploy from the approved source, then verify authenticated desktop/mobile behavior, Supabase-backed data and production diagnostics.
+
+## Release guardrails
+
+- Never promote a Preview or use `--prod` without explicit approval.
+- Deploy from source, not a locally prebuilt bundle assembled with pulled Vercel environment values.
+- Keep `VITE_UI_PREVIEW` disabled in production.
+- Treat `VITE_*` values as public browser configuration; never place service-role secrets in them.
+- Preserve the user-owned preview PNGs and `.codex-remote-attachments` directory.
+
+## Key files
+
+- `src/App.jsx` - authenticated application, role navigation and data orchestration.
+- `src/components/DashboardWorkspace.jsx` - shared authenticated/demo dashboard composition.
+- `src/LayoutPreview.jsx` - deterministic visual-review route using shared components.
+- `src/components/BusinessSnapshot.jsx` - financial summary and daily calculation explainer.
+- `src/components/ContextInfoButton.jsx` - shared accessible circular information-control treatment.
+- `src/components/MetricLibraryDrawer.jsx` - KPI selection and ordering.
+- `src/components/PerformanceStoryModal.jsx` - full KPI analysis experience.
+- `src/components/PerformanceRhythm.jsx` - responsive chart and period windows.
+- `src/utils/dashboardKpis.js` - KPI configuration and formatting.
+- `src/services/db.js` - Supabase data operations.
+- `supabase/migrations/` - database/RLS changes.
+- `e2e/` - deterministic Playwright smoke coverage.

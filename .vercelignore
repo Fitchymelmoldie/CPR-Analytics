@@ -1,3 +1,11 @@
 bodyshop-dashboard-full-app-preview.png
 bodyshop-dashboard-refinement-preview.png
 bodyshop-dashboard-vercel-preview.png
+.codex-remote-attachments/
+.codex-vercel-npm-cache/
+.env*
+playwright-report/
+test-results/
+supabase/
+supabase_schema.sql
+*.log

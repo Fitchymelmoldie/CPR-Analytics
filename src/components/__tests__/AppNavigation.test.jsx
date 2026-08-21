@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../App';
 import * as authProvider from '../AuthProvider';
@@ -11,7 +11,12 @@ vi.mock('../AuthProvider', () => ({
 }));
 
 vi.mock('../../services/db', () => ({
+  ANALYTICS_INPUT_FIELDS: [
+    { key: 'Completed RO', label: 'Completed RO', format: 'number' },
+    { key: 'Total Sales', label: 'Total Sales', format: 'currency' }
+  ],
   uploadAnalytics: vi.fn(),
+  upsertAnalyticsValue: vi.fn(),
   getAnalytics: vi.fn(),
   getCompanies: vi.fn(),
   getProfiles: vi.fn(),
@@ -28,7 +33,9 @@ vi.mock('../../services/db', () => ({
   deleteLeaderboardGroup: vi.fn(),
   getBenchmarks: vi.fn(),
   upsertBenchmark: vi.fn(),
-  deleteBenchmark: vi.fn()
+  deleteBenchmark: vi.fn(),
+  getDashboardKpiLayout: vi.fn(),
+  upsertDashboardKpiLayout: vi.fn()
 }));
 
 const company = {
@@ -129,7 +136,14 @@ describe('Drawer and dashboard regression coverage', () => {
     ]);
     dbServices.getLeaderboardGroups.mockResolvedValue([]);
     dbServices.getBenchmarks.mockResolvedValue([]);
+    dbServices.getDashboardKpiLayout.mockResolvedValue(null);
+    dbServices.upsertDashboardKpiLayout.mockImplementation((companyId, visibleKpis) => Promise.resolve({
+      company_id: companyId,
+      visible_kpis: visibleKpis,
+      updated_at: '2026-08-10T00:00:00.000Z'
+    }));
     dbServices.uploadAnalytics.mockResolvedValue(true);
+    dbServices.upsertAnalyticsValue.mockResolvedValue(true);
     dbServices.updateShopProfile.mockResolvedValue(company);
     dbServices.saveConsultantReview.mockResolvedValue({
       trend_analysis: 'Saved analysis',
@@ -157,17 +171,16 @@ describe('Drawer and dashboard regression coverage', () => {
     expect(screen.getByRole('button', { name: 'Shop Profile' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Consultant Reviews' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Data & Imports' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Gamified Leaderboards' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Gamified Leaderboards' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Customer Management' })).toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: 'Bodyshop' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Active bodyshop')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Shop Profile' }));
     expect(await screen.findByRole('heading', { name: company.name })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Data & Imports' }));
-    expect(await screen.findByRole('heading', { name: /Manual Data Entry/i })).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Gamified Leaderboards' }));
-    expect(await screen.findByText('Gamified Leaderboard Configuration')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Full Month Editor/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Customer Management' }));
     expect((await screen.findAllByRole('heading', { name: 'Customer Management' })).length).toBeGreaterThan(0);
@@ -178,6 +191,25 @@ describe('Drawer and dashboard regression coverage', () => {
     expect(screen.getByRole('button', { name: 'Save Review' })).toBeInTheDocument();
   });
 
+  it('lets an administrator inspect a customer workspace and return to administration', async () => {
+    useRole('ADMIN');
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Customer Management' }));
+    fireEvent.click(await screen.findByRole('button', { name: `Open ${company.name} dashboard` }));
+
+    expect(await screen.findByRole('heading', { name: `Welcome, ${company.name}` })).toBeInTheDocument();
+    expect(screen.getByText(/Viewing Test Bodyshop as the customer sees it/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Return to Admin' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Data & Imports' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Customer Management' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Set target for/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Return to Admin' }));
+    expect((await screen.findAllByRole('heading', { name: 'Customer Management' })).length).toBeGreaterThan(0);
+    expect(screen.getByRole('button', { name: 'Data & Imports' })).toBeInTheDocument();
+  });
+
   it('keeps KPI selection and timeframe controls connected to the new chart', async () => {
     useRole('ADMIN');
     render(<App />);
@@ -185,12 +217,63 @@ describe('Drawer and dashboard regression coverage', () => {
     const paintSales = await screen.findByRole('button', { name: /View Paint Sales trend/i });
     fireEvent.click(paintSales);
     expect(paintSales).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getAllByRole('heading', { name: 'Paint Sales' })).toHaveLength(2);
+    expect(screen.getByRole('dialog', { name: 'Paint Sales' })).toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { name: 'Paint Sales' })).toHaveLength(3);
     expect(screen.queryByRole('button', { name: 'Set target for Paint Sales' })).not.toBeInTheDocument();
 
     const threeMonths = screen.getByRole('button', { name: '3M' });
     fireEvent.click(threeMonths);
     await waitFor(() => expect(screen.getByRole('button', { name: '3M' })).toHaveAttribute('aria-pressed', 'true'));
+  });
+
+  it('recalculates dashboard KPIs and rolling daily figures for the selected reporting month', async () => {
+    useRole('ADMIN');
+    render(<App />);
+
+    expect(await screen.findByRole('button', { name: /View Completed RO performance.*Current result: 200/i })).toBeInTheDocument();
+    expect(screen.getByText('$1,080,000')).toBeInTheDocument();
+    expect(screen.getByText('$8,562')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('combobox', { name: 'Reporting period' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Apr 2026' }));
+
+    expect(await screen.findByRole('button', { name: /View Completed RO performance.*Current result: 180/i })).toBeInTheDocument();
+    expect(screen.getByText('$950,000')).toBeInTheDocument();
+    expect(screen.getByText('$8,019')).toBeInTheDocument();
+    expect(screen.getByText('Building')).toBeInTheDocument();
+  });
+
+  it('loads the saved KPI card order for the selected bodyshop', async () => {
+    useRole('ADMIN');
+    dbServices.getDashboardKpiLayout.mockResolvedValue({
+      company_id: company.id,
+      visible_kpis: ['Total Sales', 'Completed RO'],
+      updated_at: '2026-08-10T00:00:00.000Z'
+    });
+    render(<App />);
+
+    const grid = await screen.findByLabelText('Dashboard KPI cards');
+    await waitFor(() => expect(grid.querySelectorAll('article')).toHaveLength(2));
+    expect(within(grid).getByText('Total Sales')).toBeInTheDocument();
+    expect(within(grid).getByText('Completed RO')).toBeInTheDocument();
+    expect(dbServices.getDashboardKpiLayout).toHaveBeenCalledWith(company.id);
+  });
+
+  it('saves a customized KPI card order for the selected bodyshop', async () => {
+    useRole('ADMIN');
+    render(<App />);
+
+    await waitFor(() => expect(dbServices.getDashboardKpiLayout).toHaveBeenCalledWith(company.id));
+    fireEvent.click(await screen.findByRole('button', { name: /Customize cards/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Total Sales to dashboard' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save layout' }));
+
+    await waitFor(() => expect(dbServices.upsertDashboardKpiLayout).toHaveBeenCalledTimes(1));
+    const [savedCompanyId, savedTitles] = dbServices.upsertDashboardKpiLayout.mock.calls[0];
+    expect(savedCompanyId).toBe(company.id);
+    expect(savedTitles).toHaveLength(9);
+    expect(savedTitles.at(-1)).toBe('Total Sales');
+    expect(await screen.findByRole('button', { name: 'Saved' })).toBeDisabled();
   });
 
   it('preserves manual editing and saving in Data & Imports', async () => {
@@ -264,14 +347,41 @@ describe('Drawer and dashboard regression coverage', () => {
     expect(screen.queryByLabelText('Bodyshop key performance indicators')).not.toBeInTheDocument();
   });
 
-  it('persists sidebar collapse state and still signs out', async () => {
+  it('persists the hidden navigation state and still signs out', async () => {
     const state = useRole('ADMIN');
     render(<App />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Collapse sidebar' }));
-    await waitFor(() => expect(window.localStorage.getItem('cpr_sidebar_collapsed')).toBe('true'));
+    const workspaceToggle = await screen.findByRole('button', { name: 'Hide workspace' });
+    expect(workspaceToggle.closest('header')).not.toBeNull();
+    fireEvent.click(workspaceToggle);
+    await waitFor(() => expect(window.localStorage.getItem('cpr_sidebar_hidden:v1')).toBe('true'));
+    expect(workspaceToggle).toHaveAccessibleName('Show workspace');
+    fireEvent.click(workspaceToggle);
+    await waitFor(() => expect(window.localStorage.getItem('cpr_sidebar_hidden:v1')).toBe('false'));
+    expect(workspaceToggle).toHaveAccessibleName('Hide workspace');
 
     fireEvent.click(screen.getByRole('button', { name: 'Logout' }));
     await waitFor(() => expect(state.signOut).toHaveBeenCalledTimes(1));
+  });
+
+  it('reopens the metric library from the dashboard top bar', async () => {
+    useRole('ADMIN');
+    render(<App />);
+
+    const metricLibraryToggle = await screen.findByRole('button', { name: 'Show metric library' });
+    expect(metricLibraryToggle.closest('header')).not.toBeNull();
+    fireEvent.click(metricLibraryToggle);
+    expect(metricLibraryToggle).toHaveAccessibleName('Hide metric library');
+    expect(screen.getByRole('complementary', { name: 'Metric library' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Hide workspace' })).toBeInTheDocument();
+    expect(document.querySelector('.app-main-shell')).toHaveClass('metrics-panel-open');
+
+    fireEvent.click(metricLibraryToggle);
+    expect(screen.queryByRole('complementary', { name: 'Metric library' })).not.toBeInTheDocument();
+    expect(document.querySelector('.app-main-shell')).not.toHaveClass('metrics-panel-open');
+    expect(metricLibraryToggle).toHaveAccessibleName('Show metric library');
+    fireEvent.click(metricLibraryToggle);
+    expect(metricLibraryToggle).toHaveAccessibleName('Hide metric library');
+    expect(screen.getByRole('complementary', { name: 'Metric library' })).toBeInTheDocument();
   });
 
   it('opens and closes the responsive mobile drawer', async () => {
@@ -280,10 +390,13 @@ describe('Drawer and dashboard regression coverage', () => {
     const sidebar = container.querySelector('aside');
     expect(sidebar).toHaveClass('invisible');
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Open navigation' }));
+    const mobileWorkspaceToggle = await screen.findByRole('button', { name: 'Open workspace' });
+    fireEvent.click(mobileWorkspaceToggle);
     expect(sidebar).toHaveClass('visible');
-    fireEvent.click(screen.getAllByRole('button', { name: 'Close navigation' })[1]);
+    expect(mobileWorkspaceToggle).toHaveAccessibleName('Close workspace');
+    fireEvent.click(mobileWorkspaceToggle);
     expect(sidebar).toHaveClass('invisible');
+    expect(mobileWorkspaceToggle).toHaveAccessibleName('Open workspace');
   });
 
   it('keeps shop profile editing connected to the existing save action', async () => {
@@ -304,6 +417,11 @@ describe('Drawer and dashboard regression coverage', () => {
     useRole('ADMIN');
     render(<App />);
     fireEvent.click(await screen.findByRole('button', { name: 'Consultant Reviews' }));
+
+    const reviewPeriod = screen.getByLabelText('Consultant review period');
+    expect(reviewPeriod).toHaveValue('2026-05');
+    expect(within(reviewPeriod).getByRole('option', { name: 'May 2026' })).toHaveValue('2026-05');
+    expect(within(reviewPeriod).getByRole('option', { name: 'Apr 2026' })).toHaveValue('2026-04');
 
     fireEvent.change(screen.getByPlaceholderText(/Summarise the key performance trends/i), { target: { value: 'Saved analysis' } });
     fireEvent.change(screen.getByPlaceholderText(/List specific, actionable recommendations/i), { target: { value: 'Saved improvements' } });
@@ -343,21 +461,12 @@ describe('Drawer and dashboard regression coverage', () => {
     await waitFor(() => expect(dbServices.getAnalytics.mock.calls.length).toBeGreaterThan(1));
   });
 
-  it('keeps leaderboard cohort selection and group saving connected', async () => {
-    const secondCompany = { ...company, id: '456.au', name: 'Second Bodyshop' };
-    const secondCompanyRows = analytics.map(row => ({ ...row, 'Company Id': secondCompany.id, 'Company Name': secondCompany.name }));
+  it('keeps the deferred leaderboard feature out of the active product', async () => {
     useRole('ADMIN');
-    dbServices.getCompanies.mockResolvedValue([company, secondCompany]);
-    dbServices.getAnalytics.mockResolvedValue([...analytics, ...secondCompanyRows]);
     render(<App />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Gamified Leaderboards' }));
-
-    fireEvent.click(await screen.findByText(company.id, { selector: 'span' }));
-    fireEvent.click(screen.getByText(secondCompany.id, { selector: 'span' }));
-    fireEvent.change(screen.getByPlaceholderText(/Enter group name/i), { target: { value: 'Peer Group' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save Selection as Group' }));
-
-    await waitFor(() => expect(dbServices.createLeaderboardGroup).toHaveBeenCalledWith('admin-user', 'Peer Group', [company.id, secondCompany.id]));
+    expect(await screen.findByRole('button', { name: 'Data & Imports' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Gamified Leaderboards' })).not.toBeInTheDocument();
+    expect(dbServices.createLeaderboardGroup).not.toHaveBeenCalled();
   });
 
   it('exports the existing data without leaving a temporary browser URL behind', async () => {
@@ -408,6 +517,20 @@ describe('Drawer and dashboard regression coverage', () => {
     await waitFor(() => expect(dbServices.inviteCustomer).toHaveBeenCalledTimes(1));
     expect(dbServices.inviteCustomer).toHaveBeenCalledWith('newshop@example.com', company.id, 'test-token');
     expect(await screen.findByText('Invitation sent successfully!')).toBeInTheDocument();
+  });
+
+  it('opens customer account details in the shared right inspector', async () => {
+    useRole('ADMIN');
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Customer Management' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'View shop@example.com details' }));
+
+    expect(screen.getByRole('heading', { name: company.name })).toBeInTheDocument();
+    expect(screen.getByText('customer-user')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open customer workspace' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close customer details' }));
+    expect(screen.queryByRole('heading', { name: company.name })).not.toBeInTheDocument();
   });
 
   it('keeps user and company deletion behind their existing confirmations', async () => {

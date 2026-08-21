@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
-const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTH_NAMES = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 export default function ConsultantReviewModal({ 
   isOpen, 
@@ -8,7 +8,7 @@ export default function ConsultantReviewModal({
   currentUser, 
   selectedCompany, 
   selectedPeriod, 
-  availablePeriods,
+  availablePeriods = [],
   companyReviews, // Object mapping period -> { trendAnalysis, improvements, timestamp }
   onSaveReview
 }) {
@@ -16,6 +16,14 @@ export default function ConsultantReviewModal({
   const [localPeriod, setLocalPeriod] = useState(selectedPeriod);
   const [trendAnalysis, setTrendAnalysis] = useState('');
   const [improvements, setImprovements] = useState('');
+  const modalRef = useRef(null);
+  const closeRef = useRef(null);
+  const previousFocusRef = useRef(null);
+  const selectablePeriods = useMemo(() => {
+    const periods = [...availablePeriods];
+    if (selectedPeriod && !periods.includes(selectedPeriod)) periods.push(selectedPeriod);
+    return periods.sort((a, b) => b.localeCompare(a));
+  }, [availablePeriods, selectedPeriod]);
 
   // Sync localPeriod with parent when modal opens
   useEffect(() => {
@@ -33,6 +41,42 @@ export default function ConsultantReviewModal({
       setActiveTab('current');
     }
   }, [isOpen, localPeriod, companyReviews]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    previousFocusRef.current = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const focusTimer = window.setTimeout(() => closeRef.current?.focus(), 0);
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab' || !modalRef.current) return;
+      const focusable = [...modalRef.current.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')];
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previousFocusRef.current?.focus?.();
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -59,43 +103,38 @@ export default function ConsultantReviewModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-surface-900 border border-surface-700/50 rounded-2xl w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+    <div className="codex-dialog-backdrop fixed inset-0 z-[100] flex items-center justify-center p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
+      <div ref={modalRef} role="dialog" aria-modal="true" aria-labelledby="consultant-review-title" className="codex-dialog flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-surface-700/50 glass">
+        <div className="flex items-center justify-between border-b border-white/[0.07] p-5">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-accent-600 flex items-center justify-center shadow-lg">
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-brand-500/10">
+              <svg className="h-5 w-5 text-brand-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
               </svg>
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white tracking-tight">Consultant Review</h2>
+              <h2 id="consultant-review-title" className="text-base font-semibold tracking-tight text-white">Consultant Review</h2>
               <div className="flex items-center gap-2 mt-1">
                 <p className="text-sm text-surface-400">{selectedCompany} • </p>
                 {currentUser.role === 'ADMIN' ? (
-                  <input
-                    type="month"
-                    value={localPeriod ? `${localPeriod.split('-')[0]}-${String(parseInt(localPeriod.split('-')[1]) + 1).padStart(2, '0')}` : ''}
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        const [y, m] = e.target.value.split('-');
-                        setLocalPeriod(`${y}-${String(parseInt(m) - 1).padStart(2, '0')}`);
-                      } else {
-                        setLocalPeriod('');
-                      }
-                    }}
-                    className="bg-surface-800 border border-surface-700 rounded-md px-2 py-1 text-sm text-brand-400 focus:outline-none focus:border-brand-500 cursor-pointer"
+                  <select
+                    aria-label="Consultant review period"
+                    value={localPeriod || ''}
+                    onChange={(event) => setLocalPeriod(event.target.value)}
+                    className="codex-input cursor-pointer px-2 py-1.5 text-sm text-brand-300"
                     style={{ colorScheme: 'dark' }}
-                  />
+                  >
+                    {selectablePeriods.map(period => <option key={period} value={period}>{formatPeriod(period)}</option>)}
+                  </select>
                 ) : (
                   <p className="text-sm text-surface-400">{formatPeriod(localPeriod)}</p>
                 )}
               </div>
             </div>
           </div>
-          <button onClick={onClose} className="p-2 text-surface-400 hover:text-white hover:bg-surface-800 rounded-lg transition-colors">
+          <button ref={closeRef} type="button" onClick={onClose} className="codex-icon-button grid h-9 w-9 place-items-center" aria-label="Close consultant review">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -103,14 +142,20 @@ export default function ConsultantReviewModal({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-surface-700/50 px-6 bg-surface-800/20">
+        <div className="flex border-b border-white/[0.07] bg-black/10 px-5" role="tablist" aria-label="Consultant review views">
           <button 
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'current'}
             className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'current' ? 'border-brand-500 text-brand-400' : 'border-transparent text-surface-400 hover:text-surface-200'}`}
             onClick={() => setActiveTab('current')}
           >
             Current Period
           </button>
           <button 
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'history'}
             className={`py-3 px-4 text-sm font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'history' ? 'border-brand-500 text-brand-400' : 'border-transparent text-surface-400 hover:text-surface-200'}`}
             onClick={() => setActiveTab('history')}
           >
@@ -133,14 +178,15 @@ export default function ConsultantReviewModal({
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-surface-300 mb-2">Trend Analysis</label>
+                  <label htmlFor="consultant-trend-analysis" className="block text-sm font-medium text-surface-300 mb-2">Trend Analysis</label>
                   {currentUser.role === 'ADMIN' ? (
                     <textarea 
+                      id="consultant-trend-analysis"
                       rows={5} 
                       value={trendAnalysis} 
                       onChange={(e) => setTrendAnalysis(e.target.value)}
                       placeholder="Summarise the key performance trends observed in the data..."
-                      className="w-full bg-surface-800/60 border border-surface-700/60 rounded-xl px-4 py-3 text-sm text-white placeholder-surface-500 resize-y transition-all duration-200 hover:border-surface-600 focus:border-brand-500 focus:ring-1 focus:ring-brand-500" 
+                      className="codex-input w-full resize-y px-4 py-3 text-sm"
                     />
                   ) : (
                     <div className="w-full bg-surface-800/40 border border-surface-700/40 rounded-xl px-4 py-3 min-h-[120px]">
@@ -152,14 +198,15 @@ export default function ConsultantReviewModal({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-surface-300 mb-2">Actionable Improvements</label>
+                  <label htmlFor="consultant-improvements" className="block text-sm font-medium text-surface-300 mb-2">Actionable Improvements</label>
                   {currentUser.role === 'ADMIN' ? (
                     <textarea 
+                      id="consultant-improvements"
                       rows={5} 
                       value={improvements} 
                       onChange={(e) => setImprovements(e.target.value)}
                       placeholder="List specific, actionable recommendations for the bodyshop..."
-                      className="w-full bg-surface-800/60 border border-surface-700/60 rounded-xl px-4 py-3 text-sm text-white placeholder-surface-500 resize-y transition-all duration-200 hover:border-surface-600 focus:border-brand-500 focus:ring-1 focus:ring-brand-500" 
+                      className="codex-input w-full resize-y px-4 py-3 text-sm"
                     />
                   ) : (
                     <div className="w-full bg-surface-800/40 border border-surface-700/40 rounded-xl px-4 py-3 min-h-[120px]">
@@ -182,7 +229,7 @@ export default function ConsultantReviewModal({
                 </div>
               ) : (
                 <div className="space-y-8 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-surface-700 before:to-transparent">
-                  {sortedHistoryPeriods.map((periodKey, index) => {
+                  {sortedHistoryPeriods.map((periodKey) => {
                     const review = companyReviews[periodKey];
                     return (
                       <div key={periodKey} className="relative flex items-start gap-5 sm:gap-6 group">
@@ -191,7 +238,7 @@ export default function ConsultantReviewModal({
                             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                         </div>
-                        <div className="flex-1 glass p-5 sm:p-6 rounded-xl border border-surface-700/50 shadow-xl transition-all hover:-translate-y-1 hover:shadow-brand-500/10">
+                        <div className="codex-surface flex-1 p-5 sm:p-6">
                           <div className="flex items-center justify-between mb-4 border-b border-surface-700/50 pb-3">
                             <h3 className="font-bold text-white text-lg">{formatPeriod(periodKey)}</h3>
                             <span className="text-xs text-surface-500 uppercase tracking-wider">{new Date(review.timestamp).toLocaleDateString()}</span>
@@ -221,10 +268,10 @@ export default function ConsultantReviewModal({
         {/* Footer */}
         {activeTab === 'current' && currentUser.role === 'ADMIN' && (
           <div className="p-6 border-t border-surface-700/50 bg-surface-900/50 flex justify-end gap-3">
-            <button onClick={onClose} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-surface-300 hover:text-white hover:bg-surface-800 transition-colors">
+            <button type="button" onClick={onClose} className="codex-button codex-button-secondary px-4 py-2.5 text-xs">
               Cancel
             </button>
-            <button onClick={handleSave} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white bg-brand-600 hover:bg-brand-500 shadow-[0_0_15px_rgba(0,168,150,0.4)] transition-all">
+            <button type="button" onClick={handleSave} disabled={!localPeriod} className="codex-button codex-button-primary px-4 py-2.5 text-xs disabled:cursor-not-allowed disabled:opacity-45">
               Save Review
             </button>
           </div>

@@ -12,7 +12,12 @@ vi.mock('../AuthProvider', () => ({
 }));
 
 vi.mock('../../services/db', () => ({
+  ANALYTICS_INPUT_FIELDS: [
+    { key: 'Completed RO', label: 'Completed RO', format: 'number' },
+    { key: 'Total Sales', label: 'Total Sales', format: 'currency' }
+  ],
   uploadAnalytics: vi.fn(),
+  upsertAnalyticsValue: vi.fn(),
   getAnalytics: vi.fn(),
   getCompanies: vi.fn(),
   getConsultantReviews: vi.fn(),
@@ -23,6 +28,8 @@ vi.mock('../../services/db', () => ({
   getBenchmarks: vi.fn(),
   upsertBenchmark: vi.fn(),
   deleteBenchmark: vi.fn(),
+  getDashboardKpiLayout: vi.fn(),
+  upsertDashboardKpiLayout: vi.fn(),
   updateShopProfile: vi.fn(),
   deleteAnalyticsPeriod: vi.fn()
 }));
@@ -49,18 +56,20 @@ describe('Upload Pipeline Integration', () => {
     dbServices.getConsultantReviews.mockResolvedValue([]);
     dbServices.getLeaderboardGroups.mockResolvedValue([]);
     dbServices.getBenchmarks.mockResolvedValue([]);
+    dbServices.getDashboardKpiLayout.mockResolvedValue(null);
   });
 
   it('renders upload zone for Admin when there is no data', async () => {
     render(<App />);
     fireEvent.click(await screen.findByRole('button', { name: /^Data & Imports$/i }));
-    expect(await screen.findByText(/Upload Performance Data/i)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Import CSV spreadsheet/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Quick KPI entry/i })).toBeInTheDocument();
   });
 
   it('shows an in-app error when required CSV columns are missing', async () => {
     const { container } = render(<App />);
     fireEvent.click(await screen.findByRole('button', { name: /^Data & Imports$/i }));
-    await screen.findByText(/Upload Performance Data/i);
+    await screen.findByRole('heading', { name: /Import CSV spreadsheet/i });
     
     const fileInput = container.querySelector('#file-input');
     
@@ -101,7 +110,7 @@ describe('Upload Pipeline Integration', () => {
 
     const { container } = render(<App />);
     fireEvent.click(await screen.findByRole('button', { name: /^Data & Imports$/i }));
-    await screen.findByText(/Upload Performance Data/i);
+    await screen.findByRole('heading', { name: /Import CSV spreadsheet/i });
     
     const fileInput = container.querySelector('#file-input');
     
@@ -116,5 +125,90 @@ describe('Upload Pipeline Integration', () => {
     
     // The upload completes without leaving the new Data & Imports workspace.
     expect(await screen.findByRole('heading', { name: /Data & Imports/i })).toBeInTheDocument();
+  });
+
+  it('adds one KPI value for a selected reporting month', async () => {
+    const company = { id: '123', name: 'Test Co' };
+    dbServices.getCompanies.mockResolvedValue([company]);
+    dbServices.upsertAnalyticsValue.mockResolvedValue({ company_id: company.id, year: 2025, month: 1, completed_ro: 12 });
+    dbServices.getAnalytics.mockImplementation(() => {
+      if (dbServices.upsertAnalyticsValue.mock.calls.length > 0) {
+        return Promise.resolve([{
+          'Company Id': company.id,
+          'Company Name': company.name,
+          Year: 2025,
+          Month: 1,
+          'Completed RO': 12
+        }]);
+      }
+      return Promise.resolve([]);
+    });
+
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /^Data & Imports$/i }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Reporting month' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Jan', exact: true }));
+    fireEvent.change(screen.getByLabelText('Value'), { target: { value: '12' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add KPI value' }));
+
+    const expectedYear = new Date().getFullYear();
+    await waitFor(() => expect(dbServices.upsertAnalyticsValue).toHaveBeenCalledWith('123', expectedYear, 1, 'Completed RO', 12));
+    expect(await screen.findByText(`Completed RO was added for Jan ${expectedYear}.`)).toBeInTheDocument();
+  });
+
+  it('keeps the reporting month control in-app instead of falling back to a native calendar', async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /^Data & Imports$/i }));
+
+    const monthControl = await screen.findByRole('button', { name: 'Reporting month' });
+    expect(document.querySelectorAll('input[type="month"]')).toHaveLength(0);
+    expect(monthControl).toHaveAttribute('aria-haspopup', 'dialog');
+    expect(monthControl).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.click(monthControl);
+    expect(screen.getByRole('dialog', { name: 'Choose reporting month' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: `${new Date().getFullYear()} months` })).toBeInTheDocument();
+    expect(monthControl).toHaveAttribute('aria-expanded', 'true');
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.queryByRole('dialog', { name: 'Choose reporting month' })).not.toBeInTheDocument();
+    expect(monthControl).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('keeps the KPI selector in-app instead of falling back to a native select menu', async () => {
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /^Data & Imports$/i }));
+
+    const metricControl = await screen.findByRole('combobox', { name: 'KPI' });
+    expect(document.querySelector('select#quick-entry-metric')).toBeNull();
+    fireEvent.click(metricControl);
+    expect(screen.getByRole('listbox', { name: 'KPI options' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('option', { name: 'Total Sales' }));
+    expect(metricControl).toHaveTextContent('Total Sales');
+    expect(metricControl).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('makes an existing KPI replacement explicit before saving', async () => {
+    const company = { id: '123', name: 'Test Co' };
+    const existing = [{
+      'Company Id': company.id,
+      'Company Name': company.name,
+      Year: 2026,
+      Month: 8,
+      'Completed RO': 20,
+      'Total Sales': 5000
+    }];
+    dbServices.getCompanies.mockResolvedValue([company]);
+    dbServices.getAnalytics.mockResolvedValue(existing);
+    dbServices.upsertAnalyticsValue.mockResolvedValue({ company_id: company.id, year: 2026, month: 8, completed_ro: 22 });
+
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /^Data & Imports$/i }));
+    expect(await screen.findByText('Saved value')).toBeInTheDocument();
+    expect(screen.getByText('Only this KPI will change.')).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Value'), { target: { value: '22' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Update KPI value' }));
+
+    await waitFor(() => expect(dbServices.upsertAnalyticsValue).toHaveBeenCalledWith('123', 2026, 8, 'Completed RO', 22));
   });
 });

@@ -11,9 +11,9 @@ export default function PerformancePulse({
   rollingMonths,
   reportingPeriod
 }) {
-  const operationalItems = items.filter(item => item.targetable !== false);
-  const businessItems = items.filter(item => item.targetable === false);
-  const targetedItems = operationalItems.filter(item => item.benchmark !== undefined && item.benchmark !== null);
+  const operationalItems = items.filter(item => item.pulseEligible === true);
+  const businessItems = items.filter(item => item.category === 'business');
+  const targetedItems = operationalItems.filter(item => item.benchmark !== undefined && item.benchmark !== null && Number.isFinite(item.value));
   const targetsMet = targetedItems.filter(targetIsMet).length;
   const reportingItems = operationalItems.filter(item => Number.isFinite(item.value)).length;
   const hasTargets = targetedItems.length > 0;
@@ -23,11 +23,13 @@ export default function PerformancePulse({
   const progressDegrees = Math.max(0, Math.min(360, progress * 360));
 
   return (
-    <section className="performance-pulse relative overflow-hidden rounded-[30px] px-5 py-6 sm:px-7 lg:px-8" aria-labelledby="performance-pulse-title">
-      <div className="pulse-ambient pulse-ambient-one" />
-      <div className="pulse-ambient pulse-ambient-two" />
+    <section className="performance-pulse relative z-20 rounded-xl border border-white/[0.07] px-5 py-5 sm:px-6 lg:px-7" aria-labelledby="performance-pulse-title">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]" aria-hidden="true">
+        <div className="pulse-ambient pulse-ambient-one" />
+        <div className="pulse-ambient pulse-ambient-two" />
+      </div>
 
-      <div className="relative grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(330px,.85fr)] lg:items-center xl:grid-cols-[minmax(360px,1.15fr)_minmax(330px,.9fr)]">
+      <div className="relative z-10 grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(330px,.85fr)] lg:items-center xl:grid-cols-[minmax(360px,1.15fr)_minmax(330px,.9fr)]">
         <div className="flex items-center gap-5 sm:gap-7">
           <div
             className="pulse-score-ring shrink-0"
@@ -50,11 +52,6 @@ export default function PerformancePulse({
                 ? `${targetsMet} of ${targetedItems.length} tracked targets are currently met.`
                 : 'Your key bodyshop metrics are live and ready to explore.'}
             </h2>
-            <p className="mt-2 max-w-xl text-sm leading-relaxed text-surface-400">
-              {hasTargets
-                ? 'Operational target coverage at a glance, with business activity kept clearly separate.'
-                : 'Add operational KPI targets to turn this pulse into a live health score for the selected bodyshop.'}
-            </p>
           </div>
         </div>
 

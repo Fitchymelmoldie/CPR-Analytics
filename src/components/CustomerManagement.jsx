@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getProfiles, getCompanies, inviteCustomer, createCompany, deleteCompany, deleteCustomer } from '../services/db';
 import { useAuth } from './AuthProvider';
 
-export default function CustomerManagement() {
+export default function CustomerManagement({ onOpenDashboard }) {
   const [profiles, setProfiles] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,6 +25,7 @@ export default function CustomerManagement() {
   const [deleteUserStatus, setDeleteUserStatus] = useState({ loading: false, error: null });
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedProfile, setSelectedProfile] = useState(null);
 
   const { session } = useAuth();
 
@@ -107,6 +108,7 @@ export default function CustomerManagement() {
     try {
       await deleteCustomer(deleteConfirmUser.id, session.access_token);
       setDeleteConfirmUser(null);
+      setSelectedProfile(null);
       fetchData(); // refresh list
     } catch (err) {
       setDeleteUserStatus({ loading: false, error: err.message });
@@ -122,15 +124,14 @@ export default function CustomerManagement() {
   });
 
   return (
-    <div className="animate-fade-in p-6 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+    <div className="codex-page customer-management animate-fade-in">
+      <div className="codex-page-heading">
         <div>
-          <h2 className="text-2xl font-bold text-white mb-1">Customer Management</h2>
-          <p className="text-surface-400 text-sm">Manage user access and onboard new clients.</p>
+          <h2>Customer Management</h2>
         </div>
         <button
           onClick={() => setShowInviteModal(true)}
-          className="bg-brand-600 hover:bg-brand-500 text-white px-4 py-2 rounded-lg font-medium shadow-[0_0_15px_rgba(0,168,150,0.3)] transition-all flex items-center gap-2"
+          className="codex-button codex-button-primary h-9 gap-2 px-3 text-xs"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -139,7 +140,9 @@ export default function CustomerManagement() {
         </button>
       </div>
 
-      <div className="mb-6 relative">
+      <div className="codex-toolbar">
+        <p className="text-xs text-surface-500">{filteredProfiles.length} {filteredProfiles.length === 1 ? 'account' : 'accounts'}</p>
+        <div className="relative w-full sm:w-80">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
           <svg className="h-5 w-5 text-surface-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -148,32 +151,35 @@ export default function CustomerManagement() {
         <input
           type="text"
           placeholder="Search by email, role, or company..."
-          className="bg-surface-800 border border-surface-700 text-white text-sm rounded-lg focus:ring-brand-500 focus:border-brand-500 block w-full sm:w-96 pl-10 p-2.5 transition-colors"
+          className="codex-input block w-full py-2.5 pl-10 pr-3 text-sm"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
+        </div>
       </div>
 
-      <div className="glass rounded-xl border border-surface-700/50 overflow-hidden">
+      <div className="codex-surface overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-surface-400">Loading customers...</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-surface-300">
+            <table className="codex-table text-left">
               <thead className="bg-surface-800/50 text-xs uppercase text-surface-400 font-semibold border-b border-surface-700/50">
                 <tr>
-                  <th className="px-6 py-4">User ID</th>
-                  <th className="px-6 py-4">Email</th>
+                  <th className="px-6 py-4">Customer</th>
+                  <th className="px-6 py-4">Account</th>
                   <th className="px-6 py-4">Role</th>
                   <th className="px-6 py-4">Company</th>
+                  <th className="px-6 py-4">Actions</th>
                   <th className="px-6 py-4">Joined</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-700/50">
                 {filteredProfiles.map((profile) => (
                   <tr key={profile.id} className="hover:bg-surface-800/30 transition-colors">
-                    <td className="px-6 py-4 font-mono text-xs whitespace-nowrap" title={profile.id}>
-                      {profile.id.substring(0, 8)}...{profile.id.substring(profile.id.length - 4)}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <p className="font-medium text-white">{profile.companies?.name || (profile.role === 'ADMIN' ? 'CPR Analytics' : profile.company_id || 'Unassigned')}</p>
+                      <p className="mt-1 font-mono text-[10px] text-surface-600" title={profile.id}>{profile.id.substring(0, 8)}...{profile.id.substring(profile.id.length - 4)}</p>
                     </td>
                     <td className="px-6 py-4 text-surface-300">
                       {profile.email || <span className="text-surface-600 italic">No email</span>}
@@ -188,7 +194,7 @@ export default function CustomerManagement() {
                         {profile.id !== session?.user?.id && (
                           <button 
                             onClick={() => setDeleteConfirmUser({ id: profile.id })} 
-                            className="opacity-0 group-hover:opacity-100 text-surface-500 hover:text-danger-400 transition-all p-1.5 rounded hover:bg-danger-500/10" 
+                            className="text-surface-600 hover:text-danger-400 transition-colors p-1.5 rounded hover:bg-danger-500/10"
                             title="Delete User Account"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -202,12 +208,29 @@ export default function CustomerManagement() {
                         {profile.company_id && profile.role !== 'ADMIN' && (
                           <button 
                             onClick={() => setDeleteConfirmCompany({ id: profile.company_id, name: profile.companies?.name || profile.company_id })} 
-                            className="opacity-0 group-hover:opacity-100 text-surface-500 hover:text-danger-400 transition-all p-1.5 rounded hover:bg-danger-500/10" 
+                            className="text-surface-600 hover:text-danger-400 transition-colors p-1.5 rounded hover:bg-danger-500/10"
                             title="Delete Company & Data"
                           >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                           </button>
                         )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                      {profile.company_id && profile.role !== 'ADMIN' && onOpenDashboard ? (
+                        <button
+                          type="button"
+                          onClick={() => onOpenDashboard(profile.company_id)}
+                          className="text-xs font-semibold text-brand-300 transition-colors hover:text-white"
+                          aria-label={`Open ${profile.companies?.name || profile.company_id} dashboard`}
+                        >
+                          Open dashboard
+                        </button>
+                      ) : (
+                        <span className="text-surface-600">—</span>
+                      )}
+                      <button type="button" onClick={() => setSelectedProfile(profile)} className="text-xs font-semibold text-surface-400 transition-colors hover:text-white" aria-label={`View ${profile.email || profile.id} details`}>Details</button>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-surface-500 whitespace-nowrap">
@@ -217,7 +240,7 @@ export default function CustomerManagement() {
                 ))}
                 {filteredProfiles.length === 0 && (
                   <tr>
-                    <td colSpan="5" className="px-6 py-8 text-center text-surface-500">
+                    <td colSpan="6" className="px-6 py-8 text-center text-surface-500">
                       {profiles.length === 0 ? 'No users found.' : 'No users match your search.'}
                     </td>
                   </tr>
@@ -228,10 +251,37 @@ export default function CustomerManagement() {
         )}
       </div>
 
+      {selectedProfile ? (
+        <>
+          <button type="button" aria-label="Dismiss customer details" className="fixed inset-0 z-[59] bg-black/45 lg:bg-transparent" onClick={() => setSelectedProfile(null)} />
+          <aside className="fixed bottom-0 right-0 top-14 z-[60] flex w-full max-w-96 flex-col border-l border-white/[0.08] bg-[#15171a] shadow-[-20px_0_60px_rgba(0,0,0,0.32)]" aria-labelledby="customer-details-title">
+            <div className="flex items-start justify-between border-b border-white/[0.07] p-4">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-surface-500">Customer account</p>
+                <h3 id="customer-details-title" className="mt-1 truncate text-base font-semibold text-white">{selectedProfile.companies?.name || selectedProfile.email || selectedProfile.id}</h3>
+              </div>
+              <button type="button" onClick={() => setSelectedProfile(null)} className="codex-icon-button grid h-8 w-8 place-items-center" aria-label="Close customer details">×</button>
+            </div>
+            <dl className="grid grid-cols-[110px_1fr] gap-x-4 gap-y-4 p-4 text-xs">
+              <dt className="text-surface-500">Email</dt><dd className="break-all text-surface-200">{selectedProfile.email || 'No email recorded'}</dd>
+              <dt className="text-surface-500">Role</dt><dd className="text-surface-200">{selectedProfile.role}</dd>
+              <dt className="text-surface-500">Company</dt><dd className="text-surface-200">{selectedProfile.companies?.name || selectedProfile.company_id || 'Unassigned'}</dd>
+              <dt className="text-surface-500">Joined</dt><dd className="text-surface-200">{new Date(selectedProfile.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</dd>
+              <dt className="text-surface-500">User ID</dt><dd className="break-all font-mono text-[10px] text-surface-400">{selectedProfile.id}</dd>
+            </dl>
+            <div className="mt-auto space-y-2 border-t border-white/[0.07] p-4">
+              {selectedProfile.company_id && selectedProfile.role !== 'ADMIN' && onOpenDashboard ? <button type="button" onClick={() => onOpenDashboard(selectedProfile.company_id)} className="codex-button codex-button-primary w-full px-3 py-2.5 text-xs">Open customer workspace</button> : null}
+              {selectedProfile.id !== session?.user?.id ? <button type="button" onClick={() => setDeleteConfirmUser({ id: selectedProfile.id })} className="codex-button codex-button-danger w-full px-3 py-2.5 text-xs">Delete user account</button> : null}
+              {selectedProfile.company_id && selectedProfile.role !== 'ADMIN' ? <button type="button" onClick={() => setDeleteConfirmCompany({ id: selectedProfile.company_id, name: selectedProfile.companies?.name || selectedProfile.company_id })} className="w-full px-3 py-2 text-xs font-medium text-danger-400 hover:text-danger-300">Delete company and data</button> : null}
+            </div>
+          </aside>
+        </>
+      ) : null}
+
       {/* Delete User Confirmation Modal */}
       {deleteConfirmUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass rounded-2xl w-full max-w-md p-6 border border-danger-500/30 shadow-2xl relative animate-scale-in">
+        <div className="codex-dialog-backdrop fixed inset-0 z-[80] flex items-center justify-center p-4">
+          <div className="codex-dialog relative w-full max-w-md p-6">
             <div className="w-12 h-12 mx-auto rounded-full bg-danger-500/20 flex items-center justify-center mb-4 text-danger-400">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -270,8 +320,8 @@ export default function CustomerManagement() {
 
       {/* Delete Confirmation Modal */}
       {deleteConfirmCompany && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass rounded-2xl w-full max-w-md p-6 border border-danger-500/30 shadow-2xl relative animate-scale-in">
+        <div className="codex-dialog-backdrop fixed inset-0 z-[80] flex items-center justify-center p-4">
+          <div className="codex-dialog relative w-full max-w-md p-6">
             <div className="w-12 h-12 mx-auto rounded-full bg-danger-500/20 flex items-center justify-center mb-4 text-danger-400">
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -310,8 +360,8 @@ export default function CustomerManagement() {
 
       {/* Invite Modal */}
       {showInviteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="glass rounded-2xl w-full max-w-md p-6 border border-surface-700 shadow-2xl relative animate-scale-in">
+        <div className="codex-dialog-backdrop fixed inset-0 z-[80] flex items-center justify-center p-4">
+          <div className="codex-dialog relative w-full max-w-md p-6">
             <button 
               onClick={() => setShowInviteModal(false)}
               className="absolute top-4 right-4 text-surface-400 hover:text-white"

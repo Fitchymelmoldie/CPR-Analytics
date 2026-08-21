@@ -1,5 +1,6 @@
 import React from 'react';
 import ThreeLogo from './ThreeLogo';
+import { FEATURE_FLAGS } from '../utils/featureFlags';
 
 const ICON_PATHS = {
   dashboard: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z M4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z M14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z',
@@ -18,7 +19,7 @@ const WORKSPACE_ITEMS = [
 
 const ADMIN_ITEMS = [
   { id: 'raw-data', label: 'Data & Imports', icon: 'data' },
-  { id: 'leaderboards', label: 'Gamified Leaderboards', icon: 'leaderboards' },
+  ...(FEATURE_FLAGS.leaderboards ? [{ id: 'leaderboards', label: 'Gamified Leaderboards', icon: 'leaderboards' }] : []),
   { id: 'customers', label: 'Customer Management', icon: 'customers' }
 ];
 
@@ -37,12 +38,12 @@ function NavButton({ item, active, collapsed, onClick, notification }) {
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
       title={collapsed ? item.label : undefined}
-      className={`group relative flex w-full items-center gap-3 rounded-xl border px-3.5 py-2.5 text-sm font-medium transition-all duration-200 ${
+      className={`group relative flex w-full items-center gap-2.5 rounded-lg border px-2.5 py-2 text-[13px] font-medium transition-colors duration-150 ${
         collapsed ? 'lg:justify-center lg:gap-0 lg:px-3 lg:py-3' : ''
       } ${
         active
-          ? 'border-brand-500/35 bg-brand-500/[0.12] text-white shadow-[0_8px_24px_rgba(0,168,150,0.10)]'
-          : 'border-transparent text-surface-400 hover:border-white/5 hover:bg-white/[0.04] hover:text-surface-100'
+          ? 'border-white/[0.08] bg-white/[0.07] text-white'
+          : 'border-transparent text-surface-400 hover:bg-white/[0.045] hover:text-surface-100'
       }`}
     >
       <span className={`relative shrink-0 ${active ? 'text-brand-300' : 'text-surface-500 group-hover:text-surface-300'}`}>
@@ -63,14 +64,14 @@ export default function AppSidebar({
   onNavigate,
   currentUser,
   collapsed,
-  onToggleCollapsed,
   mobileOpen,
   onCloseMobile,
   onOpenReviews,
   hasNotification,
-  onLogout
+  onLogout,
+  viewingAsCompany = false
 }) {
-  const isAdmin = currentUser?.role === 'ADMIN';
+  const isAdmin = currentUser?.role === 'ADMIN' && !viewingAsCompany;
   const navigate = (tab) => {
     onNavigate(tab);
     onCloseMobile();
@@ -86,30 +87,28 @@ export default function AppSidebar({
       />
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex h-screen w-72 flex-col border-r border-white/[0.07] bg-surface-900/95 shadow-2xl backdrop-blur-xl transition-[transform,width] duration-300 lg:visible lg:sticky lg:top-0 lg:translate-x-0 lg:shadow-none ${
+        id="workspace-sidebar"
+        className={`fixed bottom-0 left-0 top-14 z-50 flex h-[calc(100vh-3.5rem)] w-[272px] flex-col border-r border-white/[0.07] bg-[#111214]/98 shadow-2xl backdrop-blur-xl transition-[transform,width,opacity,visibility] duration-200 lg:inset-y-0 lg:h-screen ${
           mobileOpen ? 'visible translate-x-0' : 'invisible -translate-x-full'
-        } ${collapsed ? 'lg:w-20' : 'lg:w-72'}`}
+        } ${collapsed
+          ? 'lg:invisible lg:w-0 lg:-translate-x-full lg:border-r-0 lg:opacity-0'
+          : 'lg:visible lg:sticky lg:top-0 lg:w-[272px] lg:translate-x-0 lg:opacity-100 lg:shadow-none'}`}
       >
-        <div className={`flex h-20 items-center justify-between border-b border-white/[0.06] px-5 ${collapsed ? 'lg:justify-center lg:px-3' : ''}`}>
+        <header className={`flex h-14 items-center justify-between border-b border-white/[0.06] px-3.5 ${collapsed ? 'lg:justify-center lg:px-3' : ''}`}>
           <div className="flex min-w-0 items-center gap-3">
             <ThreeLogo />
             <div className={`min-w-0 ${collapsed ? 'lg:hidden' : ''}`}>
-              <div className="text-base font-bold tracking-tight">
+              <div className="text-sm font-semibold tracking-tight">
                 <span className="gradient-text">CPR</span>
                 <span className="ml-1.5 font-medium text-surface-200">Analytics</span>
               </div>
-              <p className="truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-surface-500">Bodyshop intelligence</p>
+              <p className="truncate text-[9px] font-medium uppercase tracking-[0.16em] text-surface-600">Bodyshop intelligence</p>
             </div>
           </div>
 
-          <button type="button" onClick={onCloseMobile} className="rounded-lg p-2 text-surface-500 hover:bg-white/5 hover:text-white lg:hidden" aria-label="Close navigation">
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        </header>
 
-        <nav className="flex-1 overflow-y-auto px-3 py-5" aria-label="Primary navigation">
+        <nav className="flex-1 overflow-y-auto px-2 py-3" aria-label="Primary navigation">
           <p className={`mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-surface-600 ${collapsed ? 'lg:hidden' : ''}`}>Workspace</p>
           <div className="space-y-1">
             {WORKSPACE_ITEMS.map(item => (
@@ -125,7 +124,7 @@ export default function AppSidebar({
           </div>
 
           {isAdmin && (
-            <div className="mt-7 border-t border-white/[0.06] pt-5">
+            <div className="mt-5 border-t border-white/[0.06] pt-4">
               <p className={`mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-surface-600 ${collapsed ? 'lg:hidden' : ''}`}>Administration</p>
               <div className="space-y-1">
                 {ADMIN_ITEMS.map(item => (
@@ -136,17 +135,16 @@ export default function AppSidebar({
           )}
         </nav>
 
-        <div className="border-t border-white/[0.06] p-3">
-          <div className={`mb-2 rounded-xl border border-white/[0.06] bg-white/[0.025] p-3 ${collapsed ? 'lg:p-2' : ''}`}>
-            <div className={`flex items-center gap-3 ${collapsed ? 'lg:justify-center lg:gap-0' : ''}`}>
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500/15 text-xs font-bold text-brand-300 ring-1 ring-brand-500/25">
+        <div className="border-t border-white/[0.06] px-3 pb-3 pt-4">
+          <p className={`mb-2 px-3 text-[10px] font-bold uppercase tracking-[0.2em] text-surface-600 ${collapsed ? 'lg:hidden' : ''}`}>Account</p>
+          <div className={`mb-2 flex items-center gap-3 px-3 py-2.5 ${collapsed ? 'lg:justify-center lg:gap-0 lg:px-0' : ''}`}>
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-500/15 text-xs font-bold text-brand-300 ring-1 ring-brand-500/25">
                 {currentUser?.role === 'ADMIN' ? 'AD' : (currentUser?.companyName || 'BS').slice(0, 2).toUpperCase()}
               </div>
               <div className={`min-w-0 flex-1 ${collapsed ? 'lg:hidden' : ''}`}>
                 <p className="truncate text-xs font-semibold text-surface-100">{currentUser?.role === 'ADMIN' ? 'Administrator' : currentUser?.companyName}</p>
                 <p className="truncate text-[10px] text-surface-500">{currentUser?.email}</p>
               </div>
-            </div>
           </div>
 
           <button
@@ -159,16 +157,6 @@ export default function AppSidebar({
             <span className={collapsed ? 'lg:hidden' : ''}>Logout</span>
           </button>
 
-          <button
-            type="button"
-            onClick={onToggleCollapsed}
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="mt-2 hidden w-full items-center justify-center rounded-xl border border-white/[0.06] py-2 text-surface-500 transition-colors hover:bg-white/[0.04] hover:text-white lg:flex"
-          >
-            <svg className={`h-4 w-4 transition-transform ${collapsed ? 'rotate-180' : ''}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
         </div>
       </aside>
     </>

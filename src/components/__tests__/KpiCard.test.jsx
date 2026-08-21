@@ -35,9 +35,9 @@ describe('KpiCard', () => {
 
     expect(screen.getByText('Target met')).toBeInTheDocument();
     expect(screen.getByText('Ahead by $80,528')).toBeInTheDocument();
-    expect(screen.getByText('1st / 8')).toHaveAttribute('title', 'Ranked 1st of 8');
+    expect(screen.queryByText('1st / 8')).not.toBeInTheDocument();
     expect(screen.getByText('8.4%').closest('span')).toHaveClass('text-success-400');
-    expect(screen.getByRole('button', { name: /Current result: \$1,080,528.*Target met.*Ranked 1st of 8/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Current result: \$1,080,528.*Target met/i })).toBeInTheDocument();
   });
 
   it('separates favourable movement from a missed lower-is-better target', () => {

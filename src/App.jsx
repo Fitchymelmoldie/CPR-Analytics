@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import Papa from 'papaparse';
 import ConsultantReviewModal from './ConsultantReviewModal';
-import { parseNum, MONTH_NAMES, KPI_CONFIG } from './utils/metrics';
-import { DASHBOARD_KPI_DEFINITIONS } from './utils/dashboardKpis';
-import { MOCK_HISTORICAL, MOCK_SINGLE } from './utils/mockData';
+import { parseNum, MONTH_NAMES, filterPeriodsByTimeframe, KPI_CONFIG } from './utils/metrics';
+import { DASHBOARD_KPI_DEFINITIONS, DEFAULT_DASHBOARD_KPI_TITLES, normalizeDashboardKpiTitles } from './utils/dashboardKpis';
 import BenchmarkTargetModal from './components/BenchmarkTargetModal';
+import DataImportActions from './components/DataImportActions';
 import DashboardWorkspace from './components/DashboardWorkspace';
 import FilterSelect from './components/FilterSelect';
 import Header from './components/Header';
@@ -15,15 +15,29 @@ import ReportingPeriodModal from './components/ReportingPeriodModal';
 import SetPasswordScreen from './components/SetPasswordScreen';
 import CustomerManagement from './components/CustomerManagement';
 import { useAuth } from './components/AuthProvider';
-import { uploadAnalytics, getAnalytics, updateShopProfile, deleteAnalyticsPeriod, getCompanies, getConsultantReviews, saveConsultantReview, getLeaderboardGroups, createLeaderboardGroup, deleteLeaderboardGroup, getBenchmarks, upsertBenchmark, deleteBenchmark } from './services/db';
+import { uploadAnalytics, upsertAnalyticsValue, getAnalytics, updateShopProfile, deleteAnalyticsPeriod, getCompanies, getConsultantReviews, saveConsultantReview, getLeaderboardGroups, createLeaderboardGroup, deleteLeaderboardGroup, getBenchmarks, upsertBenchmark, deleteBenchmark, getDashboardKpiLayout, upsertDashboardKpiLayout } from './services/db';
+import { FEATURE_FLAGS } from './utils/featureFlags';
 
 const PAGE_META = {
-  dashboard: { title: 'Visual Dashboard', description: 'Performance, profitability and operational trends' },
-  profile: { title: 'Shop Profile', description: 'Facility capacity and staffing information' },
-  'raw-data': { title: 'Data & Imports', description: 'Upload, review and adjust bodyshop performance data' },
-  leaderboards: { title: 'Gamified Leaderboards', description: 'Build competitive cohorts and compare performance' },
-  customers: { title: 'Customer Management', description: 'Manage bodyshop access and customer accounts' }
+  dashboard: { title: 'Visual Dashboard', description: '' },
+  profile: { title: 'Shop Profile', description: '' },
+  'raw-data': { title: 'Data & Imports', description: '' },
+  leaderboards: { title: 'Gamified Leaderboards', description: '' },
+  customers: { title: 'Customer Management', description: '' }
 };
+
+const SIDEBAR_STORAGE_KEY = 'cpr_sidebar_hidden:v1';
+
+function getInitialSidebarHidden() {
+  if (typeof window === 'undefined') return false;
+  try {
+    const currentValue = window.localStorage.getItem(SIDEBAR_STORAGE_KEY);
+    if (currentValue !== null) return currentValue === 'true';
+    return window.localStorage.getItem('cpr_sidebar_collapsed') === 'true';
+  } catch {
+    return false;
+  }
+}
 
 function metricValueFromRow(title, row) {
   if (!row) return null;
@@ -122,19 +136,25 @@ function rollingMetricValue(title, rows) {
       }, [currentUser]);
       const [selectedCompany, setSelectedCompany] = useState('');
       const [selectedPeriod, setSelectedPeriod] = useState('');
+      const [customerViewCompanyId, setCustomerViewCompanyId] = useState(null);
+      const [adminReturnCompanyId, setAdminReturnCompanyId] = useState(null);
       const [showCreatePeriodModal, setShowCreatePeriodModal] = useState(false);
       const handleCloseCreatePeriodModal = useCallback(() => setShowCreatePeriodModal(false), []);
       const [isSavingRow, setIsSavingRow] = useState(false);
       const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
       const [activeTab, setActiveTab] = useState('dashboard');
-      const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('cpr_sidebar_collapsed') === 'true');
+      const [sidebarCollapsed, setSidebarCollapsed] = useState(getInitialSidebarHidden);
+      const [metricLibraryOpen, setMetricLibraryOpen] = useState(false);
       const [mobileNavOpen, setMobileNavOpen] = useState(false);
       const [selectedKpi, setSelectedKpi] = useState('Completed RO');
-      const [chartTimeframe, setChartTimeframe] = useState('YTD');
-      const [dragOver, setDragOver] = useState(false);
+      const [chartTimeframe, setChartTimeframe] = useState('12M');
+      const [chartCustomRange, setChartCustomRange] = useState({ from: '', to: '' });
       const [benchmarks, setBenchmarks] = useState({});
       const [targetEditorMetric, setTargetEditorMetric] = useState(null);
       const [benchmarkMutation, setBenchmarkMutation] = useState({ loading: false, error: null });
+      const [dashboardVisibleKpis, setDashboardVisibleKpis] = useState(() => [...DEFAULT_DASHBOARD_KPI_TITLES]);
+      const [dashboardLayoutState, setDashboardLayoutState] = useState({ status: 'idle', dirty: false, error: null });
+      const dashboardLayoutRequestRef = useRef(0);
       const [leaderboardCohort, setLeaderboardCohort] = useState([]);
       const [savedGroups, setSavedGroups] = useState([]);
       const [groupNameInput, setGroupNameInput] = useState('');
@@ -145,6 +165,26 @@ function rollingMetricValue(title, rows) {
       });
       const [appNotice, setAppNotice] = useState(null);
       const appNoticeTimerRef = useRef(null);
+
+      const enterCustomerView = useCallback((companyId) => {
+        if (!companyId || currentUserRole !== 'ADMIN') return;
+        setAdminReturnCompanyId(selectedCompany);
+        setCustomerViewCompanyId(companyId);
+        setSelectedCompany(companyId);
+        setSelectedPeriod('');
+        setActiveTab('dashboard');
+        setMobileNavOpen(false);
+      }, [currentUserRole, selectedCompany]);
+
+      const exitCustomerView = useCallback(() => {
+        const restoreCompany = adminReturnCompanyId || allCompanies[0]?.id || '';
+        setCustomerViewCompanyId(null);
+        setAdminReturnCompanyId(null);
+        setSelectedCompany(restoreCompany);
+        setSelectedPeriod('');
+        setActiveTab('customers');
+        setMobileNavOpen(false);
+      }, [adminReturnCompanyId, allCompanies]);
 
       const showAppNotice = useCallback((message, tone = 'error') => {
         if (appNoticeTimerRef.current) window.clearTimeout(appNoticeTimerRef.current);
@@ -157,14 +197,30 @@ function rollingMetricValue(title, rows) {
       }, []);
 
       useEffect(() => {
-        localStorage.setItem('cpr_sidebar_collapsed', String(sidebarCollapsed));
+        try {
+          window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(sidebarCollapsed));
+        } catch {
+          // The layout remains usable when storage is unavailable.
+        }
       }, [sidebarCollapsed]);
 
+      const handleDashboardCustomizeChange = useCallback((isOpen) => {
+        setMetricLibraryOpen(isOpen);
+      }, []);
+
       useEffect(() => {
-        if (currentUserRole !== 'ADMIN' && ['raw-data', 'leaderboards', 'customers'].includes(activeTab)) {
+        if (activeTab !== 'dashboard') setMetricLibraryOpen(false);
+      }, [activeTab]);
+
+      useEffect(() => {
+        if ((!FEATURE_FLAGS.leaderboards && activeTab === 'leaderboards') || (currentUserRole !== 'ADMIN' && ['raw-data', 'leaderboards', 'customers'].includes(activeTab))) {
           setActiveTab('dashboard');
         }
-      }, [activeTab, currentUserRole]);
+        if (currentUserRole !== 'ADMIN' && customerViewCompanyId) {
+          setCustomerViewCompanyId(null);
+          setAdminReturnCompanyId(null);
+        }
+      }, [activeTab, currentUserRole, customerViewCompanyId]);
 
       const handleEditShopProfile = useCallback(() => {
         const comp = allCompanies.find(c => c.id === selectedCompany);
@@ -264,7 +320,68 @@ function rollingMetricValue(title, rows) {
         }
       };
 
-      const fileInputRef = useRef(null);
+      useEffect(() => {
+        const requestId = dashboardLayoutRequestRef.current + 1;
+        dashboardLayoutRequestRef.current = requestId;
+
+        if (!selectedCompany) {
+          setDashboardVisibleKpis([...DEFAULT_DASHBOARD_KPI_TITLES]);
+          setDashboardLayoutState({ status: 'idle', dirty: false, error: null });
+          return undefined;
+        }
+
+        setDashboardVisibleKpis([...DEFAULT_DASHBOARD_KPI_TITLES]);
+        setDashboardLayoutState({ status: 'loading', dirty: false, error: null });
+
+        getDashboardKpiLayout(selectedCompany).then(layout => {
+          if (dashboardLayoutRequestRef.current !== requestId) return;
+          setDashboardVisibleKpis(normalizeDashboardKpiTitles(layout?.visible_kpis));
+          setDashboardLayoutState({ status: 'saved', dirty: false, error: null });
+        }).catch(err => {
+          if (dashboardLayoutRequestRef.current !== requestId) return;
+          console.error('Failed to load dashboard layout:', err);
+          setDashboardVisibleKpis([...DEFAULT_DASHBOARD_KPI_TITLES]);
+          setDashboardLayoutState({
+            status: 'error',
+            dirty: false,
+            error: err.message || 'The saved layout could not be loaded.'
+          });
+        });
+
+        return undefined;
+      }, [selectedCompany]);
+
+      const handleDashboardVisibleKpisChange = useCallback((nextTitles) => {
+        dashboardLayoutRequestRef.current += 1;
+        setDashboardVisibleKpis(normalizeDashboardKpiTitles(nextTitles));
+        setDashboardLayoutState({ status: 'dirty', dirty: true, error: null });
+      }, []);
+
+      const handleSaveDashboardLayout = useCallback(async () => {
+        if (!selectedCompany || dashboardLayoutState.status === 'saving') return;
+
+        const requestId = dashboardLayoutRequestRef.current + 1;
+        dashboardLayoutRequestRef.current = requestId;
+        const companyId = selectedCompany;
+        const visibleKpis = normalizeDashboardKpiTitles(dashboardVisibleKpis);
+        setDashboardLayoutState({ status: 'saving', dirty: true, error: null });
+
+        try {
+          const saved = await upsertDashboardKpiLayout(companyId, visibleKpis);
+          if (dashboardLayoutRequestRef.current !== requestId) return;
+          setDashboardVisibleKpis(normalizeDashboardKpiTitles(saved?.visible_kpis, visibleKpis));
+          setDashboardLayoutState({ status: 'saved', dirty: false, error: null });
+          showAppNotice('Dashboard layout saved for this bodyshop.', 'success');
+        } catch (err) {
+          if (dashboardLayoutRequestRef.current !== requestId) return;
+          console.error('Failed to save dashboard layout:', err);
+          setDashboardLayoutState({
+            status: 'error',
+            dirty: true,
+            error: err.message || 'The layout could not be saved.'
+          });
+        }
+      }, [dashboardLayoutState.status, dashboardVisibleKpis, selectedCompany, showAppNotice]);
 
       useEffect(() => {
         if (!selectedCompany) {
@@ -372,6 +489,7 @@ function rollingMetricValue(title, rows) {
                   return getAnalytics(currentUserRole === 'CUSTOMER' ? currentUserCompanyId : null);
               }).then(fetchedData => {
                  setData(fetchedData);
+                 showAppNotice('CSV data imported successfully.', 'success');
               }).catch(err => {
                  console.error(err);
                  showAppNotice('Upload failed: ' + err.message);
@@ -380,6 +498,18 @@ function rollingMetricValue(title, rows) {
           },
         });
       }, [currentUserRole, currentUserCompanyId, showAppNotice]);
+
+      const handleQuickKpiSave = useCallback(async ({ period, metricKey, value }) => {
+        if (!selectedCompany) throw new Error('Select a bodyshop before entering a KPI value.');
+        const companyId = selectedCompany;
+        const [year, month] = period.split('-').map(Number);
+        await upsertAnalyticsValue(companyId, year, month, metricKey, value);
+        const fetchedData = await getAnalytics(currentUserRole === 'CUSTOMER' ? currentUserCompanyId : null);
+        setData(fetchedData);
+        setSelectedCompany(companyId);
+        setSelectedPeriod(period);
+        showAppNotice(`${metricKey} saved for ${MONTH_NAMES[month]} ${year}.`, 'success');
+      }, [currentUserCompanyId, currentUserRole, selectedCompany, showAppNotice]);
 
       const handleExport = useCallback(() => {
         if (!data || data.length === 0) return;
@@ -396,25 +526,11 @@ function rollingMetricValue(title, rows) {
         URL.revokeObjectURL(url);
       }, [data]);
 
-      const onDrop = useCallback((e) => {
-        e.preventDefault();
-        setDragOver(false);
-        const file = e.dataTransfer?.files?.[0];
-        if (file && (file.name.endsWith('.csv') || file.type === 'text/csv')) handleFile(file);
-      }, [handleFile]);
-
-      const onFileSelect = useCallback((e) => { handleFile(e.target.files?.[0]); }, [handleFile]);
-
-      const loadMock = useCallback((type) => {
-        setData(type === 'historical' ? [...MOCK_HISTORICAL] : [...MOCK_SINGLE]);
-        setSelectedCompany('');
-        setSelectedPeriod('');
-      }, []);
-
       const resetDashboard = useCallback(() => {
         setData([]);
         setSelectedCompany('');
         setSelectedPeriod('');
+        setMetricLibraryOpen(false);
       }, []);
 
       // Derived: unique companies
@@ -460,6 +576,13 @@ function rollingMetricValue(title, rows) {
       }, [uniquePeriods, selectedPeriod]);
 
       const isMultiMonth = uniquePeriods.length > 1;
+      const chartPeriodOptions = useMemo(() => {
+        const anchorPeriod = selectedPeriod || uniquePeriods[uniquePeriods.length - 1];
+        return filterPeriodsByTimeframe(uniquePeriods, anchorPeriod, 'ALL').map(period => {
+          const [year, month] = period.split('-');
+          return { value: period, label: `${MONTH_NAMES[parseInt(month)]} ${year}` };
+        });
+      }, [selectedPeriod, uniquePeriods]);
 
       // Current row
       const currentRow = useMemo(() => {
@@ -548,24 +671,42 @@ function rollingMetricValue(title, rows) {
         let curr, prev;
         if (isDerived) {
           if (derivedType === 'return') {
-            curr = parseNum(currentRow['Paint Labour Costs']) > 0 ? (parseNum(currentRow['Paint Sales']) / parseNum(currentRow['Paint Labour Costs'])) : 0;
-            prev = parseNum(prevRow['Paint Labour Costs']) > 0 ? (parseNum(prevRow['Paint Sales']) / parseNum(prevRow['Paint Labour Costs'])) : 0;
+            const currentSales = parseNum(currentRow['Paint Sales']);
+            const currentLabour = parseNum(currentRow['Paint Labour Costs']);
+            const previousSales = parseNum(prevRow['Paint Sales']);
+            const previousLabour = parseNum(prevRow['Paint Labour Costs']);
+            curr = Number.isFinite(currentSales) && Number.isFinite(currentLabour) && currentLabour > 0 ? currentSales / currentLabour : null;
+            prev = Number.isFinite(previousSales) && Number.isFinite(previousLabour) && previousLabour > 0 ? previousSales / previousLabour : null;
           } else if (derivedType === 'revPerVehicle') {
-            curr = parseNum(currentRow['Completed RO']) > 0 ? parseNum(currentRow['Paint Sales']) / parseNum(currentRow['Completed RO']) : 0;
-            prev = parseNum(prevRow['Completed RO']) > 0 ? parseNum(prevRow['Paint Sales']) / parseNum(prevRow['Completed RO']) : 0;
+            const currentSales = parseNum(currentRow['Paint Sales']);
+            const currentCompleted = parseNum(currentRow['Completed RO']);
+            const previousSales = parseNum(prevRow['Paint Sales']);
+            const previousCompleted = parseNum(prevRow['Completed RO']);
+            curr = Number.isFinite(currentSales) && Number.isFinite(currentCompleted) && currentCompleted > 0 ? currentSales / currentCompleted : null;
+            prev = Number.isFinite(previousSales) && Number.isFinite(previousCompleted) && previousCompleted > 0 ? previousSales / previousCompleted : null;
           } else if (derivedType === 'dailyBudget') {
-            curr = (parseNum(currentRow['Paint Labour Costs']) * 3.3) / 19.33;
-            prev = (parseNum(prevRow['Paint Labour Costs']) * 3.3) / 19.33;
+            const currentLabour = parseNum(currentRow['Paint Labour Costs']);
+            const previousLabour = parseNum(prevRow['Paint Labour Costs']);
+            curr = Number.isFinite(currentLabour) ? (currentLabour * 3.3) / 19.33 : null;
+            prev = Number.isFinite(previousLabour) ? (previousLabour * 3.3) / 19.33 : null;
           } else if (derivedType === 'paintCostToTotalSales') {
-            const cPaintCost = (parseNum(currentRow['Paint Cost per RO']) || 0) * (parseNum(currentRow['Completed RO']) || 0);
-            curr = parseNum(currentRow['Total Sales']) > 0 ? cPaintCost / parseNum(currentRow['Total Sales']) : 0;
-            const pPaintCost = (parseNum(prevRow['Paint Cost per RO']) || 0) * (parseNum(prevRow['Completed RO']) || 0);
-            prev = parseNum(prevRow['Total Sales']) > 0 ? pPaintCost / parseNum(prevRow['Total Sales']) : 0;
+            const currentCostPerRO = parseNum(currentRow['Paint Cost per RO']);
+            const currentCompleted = parseNum(currentRow['Completed RO']);
+            const currentSales = parseNum(currentRow['Total Sales']);
+            const previousCostPerRO = parseNum(prevRow['Paint Cost per RO']);
+            const previousCompleted = parseNum(prevRow['Completed RO']);
+            const previousSales = parseNum(prevRow['Total Sales']);
+            curr = Number.isFinite(currentCostPerRO) && Number.isFinite(currentCompleted) && Number.isFinite(currentSales) && currentSales > 0 ? (currentCostPerRO * currentCompleted) / currentSales : null;
+            prev = Number.isFinite(previousCostPerRO) && Number.isFinite(previousCompleted) && Number.isFinite(previousSales) && previousSales > 0 ? (previousCostPerRO * previousCompleted) / previousSales : null;
           } else if (derivedType === 'liquidCostRatio') {
-            const cPaintCost = (parseNum(currentRow['Paint Cost per RO']) || 0) * (parseNum(currentRow['Completed RO']) || 0);
-            curr = parseNum(currentRow['Paint Sales']) > 0 ? cPaintCost / parseNum(currentRow['Paint Sales']) : 0;
-            const pPaintCost = (parseNum(prevRow['Paint Cost per RO']) || 0) * (parseNum(prevRow['Completed RO']) || 0);
-            prev = parseNum(prevRow['Paint Sales']) > 0 ? pPaintCost / parseNum(prevRow['Paint Sales']) : 0;
+            const currentCostPerRO = parseNum(currentRow['Paint Cost per RO']);
+            const currentCompleted = parseNum(currentRow['Completed RO']);
+            const currentSales = parseNum(currentRow['Paint Sales']);
+            const previousCostPerRO = parseNum(prevRow['Paint Cost per RO']);
+            const previousCompleted = parseNum(prevRow['Completed RO']);
+            const previousSales = parseNum(prevRow['Paint Sales']);
+            curr = Number.isFinite(currentCostPerRO) && Number.isFinite(currentCompleted) && Number.isFinite(currentSales) && currentSales > 0 ? (currentCostPerRO * currentCompleted) / currentSales : null;
+            prev = Number.isFinite(previousCostPerRO) && Number.isFinite(previousCompleted) && Number.isFinite(previousSales) && previousSales > 0 ? (previousCostPerRO * previousCompleted) / previousSales : null;
           } else {
             return null;
           }
@@ -573,7 +714,7 @@ function rollingMetricValue(title, rows) {
           curr = parseNum(currentRow[field]);
           prev = parseNum(prevRow[field]);
         }
-        if (prev === 0 || isNaN(prev)) return null;
+        if (!Number.isFinite(curr) || !Number.isFinite(prev) || prev === 0) return null;
         return ((curr - prev) / Math.abs(prev)) * 100;
       }
 
@@ -582,31 +723,9 @@ function rollingMetricValue(title, rows) {
       const trendChartData = useMemo(() => {
         if (!isMultiMonth || uniquePeriods.length === 0) return null;
         
-        // Always anchor the trend graph to the LATEST available data, independent of the KPI selectedPeriod
-        const latestPeriod = uniquePeriods[uniquePeriods.length - 1];
-        const parts = latestPeriod.split('-');
-        const targetYear = parseInt(parts[0]);
-        const targetMonth = parseInt(parts[1]);
-        const targetTotalMonths = targetYear * 12 + targetMonth;
-        
-        const chartPeriods = uniquePeriods.filter(p => {
-          const pParts = p.split('-');
-          const py = parseInt(pParts[0]);
-          const pm = parseInt(pParts[1]);
-          const pTotalMonths = py * 12 + pm;
-          
-          if (chartTimeframe === 'YTD') {
-            return py === targetYear;
-          } else if (chartTimeframe === '3M') {
-            return (targetTotalMonths - pTotalMonths) < 3;
-          } else if (chartTimeframe === '6M') {
-            return (targetTotalMonths - pTotalMonths) < 6;
-          } else if (chartTimeframe === '12M') {
-            return (targetTotalMonths - pTotalMonths) < 12;
-          } else { // ALL
-            return true;
-          }
-        });
+        // Anchor the story to the reporting period the customer selected.
+        const anchorPeriod = selectedPeriod || uniquePeriods[uniquePeriods.length - 1];
+        const chartPeriods = filterPeriodsByTimeframe(uniquePeriods, anchorPeriod, chartTimeframe, chartCustomRange);
 
         const labels = [];
         const dataPoints = [];
@@ -620,7 +739,7 @@ function rollingMetricValue(title, rows) {
           const pm = parseInt(pParts[1]);
           const row = companyData.find(r => parseNum(r['Year']) === py && parseNum(r['Month']) === pm);
           labels.push(MONTH_NAMES[pm] + ' ' + py);
-          dataPoints.push(row ? config.getValue(row) : 0);
+          dataPoints.push(row ? config.getValue(row) : null);
         });
 
         return {
@@ -643,7 +762,7 @@ function rollingMetricValue(title, rows) {
             }
           ]
         };
-      }, [isMultiMonth, uniquePeriods, companyData, selectedKpi, chartTimeframe]);
+      }, [isMultiMonth, uniquePeriods, companyData, selectedKpi, chartTimeframe, chartCustomRange, selectedPeriod]);
 
       // KPIs
       const kpis = useMemo(() => {
@@ -665,56 +784,55 @@ function rollingMetricValue(title, rows) {
             rollingMonths: 0
           };
         }
-        const paintSales = parseNum(currentRow['Paint Sales']) || 0;
-        const paintLabourCosts = parseNum(currentRow['Paint Labour Costs']) || 0;
+        const paintSales = parseNum(currentRow['Paint Sales']);
+        const paintLabourCosts = parseNum(currentRow['Paint Labour Costs']);
+        const totalSales = parseNum(currentRow['Total Sales']);
+        const completedRO = parseNum(currentRow['Completed RO']);
+        const paintCostPerRO = parseNum(currentRow['Paint Cost per RO']);
 
         // Calculate Rolling Quarter for Daily Budget & Actual Revenue
         let rollingPaintSales = 0;
         let rollingPaintLabourCosts = 0;
-        let monthsFound = 0;
+        let paintSalesMonthsFound = 0;
+        let labourCostMonthsFound = 0;
         
         if (companyData.length > 0) {
-          let maxTotalMonths = 0;
+          const selectedTotalMonths = parseNum(currentRow['Year']) * 12 + parseNum(currentRow['Month']);
+
           companyData.forEach(r => {
             const rowTotalMonths = parseNum(r['Year']) * 12 + parseNum(r['Month']);
-            if (rowTotalMonths > maxTotalMonths) {
-              maxTotalMonths = rowTotalMonths;
+            if (rowTotalMonths <= selectedTotalMonths && rowTotalMonths > selectedTotalMonths - 3) {
+              const rowPaintSales = parseNum(r['Paint Sales']);
+              const rowLabourCosts = parseNum(r['Paint Labour Costs']);
+              if (Number.isFinite(rowPaintSales)) {
+                rollingPaintSales += rowPaintSales;
+                paintSalesMonthsFound++;
+              }
+              if (Number.isFinite(rowLabourCosts)) {
+                rollingPaintLabourCosts += rowLabourCosts;
+                labourCostMonthsFound++;
+              }
             }
           });
-          
-          companyData.forEach(r => {
-            const rowTotalMonths = parseNum(r['Year']) * 12 + parseNum(r['Month']);
-            if (rowTotalMonths <= maxTotalMonths && rowTotalMonths > maxTotalMonths - 3) {
-              rollingPaintSales += parseNum(r['Paint Sales']) || 0;
-              rollingPaintLabourCosts += parseNum(r['Paint Labour Costs']) || 0;
-              monthsFound++;
-            }
-          });
-        }
-        
-        if (monthsFound === 0) {
-          rollingPaintSales = paintSales;
-          rollingPaintLabourCosts = paintLabourCosts;
-          monthsFound = 1;
         }
 
-        const avgMonthlyPaintSales = rollingPaintSales / monthsFound;
-        const avgMonthlyLabourCosts = rollingPaintLabourCosts / monthsFound;
+        const avgMonthlyPaintSales = paintSalesMonthsFound > 0 ? rollingPaintSales / paintSalesMonthsFound : null;
+        const avgMonthlyLabourCosts = labourCostMonthsFound > 0 ? rollingPaintLabourCosts / labourCostMonthsFound : null;
 
         return {
-          totalSales: parseNum(currentRow['Total Sales']) || 0,
-          completedRO: parseNum(currentRow['Completed RO']) || 0,
+          totalSales,
+          completedRO,
           paintSales: paintSales,
-          paintCostPerRO: parseNum(currentRow['Paint Cost per RO']) || 0,
-          paintCostToTotalSales: (parseNum(currentRow['Total Sales']) || 0) > 0 ? ((parseNum(currentRow['Paint Cost per RO']) || 0) * (parseNum(currentRow['Completed RO']) || 0)) / (parseNum(currentRow['Total Sales']) || 0) : 0,
-          vpdPerBooth: parseNum(currentRow['Vehicles per Day per Booth']) || 0,
-          boothCycleTime: parseNum(currentRow['Booth Cycle Time']) || 0,
-          returnOnPaintLabour: paintLabourCosts > 0 ? (paintSales / paintLabourCosts) : 0,
-          liquidCostRatio: paintSales > 0 ? ((parseNum(currentRow['Paint Cost per RO']) || 0) * (parseNum(currentRow['Completed RO']) || 0)) / paintSales : 0,
-          paintRevPerVehicle: parseNum(currentRow['Completed RO']) > 0 ? paintSales / (parseNum(currentRow['Completed RO']) || 1) : 0,
-          dailyBudget: (avgMonthlyLabourCosts * 3.3) / 19.33,
-          actualDailyRevenue: avgMonthlyPaintSales / 19.33,
-          rollingMonths: monthsFound
+          paintCostPerRO,
+          paintCostToTotalSales: Number.isFinite(totalSales) && totalSales > 0 && Number.isFinite(paintCostPerRO) && Number.isFinite(completedRO) ? (paintCostPerRO * completedRO) / totalSales : null,
+          vpdPerBooth: parseNum(currentRow['Vehicles per Day per Booth']),
+          boothCycleTime: parseNum(currentRow['Booth Cycle Time']),
+          returnOnPaintLabour: Number.isFinite(paintLabourCosts) && paintLabourCosts > 0 && Number.isFinite(paintSales) ? paintSales / paintLabourCosts : null,
+          liquidCostRatio: Number.isFinite(paintSales) && paintSales > 0 && Number.isFinite(paintCostPerRO) && Number.isFinite(completedRO) ? (paintCostPerRO * completedRO) / paintSales : null,
+          paintRevPerVehicle: Number.isFinite(completedRO) && completedRO > 0 && Number.isFinite(paintSales) ? paintSales / completedRO : null,
+          dailyBudget: Number.isFinite(avgMonthlyLabourCosts) ? (avgMonthlyLabourCosts * 3.3) / 19.33 : null,
+          actualDailyRevenue: Number.isFinite(avgMonthlyPaintSales) ? avgMonthlyPaintSales / 19.33 : null,
+          rollingMonths: labourCostMonthsFound
         };
       }, [currentRow, companyData]);
 
@@ -829,7 +947,7 @@ function rollingMetricValue(title, rows) {
 
       const dashboardKpiItems = DASHBOARD_KPI_DEFINITIONS.map((definition, index) => ({
         ...definition,
-        value: kpis[definition.valueKey],
+        value: Number.isFinite(kpis[definition.valueKey]) ? kpis[definition.valueKey] : metricValueFromRow(definition.title, currentRow),
         previousValue: metricValueFromRow(definition.title, prevRow),
         rollingAverage: rollingMetricValues[definition.title],
         rollingMonths: selectedPeriodRollingRows.length,
@@ -877,43 +995,15 @@ function rollingMetricValue(title, rows) {
       }
 
       // The empty state early return has been removed, replaced by an overlay in the main layout.
-      const UploadUI = (
-        <div className="flex-1 flex items-center justify-center px-4 py-16 w-full animate-float-in">
-          <div className="w-full max-w-2xl">
-            <div
-              className={"relative border-2 border-dashed rounded-3xl p-16 text-center transition-all duration-300 cursor-pointer " +
-                (dragOver ? 'drag-over border-brand-500' : 'border-surface-700 hover:border-surface-500')}
-              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-              onDragLeave={() => setDragOver(false)}
-              onDrop={onDrop}
-              onClick={() => fileInputRef.current?.click()}
-              id="upload-zone"
-            >
-              <input ref={fileInputRef} type="file" accept=".csv" className="hidden" onChange={onFileSelect} id="file-input" />
-              <div className={"text-brand-400 mb-5 flex justify-center " + (dragOver ? '' : 'upload-pulse')}>
-                <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
-                </svg>
-              </div>
-              <h2 className="text-xl font-semibold text-white mb-2">{dragOver ? 'Drop your CSV here' : 'Upload Performance Data'}</h2>
-              <p className="text-surface-400 text-sm max-w-md mx-auto">
-                Drag and drop your bodyshop CSV file here, or click to browse.
-              </p>
-              <p className="text-surface-500 text-xs mt-2">Supports single-month and historical multi-month data.</p>
-            </div>
-          </div>
-        </div>
-      );
-
       // Render: Dashboard
       return (
-        <div className="min-h-screen bg-surface-900 lg:flex">
+        <div className="cpr-codex-shell min-h-screen bg-surface-900 lg:flex">
           <AppSidebar
             activeTab={activeTab}
             onNavigate={setActiveTab}
             currentUser={currentUser}
+            viewingAsCompany={Boolean(customerViewCompanyId)}
             collapsed={sidebarCollapsed}
-            onToggleCollapsed={() => setSidebarCollapsed(value => !value)}
             mobileOpen={mobileNavOpen}
             onCloseMobile={() => setMobileNavOpen(false)}
             onOpenReviews={() => setShowReviewModal(true)}
@@ -921,15 +1011,25 @@ function rollingMetricValue(title, rows) {
             onLogout={handleLogout}
           />
 
-          <div className="flex min-w-0 flex-1 flex-col">
+          <div className={`app-main-shell flex min-w-0 flex-1 flex-col ${activeTab === 'dashboard' && metricLibraryOpen ? 'metrics-panel-open' : ''}`}>
             <Header
-              pageTitle={pageMeta.title}
+              pageTitle={activeTab === 'dashboard' && dashboardCompany?.name ? `Welcome, ${dashboardCompany.name}` : pageMeta.title}
               pageDescription={pageMeta.description}
-              onMenuToggle={() => setMobileNavOpen(true)}
+              onMenuToggle={() => { setMetricLibraryOpen(false); setMobileNavOpen(value => !value); }}
+              mobileNavOpen={mobileNavOpen}
+              desktopNavHidden={sidebarCollapsed}
+              onDesktopNavToggle={() => setSidebarCollapsed(value => !value)}
+              showMetricLibraryToggle={activeTab === 'dashboard' && Boolean(currentRow)}
+              metricLibraryOpen={metricLibraryOpen}
+              onMetricLibraryToggle={() => { setMobileNavOpen(false); handleDashboardCustomizeChange(!metricLibraryOpen); }}
+              showOperationalKpiInfo={activeTab === 'dashboard' && Boolean(currentRow)}
+              operationalKpiCount={DASHBOARD_KPI_DEFINITIONS.filter(definition => definition.pulseEligible === true).length}
               onReset={resetDashboard}
               showReset={activeTab === 'raw-data' && data.length > 0 && currentUser.role === 'ADMIN'}
               onExport={handleExport}
-              showExport={data.length > 0 && currentUser.role === 'ADMIN' && activeTab !== 'profile' && activeTab !== 'customers'}
+              showExport={data.length > 0 && currentUser.role === 'ADMIN' && !customerViewCompanyId && activeTab !== 'profile' && activeTab !== 'customers'}
+              viewingAsCompanyName={customerViewCompanyId ? dashboardCompany?.name : null}
+              onExitCustomerView={exitCustomerView}
             />
           <ConsultantReviewModal
             isOpen={showReviewModal}
@@ -967,8 +1067,8 @@ function rollingMetricValue(title, rows) {
 
           {/* Delete Period Confirmation Modal */}
           {deleteConfirmPeriod && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-              <div className="glass rounded-2xl w-full max-w-md p-6 border border-danger-500/30 shadow-2xl relative animate-scale-in">
+            <div className="codex-dialog-backdrop fixed inset-0 z-[80] flex items-center justify-center p-4">
+              <div className="codex-dialog relative w-full max-w-md p-6">
                 <div className="w-12 h-12 mx-auto rounded-full bg-danger-500/20 flex items-center justify-center mb-4 text-danger-400">
                   <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -1005,9 +1105,9 @@ function rollingMetricValue(title, rows) {
             </div>
           )}
 
-          <main className="relative mx-auto w-full max-w-[1600px] flex-1 px-4 pb-16 sm:px-6 lg:px-8">
+          <main className="relative mx-auto w-full max-w-[1600px] flex-1 px-4 pb-16 sm:px-5 lg:px-6">
             {/* ────── Render: Empty State Overlay for Customers ────── */}
-            {activeTab === 'dashboard' && !currentRow && currentUser.role === 'CUSTOMER' && (
+            {activeTab === 'dashboard' && !currentRow && (currentUser.role === 'CUSTOMER' || customerViewCompanyId) && (
               <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-surface-900/20 backdrop-blur-sm rounded-2xl mb-16 mt-6 border border-white/5 pointer-events-auto">
                 <div className="glass rounded-2xl p-12 text-center border border-white/10 shadow-2xl max-w-lg w-full animate-float-in">
                   <div className="w-16 h-16 mx-auto rounded-2xl bg-surface-800 flex items-center justify-center mb-6">
@@ -1057,7 +1157,7 @@ function rollingMetricValue(title, rows) {
                       {uniquePeriods.length === 0 ? 'No data loaded' : (isMultiMonth ? uniquePeriods.length + ' months loaded' : 'Single month loaded')}
                     </div>
                     {uniquePeriods.length > 0 && (
-                      <span className="text-[10px] text-surface-500 uppercase tracking-wider font-medium">All comparisons vs prev month</span>
+                      <span className="text-[10px] text-surface-500 uppercase tracking-wider font-medium">vs previous month</span>
                     )}
                   </div>
                   </div>
@@ -1071,29 +1171,39 @@ function rollingMetricValue(title, rows) {
               </div>
             )}
 
-            {activeTab === 'customers' && currentUser.role === 'ADMIN' && (
-              <CustomerManagement />
+            {activeTab === 'customers' && currentUser.role === 'ADMIN' && !customerViewCompanyId && (
+              <CustomerManagement onOpenDashboard={enterCustomerView} />
             )}
 
-            {activeTab === 'raw-data' && data.length === 0 && currentUser.role === 'ADMIN' && UploadUI}
+            {activeTab === 'raw-data' && currentUser.role === 'ADMIN' && (
+              <DataImportActions
+                companyId={selectedCompany}
+                companyName={selectedCompanyProfile?.name || currentRow?.['Company Name'] || selectedCompany}
+                selectedPeriod={selectedPeriod}
+                periods={uniquePeriods}
+                rows={companyData}
+                onFile={handleFile}
+                onQuickSave={handleQuickKpiSave}
+              />
+            )}
 
-            {activeTab === 'dashboard' && !currentRow && currentUser.role === 'ADMIN' && (
-              <div className="glass mx-auto mt-8 max-w-2xl rounded-3xl border border-white/[0.08] p-10 text-center shadow-2xl animate-float-in">
+            {activeTab === 'dashboard' && !currentRow && currentUser.role === 'ADMIN' && !customerViewCompanyId && (
+              <div className="codex-surface mx-auto mt-8 max-w-2xl p-10 text-center">
                 <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-500/20 bg-brand-500/10 text-brand-300">
                   <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v12m0-12l-4 4m4-4l4 4M5 13v5a2 2 0 002 2h10a2 2 0 002-2v-5" />
                   </svg>
                 </div>
                 <h2 className="text-xl font-bold text-white">Your dashboard is ready for data</h2>
-                <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-surface-400">Upload a CSV from Data & Imports to populate the dashboard, trends and leaderboards.</p>
-                <button type="button" onClick={() => setActiveTab('raw-data')} className="mt-6 rounded-xl border border-brand-500/30 bg-brand-500/15 px-5 py-2.5 text-sm font-semibold text-brand-200 transition-colors hover:bg-brand-500/25 hover:text-white">
+                <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-surface-400">Import a CSV or add individual KPI values from Data & Imports to populate the dashboard and trends.</p>
+                <button type="button" onClick={() => setActiveTab('raw-data')} className="codex-button codex-button-primary mt-6 px-4 py-2.5 text-xs">
                   Go to Data & Imports
                 </button>
               </div>
             )}
 
-            {(activeTab === 'dashboard' || activeTab === 'raw-data') && !currentRow && currentUser.role === 'CUSTOMER' && (
-              <div className="flex flex-col items-center justify-center py-24 animate-fade-in glass border border-surface-700/50 rounded-2xl max-w-3xl mx-auto shadow-2xl">
+            {(activeTab === 'dashboard' || activeTab === 'raw-data') && !currentRow && (currentUser.role === 'CUSTOMER' || customerViewCompanyId) && (
+              <div className="codex-surface mx-auto flex max-w-3xl flex-col items-center justify-center py-20">
                 <div className="w-20 h-20 bg-surface-800/80 rounded-full flex items-center justify-center border border-surface-700/50 mb-6 relative">
                   <div className="absolute inset-0 border border-brand-500/30 rounded-full animate-ping opacity-75"></div>
                   <svg className="w-10 h-10 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1107,8 +1217,8 @@ function rollingMetricValue(title, rows) {
               </div>
             )}
 
-            {activeTab === 'leaderboards' && data.length === 0 && currentUser.role === 'ADMIN' && (
-               <div className="glass rounded-2xl p-16 text-center border border-white/10 shadow-xl max-w-2xl mx-auto mt-8 animate-float-in">
+            {activeTab === 'leaderboards' && data.length === 0 && currentUser.role === 'ADMIN' && !customerViewCompanyId && (
+               <div className="codex-surface mx-auto mt-8 max-w-2xl p-14 text-center">
                   <h2 className="text-2xl font-bold text-white mb-3">No Data Available</h2>
                   <p className="text-surface-400 text-sm">Upload data to generate Gamified Leaderboards.</p>
                </div>
@@ -1123,7 +1233,7 @@ function rollingMetricValue(title, rows) {
                   const companyOption = allCompanies.find(company => company.id === companyId);
                   return companyOption ? companyOption.name : companyId;
                 }}
-                isAdmin={currentUser.role === 'ADMIN'}
+                isAdmin={currentUser.role === 'ADMIN' && !customerViewCompanyId}
                 periods={uniquePeriods}
                 selectedPeriod={selectedPeriod}
                 onPeriodChange={setSelectedPeriod}
@@ -1146,32 +1256,47 @@ function rollingMetricValue(title, rows) {
                 trendData={isMultiMonth ? trendChartData : null}
                 timeframe={chartTimeframe}
                 onTimeframeChange={setChartTimeframe}
+                periodOptions={chartPeriodOptions}
+                customRange={chartCustomRange}
+                onCustomRangeChange={setChartCustomRange}
                 comparisonLabel={activeRankAvgFormatted ? `3M cohort avg ${activeRankAvgFormatted}` : null}
+                navigationHidden={sidebarCollapsed}
+                metricLibraryOpen={metricLibraryOpen}
+                onCustomizeChange={handleDashboardCustomizeChange}
+                visibleTitles={dashboardVisibleKpis}
+                onVisibleTitlesChange={handleDashboardVisibleKpisChange}
+                layoutSaveStatus={dashboardLayoutState.status}
+                hasUnsavedLayout={dashboardLayoutState.dirty}
+                layoutSaveError={dashboardLayoutState.error}
+                onSaveLayout={handleSaveDashboardLayout}
               />
             )}
 
             {activeTab === 'raw-data' && data.length > 0 && currentUser.role === 'ADMIN' && (
-              <section className="glass rounded-2xl p-6 sm:p-8 card-appear card-appear-1 mb-8">
-              <div className="flex items-center justify-between gap-3 mb-5">
+              <section className="codex-surface mb-8 p-5 sm:p-6">
+              <div className="mb-5 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-surface-700/60 flex items-center justify-center">
                     <svg className="w-4 h-4 text-surface-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" /></svg>
                   </div>
-                  <h3 className="text-base font-semibold text-white">Manual Data Entry <span className="text-surface-400 font-normal text-sm ml-2">({selectedPeriod ? (MONTH_NAMES[parseInt(selectedPeriod.split('-')[1])] + ' ' + selectedPeriod.split('-')[0]) : 'None'})</span></h3>
+                  <div>
+                    <h3 className="text-base font-semibold text-white">Full Month Editor <span className="text-surface-400 font-normal text-sm ml-2">({selectedPeriod ? (MONTH_NAMES[parseInt(selectedPeriod.split('-')[1])] + ' ' + selectedPeriod.split('-')[0]) : 'None'})</span></h3>
+                    <p className="mt-1 text-xs text-surface-500">Edit all KPI values for this month.</p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {selectedPeriod && (
-                    <button onClick={() => setDeleteConfirmPeriod(selectedPeriod)} className="px-3 py-1.5 bg-danger-500/10 hover:bg-danger-500/20 text-danger-400 border border-danger-500/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5" title="Delete current period">
+                    <button onClick={() => setDeleteConfirmPeriod(selectedPeriod)} className="codex-button codex-button-danger flex items-center gap-1.5 px-3 py-2 text-xs" title="Delete current period">
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       Delete Period
                     </button>
                   )}
-                  <button onClick={() => setShowCreatePeriodModal(true)} className="px-3 py-1.5 bg-brand-600/20 hover:bg-brand-600/40 text-brand-300 border border-brand-500/30 rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5">
+                  <button onClick={() => setShowCreatePeriodModal(true)} className="codex-button codex-button-secondary flex items-center gap-1.5 px-3 py-2 text-xs">
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                     Add New Period
                   </button>
                   {selectedPeriod && (
-                    <button onClick={handleSaveChanges} disabled={isSavingRow || !hasUnsavedChanges} className={`px-3 py-1.5 border rounded-lg text-xs font-medium transition-colors flex items-center gap-1.5 disabled:opacity-50 ${hasUnsavedChanges ? 'bg-success-500/20 hover:bg-success-500/40 text-success-300 border-success-500/30' : 'bg-surface-800 text-surface-400 border-surface-700'}`}>
+                    <button onClick={handleSaveChanges} disabled={isSavingRow || !hasUnsavedChanges} className={`codex-button flex items-center gap-1.5 px-3 py-2 text-xs disabled:opacity-50 ${hasUnsavedChanges ? 'codex-button-primary' : 'codex-button-secondary'}`}>
                       {isSavingRow ? (
                         <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                       ) : (
@@ -1187,7 +1312,7 @@ function rollingMetricValue(title, rows) {
                   <div key={key} className="flex flex-col">
                     <label className="text-[9px] text-surface-400 uppercase tracking-wider mb-1.5 truncate" title={key}>{key}</label>
                     <input type="text" value={currentRow[key]} onChange={(e) => handleDataEdit(key, e.target.value)}
-                      className="bg-surface-800/80 border border-surface-700/60 rounded-md px-2.5 py-1.5 text-xs text-white focus:border-brand-500 focus:outline-none transition-colors" />
+                      className="codex-input px-2.5 py-2 text-xs" />
                   </div>
                 ))}
               </div>
@@ -1195,7 +1320,7 @@ function rollingMetricValue(title, rows) {
             )}
 
             {activeTab === 'leaderboards' && data.length > 0 && currentUser.role === 'ADMIN' && (
-              <section className="glass rounded-2xl p-6 sm:p-8 card-appear card-appear-1 mb-8">
+              <section className="codex-surface mb-8 p-5 sm:p-6">
                 <div className="flex items-center gap-3 mb-5">
                   <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
                     <span className="text-base">🏆</span>
@@ -1211,7 +1336,7 @@ function rollingMetricValue(title, rows) {
                     <h4 className="text-sm font-medium text-surface-300 mb-3">Saved Groups</h4>
                     <div className="flex flex-wrap gap-2">
                       {savedGroups.map(group => (
-                        <div key={group.id} className="group relative flex items-center bg-surface-800/80 border border-surface-700 hover:border-brand-500/50 rounded-full pl-3 pr-1 py-1 transition-colors cursor-pointer"
+                        <div key={group.id} className="group relative flex cursor-pointer items-center rounded-lg border border-white/[0.07] bg-white/[0.025] py-1 pl-3 pr-1 transition-colors hover:bg-white/[0.05]"
                           onClick={() => setLeaderboardCohort(group.shops)}>
                           <span className="text-xs text-surface-200 mr-2 font-medium">{group.name} <span className="text-surface-500 font-normal">({group.shops.length})</span></span>
                           <button onClick={async (e) => {
@@ -1245,7 +1370,7 @@ function rollingMetricValue(title, rows) {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   {companies.map(comp => (
-                    <div key={comp} className="flex items-center gap-3 p-3 rounded-lg bg-surface-800/50 border border-surface-700/50 hover:bg-surface-700/50 transition-colors cursor-pointer"
+                    <div key={comp} className="flex cursor-pointer items-center gap-3 rounded-lg border border-white/[0.07] bg-white/[0.02] p-3 transition-colors hover:bg-white/[0.045]"
                       onClick={() => {
                         setLeaderboardCohort(prev => 
                           prev.includes(comp) ? prev.filter(c => c !== comp) : [...prev, comp]
@@ -1271,7 +1396,7 @@ function rollingMetricValue(title, rows) {
 
                 <div className="mt-5 pt-5 border-t border-surface-700/50 flex flex-col sm:flex-row sm:items-center gap-3">
                   <input type="text" value={groupNameInput} onChange={(e) => setGroupNameInput(e.target.value)} placeholder="Enter group name (e.g. OEM Tier 1)"
-                    className="bg-surface-800/80 border border-surface-700/60 rounded-md px-3 py-2 text-sm text-white focus:border-brand-500 focus:outline-none transition-colors w-full sm:w-64" />
+                    className="codex-input w-full px-3 py-2 text-sm sm:w-64" />
                   <button 
                     onClick={async () => {
                       if (groupNameInput.trim() && leaderboardCohort.length > 0 && currentUser?.id) {
@@ -1286,7 +1411,7 @@ function rollingMetricValue(title, rows) {
                       }
                     }}
                     disabled={!groupNameInput.trim() || leaderboardCohort.length === 0}
-                    className="px-4 py-2 bg-brand-600 hover:bg-brand-500 disabled:opacity-50 disabled:hover:bg-brand-600 disabled:cursor-not-allowed text-white rounded-md text-sm font-medium transition-colors flex-shrink-0">
+                    className="codex-button codex-button-primary flex-shrink-0 px-4 py-2.5 text-xs disabled:cursor-not-allowed disabled:opacity-50">
                     Save Selection as Group
                   </button>
                 </div>
@@ -1301,7 +1426,7 @@ function rollingMetricValue(title, rows) {
           {appNotice ? (
             <div
               role={appNotice.tone === 'error' ? 'alert' : 'status'}
-              className={`fixed bottom-5 right-5 z-[90] max-w-sm rounded-2xl border px-4 py-3 text-sm font-medium shadow-2xl backdrop-blur-xl ${appNotice.tone === 'success' ? 'border-success-500/25 bg-surface-900/95 text-success-400' : 'border-danger-500/25 bg-surface-900/95 text-danger-400'}`}
+              className={`fixed bottom-5 right-5 z-[90] max-w-sm rounded-xl border bg-[#191b1e] px-4 py-3 text-xs font-medium shadow-2xl ${appNotice.tone === 'success' ? 'border-success-500/25 text-success-400' : 'border-danger-500/25 text-danger-400'}`}
             >
               {appNotice.message}
             </div>
@@ -1309,8 +1434,8 @@ function rollingMetricValue(title, rows) {
           
           {/* Shop Profile Modal */}
           {showShopProfileModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-              <div className="glass rounded-2xl w-full max-w-md p-6 border border-surface-700 shadow-2xl relative animate-scale-in">
+            <div className="codex-dialog-backdrop fixed inset-0 z-[80] flex items-center justify-center p-4">
+              <div className="codex-dialog relative w-full max-w-md p-6">
                 <button 
                   onClick={() => setShowShopProfileModal(false)}
                   className="absolute top-4 right-4 text-surface-400 hover:text-white"

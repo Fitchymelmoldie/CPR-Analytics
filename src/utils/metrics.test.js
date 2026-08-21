@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseNum, fmt, KPI_CONFIG } from './metrics';
+import { parseNum, fmt, filterPeriodsByTimeframe, KPI_CONFIG } from './metrics';
 
 describe('metrics utils', () => {
   describe('parseNum', () => {
@@ -78,6 +78,46 @@ describe('metrics utils', () => {
     it('formats standard numbers', () => {
       expect(fmt(1234.56)).toBe('1,234.6');
       expect(fmt(1234)).toBe('1,234');
+    });
+  });
+
+  describe('filterPeriodsByTimeframe', () => {
+    const periods = ['2025-11', '2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09'];
+
+    it('anchors every window to the selected reporting period', () => {
+      expect(filterPeriodsByTimeframe(periods, '2026-08', 'YTD')).toEqual([
+        '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08'
+      ]);
+      expect(filterPeriodsByTimeframe(periods, '2026-08', '3M')).toEqual(['2026-06', '2026-07', '2026-08']);
+      expect(filterPeriodsByTimeframe(periods, '2026-08', '6M')).toEqual(['2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08']);
+      expect(filterPeriodsByTimeframe(periods, '2026-08', '12M')).toEqual(periods.slice(0, 10));
+      expect(filterPeriodsByTimeframe(periods, '2026-08', 'ALL')).toEqual(periods.slice(0, 10));
+    });
+
+    it('uses the Australian financial year for FYTD', () => {
+      const financialYearPeriods = [
+        '2025-06', '2025-07', '2025-08', '2025-09', '2025-10', '2025-11', '2025-12',
+        '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08'
+      ];
+
+      expect(filterPeriodsByTimeframe(financialYearPeriods, '2026-05', 'FYTD')).toEqual([
+        '2025-07', '2025-08', '2025-09', '2025-10', '2025-11', '2025-12',
+        '2026-01', '2026-02', '2026-03', '2026-04', '2026-05'
+      ]);
+      expect(filterPeriodsByTimeframe(financialYearPeriods, '2026-08', 'FYTD')).toEqual(['2026-07', '2026-08']);
+    });
+
+    it('applies an inclusive custom month range and normalizes reversed endpoints', () => {
+      expect(filterPeriodsByTimeframe(periods, '2026-08', 'CUSTOM', { from: '2026-02', to: '2026-05' })).toEqual([
+        '2026-02', '2026-03', '2026-04', '2026-05'
+      ]);
+      expect(filterPeriodsByTimeframe(periods, '2026-08', 'CUSTOM', { from: '2026-05', to: '2026-02' })).toEqual([
+        '2026-02', '2026-03', '2026-04', '2026-05'
+      ]);
+    });
+
+    it('falls back to the latest valid period and ignores malformed entries', () => {
+      expect(filterPeriodsByTimeframe(['bad-period', '2026-06', '2026-07'], null, '3M')).toEqual(['2026-06', '2026-07']);
     });
   });
 

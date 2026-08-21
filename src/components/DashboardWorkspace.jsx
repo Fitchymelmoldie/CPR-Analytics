@@ -1,78 +1,33 @@
-import React from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import KpiCard from './KpiCard';
-import PerformanceInsights from './PerformanceInsights';
+import MetricLibraryDrawer from './MetricLibraryDrawer';
 import PerformancePulse from './PerformancePulse';
-import PerformanceRhythm from './PerformanceRhythm';
+import PerformanceStoryModal from './PerformanceStoryModal';
+import PillSelect from './PillSelect';
+import { MAX_DASHBOARD_KPI_CARDS } from '../utils/dashboardKpis';
+import { reorderMetricTitles } from '../utils/dashboardLayout';
 
-function ContextSelect({ id, label, value, options, onChange, formatLabel, readOnlyValue }) {
+function pointerPlacement(event) {
+  const rect = event.currentTarget.getBoundingClientRect();
+  return event.clientX >= rect.left + (rect.width / 2) ? 'after' : 'before';
+}
+
+function ContextSelect({ id, label, value, options, onChange, formatLabel, readOnlyValue, className = '', compact = false }) {
   return (
-    <div className="dashboard-context-card min-w-0 rounded-2xl px-4 py-3.5">
-      <label htmlFor={readOnlyValue ? undefined : id} className="block text-[9px] font-bold uppercase tracking-[0.17em] text-surface-600">
+    <div className={`${compact ? 'flex items-center gap-2' : 'dashboard-context-card min-w-0 rounded-2xl px-4 py-3.5'} ${className}`}>
+      <label htmlFor={readOnlyValue ? undefined : id} className={`${compact ? 'text-[9px] font-bold uppercase tracking-[0.14em] text-surface-500' : 'block text-[9px] font-bold uppercase tracking-[0.17em] text-surface-600'}`}>
         {label}
       </label>
       {readOnlyValue ? (
         <p className="mt-1.5 truncate text-sm font-semibold text-surface-200">{readOnlyValue}</p>
       ) : (
-        <div className="relative mt-1">
-          <select
-            id={id}
-            aria-label={label}
-            value={value}
-            onChange={(event) => onChange(event.target.value)}
-            className="w-full appearance-none truncate bg-transparent py-0.5 pr-7 text-sm font-semibold text-surface-200 outline-none transition-colors hover:text-white focus:text-white"
-          >
-            {options.length === 0 ? <option value="">No options available</option> : null}
-            {options.map(option => <option key={option} value={option}>{formatLabel ? formatLabel(option) : option}</option>)}
-          </select>
-          <svg className="pointer-events-none absolute right-0 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="m7 10 5 5 5-5" />
-          </svg>
-        </div>
+        <PillSelect id={id} label={label} value={value} onChange={onChange} options={options} formatLabel={formatLabel} variant={compact ? 'toolbar' : 'context'} />
       )}
     </div>
   );
 }
 
-function DataStatusCard({ label, tone = 'current', demoMode }) {
-  const dotClass = tone === 'current' ? 'bg-success-400' : tone === 'historical' ? 'bg-amber-300' : 'bg-surface-500';
-  return (
-    <div className="dashboard-context-card min-w-0 rounded-2xl px-4 py-3.5">
-      <p className="text-[9px] font-bold uppercase tracking-[0.17em] text-surface-600">Data status</p>
-      <div className="mt-1.5 flex min-w-0 items-center gap-2 text-sm font-semibold text-surface-200">
-        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${dotClass}`} />
-        <span className="truncate">{label}</span>
-        {demoMode ? <span className="ml-auto shrink-0 rounded-full bg-brand-500/10 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-brand-300">Demo</span> : null}
-      </div>
-    </div>
-  );
-}
-
-function CurrentBodyshop({ company, statusTone }) {
-  const name = company?.name || company?.id || 'Selected bodyshop';
-  const statusLabel = statusTone === 'current' ? 'Data current' : statusTone === 'historical' ? 'Historical view' : 'Awaiting data';
-  const statusClass = statusTone === 'current'
-    ? 'bg-success-500/10 text-success-400'
-    : statusTone === 'historical'
-      ? 'bg-amber-300/10 text-amber-300'
-      : 'bg-white/[0.04] text-surface-400';
-
-  return (
-    <div className="dashboard-shop-strip flex flex-col gap-3 rounded-2xl px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-      <div className="min-w-0">
-        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-brand-400">Current bodyshop</p>
-        <p className="mt-1 flex min-w-0 flex-col sm:flex-row sm:items-baseline sm:gap-2">
-          <span className="font-semibold text-white">{name}</span>
-          <span className="text-sm font-normal text-surface-500">
-            {Number(company?.painters_count || 0)} painters · {Number(company?.panel_beaters_count || 0)} panel beaters · {Number(company?.booths_count || 0)} booths
-          </span>
-        </p>
-      </div>
-      <span className={`w-fit shrink-0 rounded-full px-3 py-1 text-[10px] font-bold ${statusClass}`}>{statusLabel}</span>
-    </div>
-  );
-}
-
-function KpiCardGuide({ count }) {
+export function KpiCardGuide({ count, visibleCount, customizing, onCustomize }) {
   return (
     <aside className="dashboard-shop-strip rounded-2xl px-4 py-3" aria-labelledby="kpi-card-guide-title">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
@@ -80,7 +35,7 @@ function KpiCardGuide({ count }) {
           <p id="kpi-card-guide-title" className="text-[9px] font-bold uppercase tracking-[0.18em] text-brand-400">Operational KPI guide</p>
           <p className="mt-1 text-[11px] text-surface-500">These {count} health KPIs contribute to the Performance Pulse.</p>
         </div>
-        <div className="grid flex-1 grid-cols-2 gap-2 xl:max-w-4xl xl:grid-cols-4">
+        <div className="grid flex-1 grid-cols-2 gap-2 xl:max-w-4xl xl:grid-cols-3">
           <div className="flex flex-wrap items-center gap-1.5 rounded-xl bg-black/10 px-3 py-2">
             <span aria-hidden="true" className="rounded-full bg-success-500/10 px-2 py-0.5 text-[9px] font-bold text-success-400">↗ 4.2%</span>
             <span aria-hidden="true" className="rounded-full bg-rose-500/10 px-2 py-0.5 text-[9px] font-bold text-rose-400">↘ 3.6%</span>
@@ -92,30 +47,25 @@ function KpiCardGuide({ count }) {
             <span className="basis-full text-[10px] font-medium text-surface-400">Current result compared with target</span>
           </div>
           <div className="flex items-center gap-2 rounded-xl bg-black/10 px-3 py-2">
-            <span aria-hidden="true" className="rounded-full bg-amber-300/15 px-2 py-0.5 text-[9px] font-bold text-amber-300">1st / 8</span>
-            <span className="text-[10px] font-medium text-surface-400">Peer-group rank</span>
-          </div>
-          <div className="flex items-center gap-2 rounded-xl bg-black/10 px-3 py-2">
             <span aria-hidden="true" className="h-0.5 w-8 shrink-0 rounded-full bg-brand-400" />
             <span className="text-[10px] font-medium text-surface-400">Selected for the chart</span>
           </div>
         </div>
+        <button type="button" onClick={onCustomize} aria-expanded={customizing} className={`codex-button inline-flex shrink-0 items-center justify-center gap-2 px-3 py-2.5 text-xs ${customizing ? 'codex-button-primary' : 'codex-button-secondary text-brand-300'}`}>
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" /></svg>
+          {customizing ? 'Done customizing' : `Customize cards · ${visibleCount}`}
+        </button>
       </div>
     </aside>
   );
 }
 
 export default function DashboardWorkspace({
-  companies = [],
-  selectedCompany,
-  onCompanyChange,
-  formatCompanyLabel,
   isAdmin,
   periods = [],
   selectedPeriod,
   onPeriodChange,
   formatPeriodLabel,
-  company,
   items,
   selectedKpi,
   onSelectKpi,
@@ -125,102 +75,228 @@ export default function DashboardWorkspace({
   rollingMonths,
   reportingPeriod,
   previousPeriod,
-  dataStatusLabel,
-  dataStatusTone,
   trendData,
   timeframe,
   onTimeframeChange,
+  periodOptions,
+  customRange,
+  onCustomRangeChange,
   comparisonLabel,
-  demoMode = false
+  demoMode = false,
+  navigationHidden = false,
+  metricLibraryOpen,
+  onCustomizeChange,
+  visibleTitles,
+  onVisibleTitlesChange,
+  layoutSaveStatus = 'idle',
+  hasUnsavedLayout = false,
+  layoutSaveError = null,
+  onSaveLayout
 }) {
-  const selectedItem = items.find(item => item.title === selectedKpi) || items[0];
-  const operationalItems = items.filter(item => item.targetable !== false);
+  const defaultVisibleTitles = useMemo(() => items.filter(item => item.defaultVisible).map(item => item.title), [items]);
+  const [internalDrawerOpen, setInternalDrawerOpen] = useState(false);
+  const drawerOpen = typeof metricLibraryOpen === 'boolean' ? metricLibraryOpen : internalDrawerOpen;
+  const [librarySearch, setLibrarySearch] = useState('');
+  const [libraryCategory, setLibraryCategory] = useState('all');
+  const [storyTitle, setStoryTitle] = useState(null);
+  const [draggedTitle, setDraggedTitle] = useState(null);
+  const [dropTarget, setDropTarget] = useState(null);
+  const visibleItems = visibleTitles.map(title => items.find(item => item.title === title)).filter(Boolean);
+  const storyItem = items.find(item => item.title === storyTitle) || null;
+
+  const setCustomizationOpen = useCallback((open) => {
+    if (typeof metricLibraryOpen !== 'boolean') setInternalDrawerOpen(open);
+    onCustomizeChange?.(open);
+  }, [metricLibraryOpen, onCustomizeChange]);
+
+  const handleMetricSelect = useCallback((title) => {
+    onSelectKpi(title);
+    setStoryTitle(title);
+  }, [onSelectKpi]);
+
+  const handleAddMetric = useCallback((title, insertionIndex) => {
+    if (visibleTitles.includes(title) || visibleTitles.length >= MAX_DASHBOARD_KPI_CARDS) return;
+    const next = [...visibleTitles];
+    if (Number.isInteger(insertionIndex)) next.splice(insertionIndex, 0, title);
+    else next.push(title);
+    onVisibleTitlesChange(next);
+  }, [onVisibleTitlesChange, visibleTitles]);
+
+  const handleRemoveMetric = useCallback((title) => {
+    onVisibleTitlesChange(visibleTitles.filter(itemTitle => itemTitle !== title));
+  }, [onVisibleTitlesChange, visibleTitles]);
+
+  const handleMoveMetric = useCallback((title, offset) => {
+    const index = visibleTitles.indexOf(title);
+    const nextIndex = Math.max(0, Math.min(visibleTitles.length - 1, index + offset));
+    if (index < 0 || index === nextIndex) return;
+    const next = [...visibleTitles];
+    next.splice(index, 1);
+    next.splice(nextIndex, 0, title);
+    onVisibleTitlesChange(next);
+  }, [onVisibleTitlesChange, visibleTitles]);
+
+  const handleCardDrop = useCallback((targetTitle, event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const sourceTitle = event.dataTransfer.getData('application/x-cpr-metric') || event.dataTransfer.getData('text/plain') || draggedTitle;
+    if (!sourceTitle || sourceTitle === targetTitle) {
+      setDropTarget(null);
+      return;
+    }
+    if (!items.some(item => item.title === sourceTitle)) return;
+    const next = reorderMetricTitles(visibleTitles, sourceTitle, targetTitle, pointerPlacement(event));
+    if (next !== visibleTitles) onVisibleTitlesChange(next);
+    setDraggedTitle(null);
+    setDropTarget(null);
+  }, [draggedTitle, items, onVisibleTitlesChange, visibleTitles]);
+
+  const handleGridDrop = useCallback((event) => {
+    event.preventDefault();
+    const title = event.dataTransfer.getData('application/x-cpr-metric') || event.dataTransfer.getData('text/plain') || draggedTitle;
+    if (title && visibleTitles.includes(title)) {
+      const next = visibleTitles.filter(itemTitle => itemTitle !== title);
+      next.push(title);
+      onVisibleTitlesChange(next);
+    } else if (title) handleAddMetric(title);
+    setDraggedTitle(null);
+    setDropTarget(null);
+  }, [draggedTitle, handleAddMetric, onVisibleTitlesChange, visibleTitles]);
+
+  const finishDragging = useCallback(() => {
+    setDraggedTitle(null);
+    setDropTarget(null);
+  }, []);
+
+  const handleReportingPeriodChange = useCallback((nextPeriod) => {
+    if (nextPeriod === selectedPeriod) return;
+    onTimeframeChange?.('12M');
+    onCustomRangeChange?.({ from: '', to: '' });
+    onPeriodChange(nextPeriod);
+  }, [onCustomRangeChange, onPeriodChange, onTimeframeChange, selectedPeriod]);
 
   return (
     <div className="space-y-4 pt-6" data-testid="dashboard-workspace">
-      <section className="grid gap-2.5 sm:grid-cols-3 animate-float-in" aria-label="Dashboard context">
-        <ContextSelect
-          id="filter-company"
-          label="Bodyshop"
-          value={selectedCompany}
-          options={companies}
-          onChange={onCompanyChange}
-          formatLabel={formatCompanyLabel}
-          readOnlyValue={isAdmin ? null : (company?.name || company?.id)}
-        />
+      <section className="relative z-30 flex animate-float-in justify-end" aria-label="Dashboard context">
         <ContextSelect
           id="filter-period"
           label="Reporting period"
           value={selectedPeriod}
           options={periods}
-          onChange={onPeriodChange}
+          onChange={handleReportingPeriodChange}
           formatLabel={formatPeriodLabel}
+          className="w-full sm:w-auto"
+          compact
         />
-        <DataStatusCard label={dataStatusLabel} tone={dataStatusTone} demoMode={demoMode} />
       </section>
-
-      <CurrentBodyshop company={company} statusTone={dataStatusTone} />
 
       <PerformancePulse
         items={items}
         selectedKpi={selectedKpi}
-        onSelectKpi={onSelectKpi}
+        onSelectKpi={handleMetricSelect}
         dailyActual={dailyActual}
         dailyTarget={dailyTarget}
         rollingMonths={rollingMonths}
         reportingPeriod={reportingPeriod}
       />
 
-      <KpiCardGuide count={operationalItems.length} />
+      {!drawerOpen ? (
+        <div className="flex justify-end">
+          <button type="button" onClick={() => setCustomizationOpen(true)} aria-expanded="false" aria-controls="metric-library-drawer" className="codex-button codex-button-secondary inline-flex shrink-0 items-center justify-center gap-2 px-3 py-2 text-xs text-brand-300">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8} aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" /></svg>
+            Customize cards · {visibleItems.length}
+          </button>
+        </div>
+      ) : null}
 
-      <section className="grid grid-cols-2 gap-2.5 lg:grid-cols-4" aria-label="Operational bodyshop KPIs">
-        {operationalItems.map((item, index) => (
+      <section
+        className={`kpi-builder-grid relative grid min-h-[190px] grid-cols-2 gap-2.5 rounded-xl transition-all lg:grid-cols-4 ${navigationHidden ? 'min-[1320px]:grid-cols-5 min-[1720px]:grid-cols-6' : ''} ${drawerOpen ? 'kpi-builder-grid-active p-2.5' : ''}`}
+        aria-label="Dashboard KPI cards"
+        onDragOver={(event) => {
+          if (!drawerOpen) return;
+          event.preventDefault();
+          event.dataTransfer.dropEffect = visibleTitles.includes(draggedTitle) ? 'move' : 'copy';
+        }}
+        onDrop={handleGridDrop}
+      >
+        {visibleItems.map((item, index) => (
           <KpiCard
             key={item.title}
             {...item}
             delayClass={`card-appear-${(index % 4) + 1}`}
             isActive={selectedKpi === item.title}
-            onClick={() => onSelectKpi(item.title)}
+            onClick={() => handleMetricSelect(item.title)}
             onSetBenchmark={onSetBenchmark}
-            isAdmin={isAdmin}
+            isAdmin={isAdmin && item.targetable !== false}
+            customizing={drawerOpen}
+            position={index}
+            totalCards={visibleItems.length}
+            onMove={handleMoveMetric}
+            onRemove={handleRemoveMetric}
+            onDragStart={(title, event) => {
+              event.dataTransfer.effectAllowed = 'move';
+              event.dataTransfer.setData('application/x-cpr-metric', title);
+              event.dataTransfer.setData('text/plain', title);
+              setDraggedTitle(title);
+            }}
+            onDragOver={(title, event) => {
+              event.preventDefault();
+              event.dataTransfer.dropEffect = visibleTitles.includes(draggedTitle) ? 'move' : 'copy';
+              const placement = pointerPlacement(event);
+              setDropTarget(current => current?.title === title && current?.placement === placement ? current : { title, placement });
+            }}
+            onDrop={handleCardDrop}
+            onDragEnd={finishDragging}
+            isDragging={draggedTitle === item.title}
+            dropPlacement={dropTarget?.title === item.title && draggedTitle !== item.title ? dropTarget.placement : null}
           />
         ))}
+        {visibleItems.length === 0 ? (
+          <button type="button" onClick={() => setCustomizationOpen(true)} className="col-span-full grid min-h-[190px] place-items-center rounded-[24px] border border-dashed border-brand-400/20 bg-brand-400/[0.035] p-8 text-center text-sm font-semibold text-brand-300">
+            Choose your first KPI card
+          </button>
+        ) : null}
       </section>
 
-      <section className="pb-4" id="charts">
-        {trendData ? (
-          <div className="grid items-stretch gap-3.5 xl:grid-cols-[minmax(0,1.65fr)_minmax(290px,.7fr)]">
-            <div className="h-full min-w-0 overflow-x-auto rounded-[28px]">
-              <PerformanceRhythm
-                key={`${selectedKpi}-${timeframe}`}
-                data={trendData}
-                title={selectedKpi}
-                timeframe={timeframe}
-                onTimeframeChange={onTimeframeChange}
-                benchmark={selectedItem?.targetable === false ? null : selectedItem?.benchmark}
-                benchmarkType={selectedItem?.benchmarkType}
-                comparisonLabel={comparisonLabel}
-              />
-            </div>
-            <PerformanceInsights
-              items={items}
-              selectedTitle={selectedKpi}
-              reportingPeriod={reportingPeriod}
-              previousPeriod={previousPeriod}
-            />
-          </div>
-        ) : (
-          <div className="glass card-appear card-appear-1 flex min-h-[300px] flex-col items-center justify-center rounded-[28px] p-10 text-center">
-            <div className="mb-5 grid h-16 w-16 place-items-center rounded-2xl bg-brand-800/50 text-brand-400">
-              <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-semibold text-white">Trend visualization locked</h3>
-            <p className="mt-2 max-w-md text-sm text-surface-400">Add another reporting period to unlock monthly performance trends.</p>
-          </div>
-        )}
-      </section>
+
+      <MetricLibraryDrawer
+        isOpen={drawerOpen}
+        items={items}
+        visibleTitles={visibleTitles}
+        search={librarySearch}
+        onSearchChange={setLibrarySearch}
+        category={libraryCategory}
+        onCategoryChange={setLibraryCategory}
+        onAdd={handleAddMetric}
+        onMove={handleMoveMetric}
+        onRemove={handleRemoveMetric}
+        onReset={() => onVisibleTitlesChange([...defaultVisibleTitles])}
+        onClose={() => setCustomizationOpen(false)}
+        onDragStart={setDraggedTitle}
+        onDragEnd={finishDragging}
+        maxCards={MAX_DASHBOARD_KPI_CARDS}
+        demoMode={demoMode}
+        saveStatus={layoutSaveStatus}
+        hasUnsavedChanges={hasUnsavedLayout}
+        saveError={layoutSaveError}
+        onSave={onSaveLayout}
+      />
+
+      <PerformanceStoryModal
+        isOpen={Boolean(storyItem)}
+        item={storyItem}
+        items={items}
+        trendData={trendData}
+        timeframe={timeframe}
+        onTimeframeChange={onTimeframeChange}
+        periodOptions={periodOptions}
+        customRange={customRange}
+        onCustomRangeChange={onCustomRangeChange}
+        reportingPeriod={reportingPeriod}
+        previousPeriod={previousPeriod}
+        comparisonLabel={comparisonLabel}
+        onClose={() => setStoryTitle(null)}
+      />
     </div>
   );
 }
