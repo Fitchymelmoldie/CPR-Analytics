@@ -130,11 +130,12 @@ Protected Preview `dpl_9DdBjYWmYgMXo2kNMXMeKeYRQ4wS` returned HTTP 200 through a
 
 Protected Preview `dpl_C7Zow3v7edU2DaJWC445bwWL67ti` returned HTTP 200 through approved Vercel CLI access with `X-Robots-Tag: noindex`. Vercel reports `READY`, `target: preview`. Hosted inspection confirmed continuous Jan-Aug hover coverage, one stable crosshair throughout the plot and one designed value preview per real pointer position. Production was re-inspected afterward and remains deployment `dpl_3AQ3TRxHb4ECSfCq2JurybaWV3sr`.
 
-## Remaining release steps
+## Post-release state
 
-1. Review the final diff, protected Preview and this handoff with the user.
-2. Only after explicit approval: create an intentional source commit and push it.
-3. Only after separate explicit production approval: deploy from the approved source, then verify authenticated desktop/mobile behavior, Supabase-backed data and production diagnostics.
+1. The verified application source is committed locally as `7757e60`; the documentation follow-up is recorded in `623a3de`.
+2. Production is live at `https://bodyshop-dashboard.vercel.app` as `dpl_75WAHNYY2GR3BTUbygqBHE9vcoVk` (`READY`, target `production`).
+3. The final 77-test, build, lint, dependency, Supabase, Vercel, desktop and mobile checks are recorded in `CHANGELOG.md`.
+4. GitHub push was attempted and stopped by the environment's full-source export safeguard. No workaround was used; the commits remain available locally for a later approved push.
 
 ## Release guardrails
 
