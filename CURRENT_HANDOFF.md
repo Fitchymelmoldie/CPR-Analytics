@@ -1,18 +1,18 @@
 # Current Handoff
 
-Last updated: 24 August 2026, 10:07 PM AEST
+Last updated: 24 August 2026, 10:34 PM AEST
 
 This document is the authoritative current-state snapshot. Historical implementation and Preview details belong in `CHANGELOG.md`.
 
 ## Release status
 
-- Stage: production release authorized; clean source release and backend/frontend deployment are in progress. Production remains unchanged until the release gates complete.
+- Stage: production release complete. The verified source, Supabase Edge Functions and Vercel production deployment are live and have passed post-deployment browser checks.
 - Working branch: `agent/bodyshop-audit-hardening`.
-- Working-tree base: `e53485f` (`docs: record GitHub release sync`).
-- Candidate state: the source candidate is approved and fully validated for release. Generated Playwright reports, test results and user-owned Preview assets remain outside the source release.
-- Production: `https://bodyshop-dashboard.vercel.app`, deployment `dpl_75WAHNYY2GR3BTUbygqBHE9vcoVk`, `READY`, target `production`, source deployed from the verified local release commit.
+- Released source commit: `fd80154` (`fix: restore mobile workspace visibility`), following `d00acfc` and `b0d9617`; all three source commits are published on `origin/agent/bodyshop-audit-hardening`.
+- Working-tree state: only generated Playwright output and user-owned Preview evidence remain outside the release commits by design.
+- Production: `https://bodyshop-dashboard.vercel.app`, deployment `dpl_J3NLqNJQXq5WBKWNmFEBqwENRqQn`, `READY`, target `production`, deployed from the verified clean `fd80154` source tree.
 - Latest protected Preview: `https://bodyshop-dashboard-9qbu58o3u-cpr-analytics.vercel.app/?layout-preview=1`, deployment `dpl_ASU5mMhHC7nStKEmYytvzKSQaCra`, `READY`, target `preview`, HTTP 200 and `X-Robots-Tag: noindex`.
-- Current Preview follow-up: the dashboard is now a neutral monthly snapshot rather than a target score. It reports KPI completeness, directs users into the existing multi-month Performance Story, keeps targets optional, adds a compact Latest Consultant Review entry point, and distinguishes loading from genuinely missing data or targets. Historical review creation opens the month being viewed, and the customer-view role boundary is consistent across authenticated and protected-demo routes.
+- Current production release: the dashboard is now a neutral monthly snapshot rather than a target score. It reports KPI completeness, directs users into the existing multi-month Performance Story, keeps targets optional, adds a compact Latest Consultant Review entry point, and distinguishes loading from genuinely missing data or targets. Historical review creation opens the month being viewed, and the customer-view role boundary is consistent across authenticated and protected-demo routes.
 - Production release baseline: Data & Imports offers bulk CSV import and Quick KPI Entry for one metric/month, missing values remain visibly incomplete, Gamified Leaderboards is deferred, and the site-wide content hierarchy avoids repeated instructional copy. These production features remain on the deployment above.
 - Earlier review follow-up: the entire product uses one Codex-native visual and interaction system across Customer Management, Data & Imports, profile, reviews, authentication, dialogs and KPI reporting. KPI reordering is deterministic on pointer, touch and keyboard. KPI charts use clean adaptive Y scales, year-aware X labels, directional external goal keys and one compact target-aware tooltip that previews on hover/focus and pins on click/tap; browser-native duplicate tooltips have been removed. The plot uses one stable crosshair and continuous nearest-month hover regions, eliminating the arrow/hand flicker and dead zones between points.
 - Production was promoted and aliased only after the local test/build/lint gates, Supabase audit, Vercel inspection, desktop/mobile smoke checks and hosted browser checks were green.
@@ -96,21 +96,23 @@ Both show `Building` until three months are available. Daily budget is a calcula
 - Row Level Security and authenticated-only grants protect company-scoped analytics and KPI layouts.
 - Customer layout policy tests confirmed own-company writes and rejected cross-company writes; administrators can manage the selected bodyshop.
 - `invite-user` and `delete-user` Edge Functions use verified JWTs, origin-scoped CORS, POST-only handling and reduced response payloads.
-- Edge Function source now normalizes request origins against the application allowlist before using an origin for CORS or invite redirects. This source hardening is not deployed to Supabase during the Preview-only cycle.
+- Edge Function source normalizes request origins against the application allowlist before using an origin for CORS or invite redirects. The current-runtime implementation uses `Deno.serve`, loads the Supabase client only after an authenticated POST enters the handler, and is live as `invite-user` version 16 and `delete-user` version 6 with JWT verification enabled.
 - Accepted limitation: Supabase leaked-password protection remains disabled because it requires a paid plan.
-- Live Supabase advisors report no RLS/security-policy findings. Two unused-index notices are informational only and the indexes remain in place while the new tables accumulate representative traffic.
+- Live Supabase advisors report no RLS/security-policy findings. Three unused-index notices are informational only and the indexes remain in place while the new tables accumulate representative traffic.
 
 ## Verification evidence
 
-Current monthly-snapshot hierarchy candidate gate:
+Current production release gate:
 
 - Vitest: all 8 files and 80 tests passed, including neutral snapshot completeness with configured targets, analytics loading, target loading, current/historical review routing and customer-view parity.
 - Vite production build: passed.
 - Lint: no errors; one existing Fast Refresh advisory remains in `AuthProvider.jsx`.
 - `git diff --check`: passed with only Windows line-ending notices.
-- Playwright: all 8 configured Chromium scenarios passed in 12.4 seconds against a separately managed local Vite server. The earlier managed-web-server runs entered all scenarios and then stalled during Windows process teardown; isolating the server confirmed the dashboard journeys themselves complete cleanly.
-- Direct local and hosted supported-browser verification passed at `1440 x 1000` and `390 x 844`: `8/8 reported`, selected-month headline, Latest Consultant Review, exact historical review period, Completed RO `3M` range, customer read-only review, hidden administrator/export/target controls, eight KPI cards, zero horizontal overflow and no application warning/error logs.
-- Protected Preview `dpl_ASU5mMhHC7nStKEmYytvzKSQaCra` returned HTTP 200 with `X-Robots-Tag: noindex`; Vercel reports `READY`, target `preview`. Production was inspected before and after and remains `dpl_75WAHNYY2GR3BTUbygqBHE9vcoVk` (`READY`, target `production`).
+- Playwright: all 8 configured Chromium scenarios passed in 14.6 seconds against a separately managed local Vite server, including the mobile Workspace first-tap regression. The earlier managed-web-server runs stalled during Windows process teardown; isolating the server confirmed the dashboard journeys themselves complete cleanly.
+- Dependency audit: `npm audit --omit=dev --audit-level=high` reported zero vulnerabilities.
+- Supabase: both live JWT-protected functions returned `204` for safe preflight requests and expected `401` responses for unauthenticated or invalid-token POST requests; no user record was created or deleted. Recent function logs contain no unexpected error response from the final versions.
+- Live production supported-browser verification passed on desktop and `390 x 844` mobile: monthly snapshot, Latest Consultant Review, Completed RO `3M` story, Data & Imports, Customer Management, customer role boundary, first-tap Workspace open/close, eight KPI cards, zero horizontal overflow and no application warning/error logs.
+- Vercel production deployment `dpl_J3NLqNJQXq5WBKWNmFEBqwENRqQn` is `READY`, target `production`, and serves both production aliases. Error and HTTP 500 log scans found no entries after the release.
 
 Current cursor-continuity follow-up gate:
 
@@ -143,10 +145,11 @@ Protected Preview `dpl_C7Zow3v7edU2DaJWC445bwWL67ti` returned HTTP 200 through a
 
 ## Post-release state
 
-1. The verified production source sequence remains published through `e53485f`; the new monthly-snapshot candidate is intentionally uncommitted and unpushed pending user approval.
-2. Production is live at `https://bodyshop-dashboard.vercel.app` as `dpl_75WAHNYY2GR3BTUbygqBHE9vcoVk` (`READY`, target `production`).
-3. The current protected candidate is live only at `https://bodyshop-dashboard-9qbu58o3u-cpr-analytics.vercel.app/?layout-preview=1` as `dpl_ASU5mMhHC7nStKEmYytvzKSQaCra` (`READY`, target `preview`).
-4. The 80-test, build, lint, Vercel, desktop and mobile checks are recorded in `CHANGELOG.md`; no Supabase state was changed.
+1. The verified production source sequence through `fd80154` is published on `origin/agent/bodyshop-audit-hardening`; this handoff and the changelog are the final documentation sync.
+2. Production is live at `https://bodyshop-dashboard.vercel.app` as `dpl_J3NLqNJQXq5WBKWNmFEBqwENRqQn` (`READY`, target `production`).
+3. The earlier protected review candidate remains available at `https://bodyshop-dashboard-9qbu58o3u-cpr-analytics.vercel.app/?layout-preview=1` as `dpl_ASU5mMhHC7nStKEmYytvzKSQaCra` (`READY`, target `preview`); it is no longer the release source of truth.
+4. Supabase is `ACTIVE_HEALTHY`; `invite-user` version 16 and `delete-user` version 6 are live with JWT verification. Safe production checks made no user-data changes.
+5. The 80-test, build, lint, dependency-audit, 8-scenario browser, Vercel, Supabase, desktop and mobile checks are recorded in `CHANGELOG.md`.
 
 ## Release guardrails
 

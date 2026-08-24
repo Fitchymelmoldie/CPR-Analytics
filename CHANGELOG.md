@@ -2,6 +2,15 @@
 
 All notable changes to the CPR Analytics Dashboard prototype will be documented in this file.
 
+## Production release — 24 August 2026
+
+- Promoted the clean `fd80154` source tree to `https://bodyshop-dashboard.vercel.app` as deployment `dpl_J3NLqNJQXq5WBKWNmFEBqwENRqQn` (`READY`, target `production`) after publishing the release sequence `d00acfc`, `b0d9617` and `fd80154` to GitHub.
+- Reframed the dashboard hero as a neutral monthly snapshot: the ring now communicates reported-data completeness, the selected month anchors the headline, multi-month Performance Story ranges are the primary analysis path, targets remain optional KPI context, and Latest Consultant Review provides a compact bridge from data to consultant interpretation.
+- Deployed hardened Supabase Edge Functions using the current runtime pattern as `invite-user` version 16 and `delete-user` version 6, both `ACTIVE` with JWT verification. Allowed and untrusted-origin preflight checks returned `204`; unauthenticated and invalid-token POST checks returned the expected `401` without creating or deleting a user.
+- Paused the first promotion after live verification found that the mobile Workspace drawer could retain `visibility: hidden` on its first tap. Removed `visibility` from the animated properties, added component and `390 x 844` browser regressions, rebuilt from a clean worktree and promoted only the corrected deployment.
+- Final gates: all 80 Vitest tests passed; Vite production build passed; lint completed with one existing Fast Refresh warning and no errors; the production dependency audit found zero vulnerabilities; all 8 Chromium scenarios passed in 14.6 seconds; live desktop, customer-role, Data & Imports, Customer Management, KPI-story and mobile Workspace checks passed with zero horizontal overflow and no application warning/error logs.
+- Supabase is `ACTIVE_HEALTHY`. Leaked-password protection remains disabled as an accepted Auth advisory, and three unused-index notices remain informational while representative traffic accumulates. Vercel error and HTTP 500 log scans found no post-release entries.
+
 ## Production release — 21 August 2026
 
 - Promoted the verified release commit `7757e60` to `https://bodyshop-dashboard.vercel.app` as deployment `dpl_75WAHNYY2GR3BTUbygqBHE9vcoVk` (`READY`, target `production`).
@@ -10,20 +19,6 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 - Published the verified release branch to GitHub as `origin/agent/bodyshop-audit-hardening` after explicit release authorization.
 
 ## [Unreleased]
-
-- **Mobile workspace visibility release fix (24 August 2026)**
-  - Removed `visibility` from the workspace drawer's animated properties after live production verification showed that the mobile drawer could retain `visibility: hidden` after receiving its open state.
-  - Kept the existing immediate `visible`/`invisible` accessibility states while limiting motion to transform, width and opacity, so the first tap consistently reveals the navigation without changing desktop behavior.
-  - Added component and real-browser regressions that prevent `visibility` from returning to the transition list and require the 390 x 844 drawer to become visibly interactive on its first tap. The production release was paused for a corrected build and mobile re-verification.
-
-- **Trend-led monthly snapshot hierarchy (23 August 2026)**
-  - Reframed the dashboard hero from a target score into a neutral monthly snapshot. The ring now reports operational-data completeness, the headline names the selected reporting month, and one concise prompt makes the existing `3M`, `6M` and `12M` Performance Story discoverable without redesigning it.
-  - Kept configured targets as optional secondary context on KPI cards and inside Performance Story. Target copy no longer defines overall performance, and explicit loading/unavailable states prevent asynchronous target data from briefly appearing as `No target set`.
-  - Added a compact Latest Consultant Review strip below the monthly snapshot. It shows the most recent review available at or before the selected reporting month and opens that exact review period; an empty historical month opens a new review for the month being viewed.
-  - Added explicit analytics and review loading/error states, removed the duplicate customer empty-data overlay, and kept administrator customer-preview reviews read-only. The protected demo now also hides Export in customer view, matching the authenticated role boundary.
-  - Added regressions for neutral snapshot scoring, loading-state trust, target-loading behavior, current and historical consultant-review routing, and customer-view controls. All 80 Vitest tests passed; the Vite production build passed; lint completed with no errors and one existing Fast Refresh advisory; and `git diff --check` passed with only Windows line-ending notices.
-  - All eight Playwright Chromium scenarios passed in 12.4 seconds against a separately managed local Vite server. This isolated the earlier Windows managed-server teardown stall from the dashboard journeys themselves. Direct supported-browser checks also covered the affected journeys at `1440 x 1000` and `390 x 844`: snapshot, review, historical period, `3M` story, customer role boundary, desktop/mobile geometry, zero horizontal overflow and zero application warnings/errors.
-  - Published protected Preview `dpl_ASU5mMhHC7nStKEmYytvzKSQaCra` at `https://bodyshop-dashboard-9qbu58o3u-cpr-analytics.vercel.app/?layout-preview=1` (`READY`, target `preview`, HTTP 200, `X-Robots-Tag: noindex`). Production remains unchanged on `dpl_75WAHNYY2GR3BTUbygqBHE9vcoVk`; no Supabase mutation, commit, push, promotion, production deployment or alias change was performed.
 
 - **Data-entry-only Full Month Editor (21 August 2026)**
   - Removed previous-month, movement and reporting-status columns from the visual Preview's Full Month Editor. Those comparisons belong in the dashboard and Performance Story, not beside raw import values.
