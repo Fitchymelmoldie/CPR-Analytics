@@ -116,7 +116,7 @@ function previewRollingAverage(definition, periodIndex) {
   return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
 }
 
-function DashboardPreview({ navigationHidden, metricLibraryOpen, onCustomizeChange, isAdmin = true }) {
+function DashboardPreview({ navigationHidden, metricLibraryOpen, onCustomizeChange, isAdmin = true, consultantReviews = {}, onOpenConsultantReview }) {
   const [selectedTitle, setSelectedTitle] = useState('Total Sales');
   const [timeframe, setTimeframe] = useState('12M');
   const [customRange, setCustomRange] = useState({ from: '', to: '' });
@@ -161,6 +161,14 @@ function DashboardPreview({ navigationHidden, metricLibraryOpen, onCustomizeChan
   const previousPeriod = selectedPeriodIndex > 0 ? PREVIEW_LABELS[selectedPeriodIndex - 1] : null;
   const dailyActual = 9108 * (previewMetricValue({ title: 'Paint Sales', benchmarkType: 'min' }, selectedPeriodIndex) / MOCK_VALUES['Paint Sales']);
   const dailyTarget = 8670 * (previewMetricValue({ title: 'Paint Cost / RO', benchmarkType: 'max' }, selectedPeriodIndex) / MOCK_VALUES['Paint Cost / RO']);
+  const latestReviewEntry = Object.entries(consultantReviews)
+    .filter(([period]) => period <= selectedPeriod)
+    .sort(([periodA], [periodB]) => periodB.localeCompare(periodA))[0] || null;
+  const latestConsultantReview = latestReviewEntry ? {
+    period: latestReviewEntry[0],
+    periodLabel: PREVIEW_LABELS[PREVIEW_PERIODS.indexOf(latestReviewEntry[0])] || latestReviewEntry[0],
+    ...latestReviewEntry[1]
+  } : null;
 
   return (
     <>
@@ -184,8 +192,10 @@ function DashboardPreview({ navigationHidden, metricLibraryOpen, onCustomizeChan
         rollingMonths={Math.min(selectedPeriodIndex + 1, 3)}
         reportingPeriod={reportingPeriod}
         previousPeriod={previousPeriod}
-        dataStatusLabel={`${items.filter(item => Number.isFinite(item.value)).length} metrics reporting`}
         dataStatusTone={selectedPeriod === '2026-08' ? 'current' : 'historical'}
+        consultantReview={latestConsultantReview}
+        consultantReviewStatus="ready"
+        onOpenConsultantReview={onOpenConsultantReview}
         trendData={trendData}
         timeframe={timeframe}
         onTimeframeChange={setTimeframe}
@@ -277,6 +287,7 @@ export default function LayoutPreview() {
   const [notice, setNotice] = useState('');
   const [viewingAs, setViewingAs] = useState(null);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [reviewOpenPeriod, setReviewOpenPeriod] = useState('2026-08');
   const [previewReviews, setPreviewReviews] = useState({
     '2026-08': {
       trendAnalysis: 'Paint sales and completed repair orders are moving favourably, while paint cost per repair order remains the clearest watch point.',
@@ -307,7 +318,7 @@ export default function LayoutPreview() {
 
   return (
     <div className="cpr-codex-shell min-h-screen bg-surface-900 text-surface-100 lg:flex">
-      <AppSidebar activeTab={activeTab} onNavigate={navigate} currentUser={MOCK_USER} viewingAsCompany={Boolean(viewingAs)} collapsed={collapsed} mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} onOpenReviews={() => setReviewOpen(true)} hasNotification onLogout={() => showNotice('Logout is disabled in this visual preview.')} />
+      <AppSidebar activeTab={activeTab} onNavigate={navigate} currentUser={MOCK_USER} viewingAsCompany={Boolean(viewingAs)} collapsed={collapsed} mobileOpen={mobileOpen} onCloseMobile={() => setMobileOpen(false)} onOpenReviews={() => { setReviewOpenPeriod('2026-08'); setReviewOpen(true); }} hasNotification onLogout={() => showNotice('Logout is disabled in this visual preview.')} />
       <div className={`app-main-shell min-w-0 flex-1 ${activeTab === 'dashboard' && metricLibraryOpen ? 'metrics-panel-open' : ''}`}>
         <Header
           pageTitle={headerTitle}
@@ -324,12 +335,12 @@ export default function LayoutPreview() {
           onReset={() => navigate('raw-data')}
           showReset={activeTab === 'raw-data'}
           onExport={() => showNotice('Export is disabled in this visual preview.')}
-          showExport={!['profile', 'customers'].includes(activeTab)}
+          showExport={!viewingAs && !['profile', 'customers'].includes(activeTab)}
           viewingAsCompanyName={viewingAs ? MOCK_COMPANY.name : null}
           onExitCustomerView={exitCustomerView}
         />
         <main className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">
-          {activeTab === 'dashboard' ? <DashboardPreview navigationHidden={collapsed} metricLibraryOpen={metricLibraryOpen} onCustomizeChange={handleCustomizeChange} isAdmin={!viewingAs} /> : null}
+          {activeTab === 'dashboard' ? <DashboardPreview navigationHidden={collapsed} metricLibraryOpen={metricLibraryOpen} onCustomizeChange={handleCustomizeChange} isAdmin={!viewingAs} consultantReviews={previewReviews} onOpenConsultantReview={(period) => { setReviewOpenPeriod(period || '2026-08'); setReviewOpen(true); }} /> : null}
           {activeTab === 'profile' ? <ShopProfilePanel company={MOCK_COMPANY} onEdit={() => showNotice('Profile editing is disabled in this visual preview.')} /> : null}
           {activeTab === 'raw-data' ? <DataPreview onNotice={showNotice} /> : null}
           {FEATURE_FLAGS.leaderboards && activeTab === 'leaderboards' ? <LeaderboardPreview /> : null}
@@ -342,7 +353,7 @@ export default function LayoutPreview() {
         onClose={() => setReviewOpen(false)}
         currentUser={viewingAs ? { ...MOCK_USER, role: 'CUSTOMER' } : MOCK_USER}
         selectedCompany={MOCK_COMPANY.name}
-        selectedPeriod="2026-08"
+        selectedPeriod={reviewOpenPeriod}
         availablePeriods={PREVIEW_PERIODS}
         companyReviews={previewReviews}
         onSaveReview={(period, trendAnalysis, improvements) => {

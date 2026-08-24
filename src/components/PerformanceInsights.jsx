@@ -27,10 +27,16 @@ function targetGap(item) {
 
 function targetDetail(item) {
   if (item?.targetable === false) {
-    return { title: 'Reference metric', detail: 'Shown for context and kept outside the Performance Pulse score.' };
+    return { title: 'Reference metric', detail: 'Shown for context and best understood through its trend over time.' };
+  }
+  if (item?.benchmarkStatus === 'loading' || item?.benchmarkStatus === 'idle') {
+    return { title: 'Loading target', detail: 'The trend is ready while target context loads.' };
+  }
+  if (item?.benchmarkStatus === 'error') {
+    return { title: 'Target unavailable', detail: 'The trend remains available for review.' };
   }
   if (!item || item.benchmark === undefined || item.benchmark === null) {
-    return { title: 'No target set', detail: 'Add a target to compare this metric with a health threshold.' };
+    return { title: 'No target set', detail: 'The trend remains the primary comparison.' };
   }
 
   const met = targetIsMet(item);
@@ -54,7 +60,7 @@ export default function PerformanceInsights({ items, selectedTitle, reportingPer
   const selected = items.find(item => item.title === selectedTitle) || items[0];
   const movement = movementValue(selected);
   const target = targetDetail(selected);
-  const targetTone = selected?.targetable !== false && selected?.benchmark !== undefined && selected?.benchmark !== null
+  const targetTone = selected?.targetable !== false && selected?.benchmarkStatus !== 'loading' && selected?.benchmarkStatus !== 'error' && selected?.benchmark !== undefined && selected?.benchmark !== null
     ? targetIsMet(selected) ? 'positive' : 'attention'
     : 'selected';
   const rollingMonths = Number.isFinite(selected?.rollingMonths) ? selected.rollingMonths : 0;
@@ -89,7 +95,7 @@ export default function PerformanceInsights({ items, selectedTitle, reportingPer
             <p>{rollingDetail}</p>
           </div>
           <div className={`insight-row insight-row-${targetTone} min-w-0`} style={{ animationDelay: '360ms' }}>
-            <span>{selected.targetable === false ? 'Pulse treatment' : 'Target status'}</span>
+            <span>{selected.targetable === false ? 'Metric role' : 'Target status'}</span>
             <strong className="truncate">{target.title}</strong>
             <p>{target.detail}</p>
           </div>

@@ -33,7 +33,7 @@ export function KpiCardGuide({ count, visibleCount, customizing, onCustomize }) 
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div className="shrink-0">
           <p id="kpi-card-guide-title" className="text-[9px] font-bold uppercase tracking-[0.18em] text-brand-400">Operational KPI guide</p>
-          <p className="mt-1 text-[11px] text-surface-500">These {count} health KPIs contribute to the Performance Pulse.</p>
+          <p className="mt-1 text-[11px] text-surface-500">These {count} operational KPIs make up the monthly snapshot.</p>
         </div>
         <div className="grid flex-1 grid-cols-2 gap-2 xl:max-w-4xl xl:grid-cols-3">
           <div className="flex flex-wrap items-center gap-1.5 rounded-xl bg-black/10 px-3 py-2">
@@ -60,6 +60,43 @@ export function KpiCardGuide({ count, visibleCount, customizing, onCustomize }) 
   );
 }
 
+function ConsultantReviewStrip({ review, status, selectedPeriod, periodLabel, isAdmin, onOpen }) {
+  if (!onOpen) return null;
+
+  const summary = review?.improvements?.trim() || review?.trendAnalysis?.trim() || '';
+  const reviewPeriodLabel = review?.periodLabel || periodLabel;
+  const isLoading = status === 'loading' || status === 'idle';
+  const message = isLoading
+    ? 'Loading the latest consultant review…'
+    : status === 'error'
+      ? 'The review history could not be refreshed.'
+      : summary || `No review has been added for ${periodLabel || 'this period'}.`;
+  const actionLabel = review ? 'View review' : isAdmin ? 'Add review' : 'View reviews';
+
+  return (
+    <section className="rounded-xl border border-white/[0.07] bg-white/[0.025] px-4 py-3" aria-labelledby="latest-consultant-review-title">
+      <div className="flex items-center gap-3">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-brand-400/15 bg-brand-400/[0.07] text-brand-300" aria-hidden="true">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+          </svg>
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <h2 id="latest-consultant-review-title" className="text-xs font-semibold text-surface-100">Latest consultant review</h2>
+            {reviewPeriodLabel ? <span className="text-[10px] font-medium text-surface-500">{reviewPeriodLabel}</span> : null}
+          </div>
+          <p className={`mt-1 truncate text-xs ${status === 'error' ? 'text-amber-300' : 'text-surface-400'}`} aria-live="polite">{message}</p>
+        </div>
+        <button type="button" onClick={() => onOpen(review?.period || selectedPeriod)} disabled={isLoading} aria-label={actionLabel} className="codex-button codex-button-secondary shrink-0 px-3 py-2 text-xs disabled:cursor-wait disabled:opacity-45">
+          <span className="hidden sm:inline">{actionLabel}</span>
+          <span className="sm:hidden">Open</span>
+        </button>
+      </div>
+    </section>
+  );
+}
+
 export default function DashboardWorkspace({
   isAdmin,
   periods = [],
@@ -74,6 +111,10 @@ export default function DashboardWorkspace({
   dailyTarget,
   rollingMonths,
   reportingPeriod,
+  dataStatusTone = 'current',
+  consultantReview = null,
+  consultantReviewStatus = 'ready',
+  onOpenConsultantReview,
   previousPeriod,
   trendData,
   timeframe,
@@ -198,6 +239,16 @@ export default function DashboardWorkspace({
         dailyTarget={dailyTarget}
         rollingMonths={rollingMonths}
         reportingPeriod={reportingPeriod}
+        dataStatusTone={dataStatusTone}
+      />
+
+      <ConsultantReviewStrip
+        review={consultantReview}
+        status={consultantReviewStatus}
+        selectedPeriod={selectedPeriod}
+        periodLabel={reportingPeriod}
+        isAdmin={isAdmin}
+        onOpen={onOpenConsultantReview}
       />
 
       {!drawerOpen ? (

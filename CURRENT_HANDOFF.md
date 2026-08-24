@@ -1,18 +1,19 @@
 # Current Handoff
 
-Last updated: 21 August 2026, 11:46 PM AEST
+Last updated: 24 August 2026, 10:07 PM AEST
 
 This document is the authoritative current-state snapshot. Historical implementation and Preview details belong in `CHANGELOG.md`.
 
 ## Release status
 
-- Stage: production release completed; post-release verification complete.
+- Stage: production release authorized; clean source release and backend/frontend deployment are in progress. Production remains unchanged until the release gates complete.
 - Working branch: `agent/bodyshop-audit-hardening`.
-- Working-tree base: `7757e60` (`feat: finalize dashboard production release`).
-- Candidate state: committed and pushed to `origin/agent/bodyshop-audit-hardening`.
+- Working-tree base: `e53485f` (`docs: record GitHub release sync`).
+- Candidate state: the source candidate is approved and fully validated for release. Generated Playwright reports, test results and user-owned Preview assets remain outside the source release.
 - Production: `https://bodyshop-dashboard.vercel.app`, deployment `dpl_75WAHNYY2GR3BTUbygqBHE9vcoVk`, `READY`, target `production`, source deployed from the verified local release commit.
-- Latest protected Preview: `https://bodyshop-dashboard-il59n1e5d-cpr-analytics.vercel.app/?layout-preview=1`, deployment `dpl_FWkY7hXqSYk6A1ULd1y9qQgyjCXW`, `READY`, target `preview`.
-- Release follow-up: Data & Imports now offers bulk CSV import and Quick KPI Entry for one metric/month, using a dark in-app year/month picker that stays consistent with the dashboard instead of opening the browser's native calendar. The entry flow preserves every other value in an existing period. Missing values remain visibly incomplete rather than becoming false zero KPIs. Gamified Leaderboards is deferred behind a disabled feature flag and removed from active navigation. The site-wide content hierarchy pass also removes repeated subtitles and instructions while preserving labels, meaningful states and contextual help. These 21 August changes passed the final 77-test local gate and are live in the production deployment above.
+- Latest protected Preview: `https://bodyshop-dashboard-9qbu58o3u-cpr-analytics.vercel.app/?layout-preview=1`, deployment `dpl_ASU5mMhHC7nStKEmYytvzKSQaCra`, `READY`, target `preview`, HTTP 200 and `X-Robots-Tag: noindex`.
+- Current Preview follow-up: the dashboard is now a neutral monthly snapshot rather than a target score. It reports KPI completeness, directs users into the existing multi-month Performance Story, keeps targets optional, adds a compact Latest Consultant Review entry point, and distinguishes loading from genuinely missing data or targets. Historical review creation opens the month being viewed, and the customer-view role boundary is consistent across authenticated and protected-demo routes.
+- Production release baseline: Data & Imports offers bulk CSV import and Quick KPI Entry for one metric/month, missing values remain visibly incomplete, Gamified Leaderboards is deferred, and the site-wide content hierarchy avoids repeated instructional copy. These production features remain on the deployment above.
 - Earlier review follow-up: the entire product uses one Codex-native visual and interaction system across Customer Management, Data & Imports, profile, reviews, authentication, dialogs and KPI reporting. KPI reordering is deterministic on pointer, touch and keyboard. KPI charts use clean adaptive Y scales, year-aware X labels, directional external goal keys and one compact target-aware tooltip that previews on hover/focus and pins on click/tap; browser-native duplicate tooltips have been removed. The plot uses one stable crosshair and continuous nearest-month hover regions, eliminating the arrow/hand flicker and dead zones between points.
 - Production was promoted and aliased only after the local test/build/lint gates, Supabase audit, Vercel inspection, desktop/mobile smoke checks and hosted browser checks were green.
 
@@ -40,8 +41,8 @@ Do not make another production deployment without explicit approval.
 
 ### KPI experience
 
-- Eight operational KPIs drive the Performance Pulse; peer-group rank wording and card badges are removed.
-- The Operational KPI guide is available from a shared accessible information control immediately before Export; it uses the same glyph, visible circle, 32 x 32 pointer target and interaction states as the Daily budget help control. Its `320 x 172` fully opaque surface is anchored to the full header rather than the icon row, opens below any customer-view context bar, and stacks above the reporting-period toolbar without a translucent entrance frame.
+- Eight operational KPIs drive the monthly snapshot completeness ring; peer-group rank wording and card badges are removed. Targets remain optional context on individual KPIs and do not define the dashboard headline.
+- The Operational KPI guide is available from a shared accessible information control immediately before Export; it uses the same glyph, visible circle, 32 x 32 pointer target and interaction states as the Daily budget help control. Its fully opaque surface is anchored to the full header rather than the icon row, opens below any customer-view context bar, and stacks above the reporting-period toolbar without a translucent entrance frame.
 - Bodyshops can add, remove, reorder and reset KPI cards through the Metric Library drawer.
 - Desktop dragging uses explicit before/after insertion zones on every KPI card; the teal line is the authoritative landing position. Dropping a current card on empty grid space moves it to the end.
 - The card itself is no longer draggable. Native dragging starts only from its labelled handle, preventing accidental movement while selecting KPI content.
@@ -101,6 +102,16 @@ Both show `Building` until three months are available. Daily budget is a calcula
 
 ## Verification evidence
 
+Current monthly-snapshot hierarchy candidate gate:
+
+- Vitest: all 8 files and 80 tests passed, including neutral snapshot completeness with configured targets, analytics loading, target loading, current/historical review routing and customer-view parity.
+- Vite production build: passed.
+- Lint: no errors; one existing Fast Refresh advisory remains in `AuthProvider.jsx`.
+- `git diff --check`: passed with only Windows line-ending notices.
+- Playwright: all 8 configured Chromium scenarios passed in 12.4 seconds against a separately managed local Vite server. The earlier managed-web-server runs entered all scenarios and then stalled during Windows process teardown; isolating the server confirmed the dashboard journeys themselves complete cleanly.
+- Direct local and hosted supported-browser verification passed at `1440 x 1000` and `390 x 844`: `8/8 reported`, selected-month headline, Latest Consultant Review, exact historical review period, Completed RO `3M` range, customer read-only review, hidden administrator/export/target controls, eight KPI cards, zero horizontal overflow and no application warning/error logs.
+- Protected Preview `dpl_ASU5mMhHC7nStKEmYytvzKSQaCra` returned HTTP 200 with `X-Robots-Tag: noindex`; Vercel reports `READY`, target `preview`. Production was inspected before and after and remains `dpl_75WAHNYY2GR3BTUbygqBHE9vcoVk` (`READY`, target `production`).
+
 Current cursor-continuity follow-up gate:
 
 - Vitest: all 8 files and 73 tests passed, including exact continuous month-zone coverage in the chart component.
@@ -132,10 +143,10 @@ Protected Preview `dpl_C7Zow3v7edU2DaJWC445bwWL67ti` returned HTTP 200 through a
 
 ## Post-release state
 
-1. The verified application source is committed locally as `7757e60`; the documentation follow-up is recorded in `623a3de`.
+1. The verified production source sequence remains published through `e53485f`; the new monthly-snapshot candidate is intentionally uncommitted and unpushed pending user approval.
 2. Production is live at `https://bodyshop-dashboard.vercel.app` as `dpl_75WAHNYY2GR3BTUbygqBHE9vcoVk` (`READY`, target `production`).
-3. The final 77-test, build, lint, dependency, Supabase, Vercel, desktop and mobile checks are recorded in `CHANGELOG.md`.
-4. GitHub now contains the verified release branch at `origin/agent/bodyshop-audit-hardening`; production was already deployed from the same verified source sequence.
+3. The current protected candidate is live only at `https://bodyshop-dashboard-9qbu58o3u-cpr-analytics.vercel.app/?layout-preview=1` as `dpl_ASU5mMhHC7nStKEmYytvzKSQaCra` (`READY`, target `preview`).
+4. The 80-test, build, lint, Vercel, desktop and mobile checks are recorded in `CHANGELOG.md`; no Supabase state was changed.
 
 ## Release guardrails
 

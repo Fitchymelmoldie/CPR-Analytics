@@ -160,9 +160,9 @@ export default function Header({
           aria-label="Operational KPI guide details"
           className={`pointer-events-none absolute right-4 top-full z-[70] mt-3 w-[calc(100vw-2rem)] max-w-80 origin-top-right rounded-2xl border border-white/[0.12] bg-[#171d26] p-4 text-left opacity-100 shadow-[0_24px_70px_rgba(0,0,0,0.72)] ring-1 ring-black/20 transition-transform duration-100 sm:right-6 sm:w-80 lg:right-8 ${operationalKpiInfoOpen ? 'visible translate-y-0' : 'invisible -translate-y-1'}`}
         >
-          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-brand-400">Operational KPI health</p>
-          <p className="mt-1.5 text-xs leading-relaxed text-surface-300">These {operationalKpiCount} health KPIs contribute to the Performance Pulse.</p>
-          <p className="mt-2 text-[11px] leading-relaxed text-surface-500">Green or red movement shows favourable or unfavourable change. Target status compares the current result with its target, and the teal marker identifies the KPI selected for the chart.</p>
+          <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-brand-400">Operational KPI guide</p>
+          <p className="mt-1.5 text-xs leading-relaxed text-surface-300">These {operationalKpiCount} operational KPIs make up the monthly snapshot. Open a card to review its longer-term trend.</p>
+          <p className="mt-2 text-[11px] leading-relaxed text-surface-500">Movement shows favourable or unfavourable change. Target status appears only when a target has been configured, and the teal marker identifies the KPI selected for the chart.</p>
         </div>
       ) : null}
     </header>

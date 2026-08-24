@@ -11,6 +11,15 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Trend-led monthly snapshot hierarchy (23 August 2026)**
+  - Reframed the dashboard hero from a target score into a neutral monthly snapshot. The ring now reports operational-data completeness, the headline names the selected reporting month, and one concise prompt makes the existing `3M`, `6M` and `12M` Performance Story discoverable without redesigning it.
+  - Kept configured targets as optional secondary context on KPI cards and inside Performance Story. Target copy no longer defines overall performance, and explicit loading/unavailable states prevent asynchronous target data from briefly appearing as `No target set`.
+  - Added a compact Latest Consultant Review strip below the monthly snapshot. It shows the most recent review available at or before the selected reporting month and opens that exact review period; an empty historical month opens a new review for the month being viewed.
+  - Added explicit analytics and review loading/error states, removed the duplicate customer empty-data overlay, and kept administrator customer-preview reviews read-only. The protected demo now also hides Export in customer view, matching the authenticated role boundary.
+  - Added regressions for neutral snapshot scoring, loading-state trust, target-loading behavior, current and historical consultant-review routing, and customer-view controls. All 80 Vitest tests passed; the Vite production build passed; lint completed with no errors and one existing Fast Refresh advisory; and `git diff --check` passed with only Windows line-ending notices.
+  - All eight Playwright Chromium scenarios passed in 12.4 seconds against a separately managed local Vite server. This isolated the earlier Windows managed-server teardown stall from the dashboard journeys themselves. Direct supported-browser checks also covered the affected journeys at `1440 x 1000` and `390 x 844`: snapshot, review, historical period, `3M` story, customer role boundary, desktop/mobile geometry, zero horizontal overflow and zero application warnings/errors.
+  - Published protected Preview `dpl_ASU5mMhHC7nStKEmYytvzKSQaCra` at `https://bodyshop-dashboard-9qbu58o3u-cpr-analytics.vercel.app/?layout-preview=1` (`READY`, target `preview`, HTTP 200, `X-Robots-Tag: noindex`). Production remains unchanged on `dpl_75WAHNYY2GR3BTUbygqBHE9vcoVk`; no Supabase mutation, commit, push, promotion, production deployment or alias change was performed.
+
 - **Data-entry-only Full Month Editor (21 August 2026)**
   - Removed previous-month, movement and reporting-status columns from the visual Preview's Full Month Editor. Those comparisons belong in the dashboard and Performance Story, not beside raw import values.
   - The editor now presents only `Metric` and `Value`, matching the authenticated editor's direct input grid and keeping Data & Imports focused on entry, correction and saving.

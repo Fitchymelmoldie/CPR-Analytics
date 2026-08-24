@@ -105,6 +105,7 @@ function rollingMetricValue(title, rows) {
       const handleLogout = async () => {
         await signOut();
         setData([]);
+        setAnalyticsStatus('idle');
         setSelectedCompany('');
         setSelectedPeriod('');
         setBenchmarks({});
@@ -117,13 +118,30 @@ function rollingMetricValue(title, rows) {
       };
 
       const [data, setData] = useState([]);
+      const [analyticsStatus, setAnalyticsStatus] = useState('idle');
       
       useEffect(() => {
-        if (currentUser) {
-          getAnalytics(currentUser.role === 'CUSTOMER' ? currentUser.companyId : null)
-            .then(fetched => setData(fetched))
-            .catch(err => console.error("DB Fetch Error:", err));
+        if (!currentUser) {
+          setAnalyticsStatus('idle');
+          return undefined;
         }
+
+        let cancelled = false;
+        setData([]);
+        setAnalyticsStatus('loading');
+        getAnalytics(currentUser.role === 'CUSTOMER' ? currentUser.companyId : null)
+          .then(fetched => {
+            if (cancelled) return;
+            setData(fetched);
+            setAnalyticsStatus('ready');
+          })
+          .catch(err => {
+            if (cancelled) return;
+            console.error("DB Fetch Error:", err);
+            setAnalyticsStatus('error');
+          });
+
+        return () => { cancelled = true; };
       }, [currentUser]);
 
       const [allCompanies, setAllCompanies] = useState([]);
@@ -150,6 +168,7 @@ function rollingMetricValue(title, rows) {
       const [chartTimeframe, setChartTimeframe] = useState('12M');
       const [chartCustomRange, setChartCustomRange] = useState({ from: '', to: '' });
       const [benchmarks, setBenchmarks] = useState({});
+      const [benchmarkLoadState, setBenchmarkLoadState] = useState({ companyId: null, status: 'idle' });
       const [targetEditorMetric, setTargetEditorMetric] = useState(null);
       const [benchmarkMutation, setBenchmarkMutation] = useState({ loading: false, error: null });
       const [dashboardVisibleKpis, setDashboardVisibleKpis] = useState(() => [...DEFAULT_DASHBOARD_KPI_TITLES]);
@@ -271,6 +290,13 @@ function rollingMetricValue(title, rows) {
 
       const [savedReviews, setSavedReviews] = useState({});
       const [showReviewModal, setShowReviewModal] = useState(false);
+      const [reviewModalPeriod, setReviewModalPeriod] = useState('');
+      const [reviewLoadState, setReviewLoadState] = useState({ companyId: null, status: 'idle' });
+
+      const handleOpenReview = useCallback((period = selectedPeriod) => {
+        setReviewModalPeriod(period || selectedPeriod);
+        setShowReviewModal(true);
+      }, [selectedPeriod]);
 
       // Load saved leaderboard groups from Supabase when user changes
       useEffect(() => {
@@ -284,8 +310,15 @@ function rollingMetricValue(title, rows) {
       }, [currentUser]);
       // Load reviews from Supabase when selectedCompany changes
       useEffect(() => {
-        if (!selectedCompany) return;
+        if (!selectedCompany) {
+          setReviewLoadState({ companyId: null, status: 'idle' });
+          return undefined;
+        }
+
+        let cancelled = false;
+        setReviewLoadState({ companyId: selectedCompany, status: 'loading' });
         getConsultantReviews(selectedCompany).then(reviews => {
+          if (cancelled) return;
           const formattedReviews = {};
           reviews.forEach(r => {
             formattedReviews[r.period] = {
@@ -298,9 +331,14 @@ function rollingMetricValue(title, rows) {
             ...prev,
             [selectedCompany]: formattedReviews
           }));
+          setReviewLoadState({ companyId: selectedCompany, status: 'ready' });
         }).catch(err => {
+          if (cancelled) return;
           console.error("Failed to load reviews:", err);
+          setReviewLoadState({ companyId: selectedCompany, status: 'error' });
         });
+
+        return () => { cancelled = true; };
       }, [selectedCompany]);
       
       const handleSaveReview = async (period, trendAnalysis, improvements) => {
@@ -314,6 +352,7 @@ function rollingMetricValue(title, rows) {
               [period]: { trendAnalysis: saved.trend_analysis, improvements: saved.improvements, timestamp: saved.created_at }
             }
           }));
+          setReviewLoadState({ companyId: selectedCompany, status: 'ready' });
         } catch (err) {
           console.error("Failed to save review:", err);
           showAppNotice("Failed to save review: " + err.message);
@@ -386,18 +425,24 @@ function rollingMetricValue(title, rows) {
       useEffect(() => {
         if (!selectedCompany) {
           setBenchmarks({});
+          setBenchmarkLoadState({ companyId: null, status: 'idle' });
           return undefined;
         }
 
         let cancelled = false;
+        setBenchmarks({});
+        setBenchmarkLoadState({ companyId: selectedCompany, status: 'loading' });
         getBenchmarks(selectedCompany).then(rows => {
           if (cancelled) return;
           setBenchmarks(rows.reduce((acc, row) => {
             acc[row.kpi_key] = { target: Number(row.target) };
             return acc;
           }, {}));
+          setBenchmarkLoadState({ companyId: selectedCompany, status: 'ready' });
         }).catch(err => {
-          if (!cancelled) console.error("Failed to load benchmarks:", err);
+          if (cancelled) return;
+          console.error("Failed to load benchmarks:", err);
+          setBenchmarkLoadState({ companyId: selectedCompany, status: 'error' });
         });
 
         return () => { cancelled = true; };
@@ -423,6 +468,7 @@ function rollingMetricValue(title, rows) {
         try {
           const saved = await upsertBenchmark(selectedCompany, targetEditorMetric, target);
           setBenchmarks(prev => ({ ...prev, [targetEditorMetric]: { target: Number(saved.target) } }));
+          setBenchmarkLoadState({ companyId: selectedCompany, status: 'ready' });
           setTargetEditorMetric(null);
           setBenchmarkMutation({ loading: false, error: null });
         } catch (err) {
@@ -441,6 +487,7 @@ function rollingMetricValue(title, rows) {
             delete next[targetEditorMetric];
             return next;
           });
+          setBenchmarkLoadState({ companyId: selectedCompany, status: 'ready' });
           setTargetEditorMetric(null);
           setBenchmarkMutation({ loading: false, error: null });
         } catch (err) {
@@ -953,6 +1000,9 @@ function rollingMetricValue(title, rows) {
         rollingMonths: selectedPeriodRollingRows.length,
         variance: calcVariance(...definition.varianceArgs),
         benchmark: definition.targetable === false ? undefined : benchmarks[definition.title]?.target,
+        benchmarkStatus: definition.targetable === false
+          ? 'ready'
+          : benchmarkLoadState.companyId === selectedCompany ? benchmarkLoadState.status : 'loading',
         rank: ranks?.[definition.rankKey],
         cohortSize: ranks?.cohortSize,
         description: KPI_CONFIG[definition.title]?.description,
@@ -974,7 +1024,16 @@ function rollingMetricValue(title, rows) {
       const dashboardDataStatusTone = uniquePeriods.length === 0
         ? 'empty'
         : selectedPeriod === uniquePeriods[uniquePeriods.length - 1] ? 'current' : 'historical';
-      const dashboardDataStatusLabel = `${dashboardKpiItems.filter(item => Number.isFinite(item.value)).length} metrics reporting`;
+      const availableReviewEntries = Object.entries(savedReviews[selectedCompany] || {})
+        .filter(([period]) => !selectedPeriod || period <= selectedPeriod)
+        .sort(([periodA], [periodB]) => periodB.localeCompare(periodA));
+      const latestReviewEntry = availableReviewEntries[0] || null;
+      const dashboardConsultantReview = latestReviewEntry ? {
+        period: latestReviewEntry[0],
+        periodLabel: `${MONTH_NAMES[parseInt(latestReviewEntry[0].split('-')[1])]} ${latestReviewEntry[0].split('-')[0]}`,
+        ...latestReviewEntry[1]
+      } : null;
+      const dashboardConsultantReviewStatus = reviewLoadState.companyId === selectedCompany ? reviewLoadState.status : 'loading';
       const targetEditorDefinition = DASHBOARD_KPI_DEFINITIONS.find(definition => definition.title === targetEditorMetric) || null;
 
       // Render Logic
@@ -1006,7 +1065,7 @@ function rollingMetricValue(title, rows) {
             collapsed={sidebarCollapsed}
             mobileOpen={mobileNavOpen}
             onCloseMobile={() => setMobileNavOpen(false)}
-            onOpenReviews={() => setShowReviewModal(true)}
+            onOpenReviews={() => handleOpenReview(selectedPeriod)}
             hasNotification={Boolean(selectedPeriod && savedReviews[selectedCompany]?.[selectedPeriod])}
             onLogout={handleLogout}
           />
@@ -1034,9 +1093,9 @@ function rollingMetricValue(title, rows) {
           <ConsultantReviewModal
             isOpen={showReviewModal}
             onClose={() => setShowReviewModal(false)}
-            currentUser={currentUser}
-            selectedCompany={selectedCompany}
-            selectedPeriod={selectedPeriod}
+            currentUser={customerViewCompanyId ? { ...currentUser, role: 'CUSTOMER' } : currentUser}
+            selectedCompany={dashboardCompany?.name || selectedCompany}
+            selectedPeriod={reviewModalPeriod || selectedPeriod}
             availablePeriods={uniquePeriods}
             companyReviews={savedReviews[selectedCompany] || {}}
             onSaveReview={handleSaveReview}
@@ -1106,21 +1165,24 @@ function rollingMetricValue(title, rows) {
           )}
 
           <main className="relative mx-auto w-full max-w-[1600px] flex-1 px-4 pb-16 sm:px-5 lg:px-6">
-            {/* ────── Render: Empty State Overlay for Customers ────── */}
-            {activeTab === 'dashboard' && !currentRow && (currentUser.role === 'CUSTOMER' || customerViewCompanyId) && (
-              <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-surface-900/20 backdrop-blur-sm rounded-2xl mb-16 mt-6 border border-white/5 pointer-events-auto">
-                <div className="glass rounded-2xl p-12 text-center border border-white/10 shadow-2xl max-w-lg w-full animate-float-in">
-                  <div className="w-16 h-16 mx-auto rounded-2xl bg-surface-800 flex items-center justify-center mb-6">
-                    <svg className="w-8 h-8 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
+            {activeTab === 'dashboard' && analyticsStatus === 'loading' && (
+              <section className="codex-surface mx-auto mt-8 max-w-2xl p-8" role="status" aria-label="Loading monthly dashboard">
+                <div className="flex items-center gap-4">
+                  <div className="h-10 w-10 shrink-0 animate-pulse rounded-lg bg-brand-400/10" aria-hidden="true" />
+                  <div className="min-w-0 flex-1 space-y-2" aria-hidden="true">
+                    <div className="h-3 w-40 animate-pulse rounded bg-surface-700/70" />
+                    <div className="h-2.5 w-full max-w-md animate-pulse rounded bg-surface-800" />
                   </div>
-                  <h2 className="text-2xl font-bold text-white mb-3">Awaiting Data</h2>
-                  <p className="text-surface-400 text-sm max-w-md mx-auto">
-                    Your consultancy dashboard is currently empty. Please wait for an administrator to upload the latest performance report for {currentUser.companyId}.
-                  </p>
+                  <span className="text-xs font-medium text-surface-400">Loading dashboard…</span>
                 </div>
-              </div>
+              </section>
+            )}
+
+            {activeTab === 'dashboard' && analyticsStatus === 'error' && (
+              <section className="codex-surface mx-auto mt-8 max-w-2xl p-8 text-center" role="alert">
+                <h2 className="text-lg font-semibold text-white">Dashboard unavailable</h2>
+                <p className="mt-2 text-sm text-surface-400">The latest reporting data could not be loaded. Refresh the page to try again.</p>
+              </section>
             )}
             
             {/* Filters */}
@@ -1187,7 +1249,7 @@ function rollingMetricValue(title, rows) {
               />
             )}
 
-            {activeTab === 'dashboard' && !currentRow && currentUser.role === 'ADMIN' && !customerViewCompanyId && (
+            {activeTab === 'dashboard' && analyticsStatus === 'ready' && !currentRow && currentUser.role === 'ADMIN' && !customerViewCompanyId && (
               <div className="codex-surface mx-auto mt-8 max-w-2xl p-10 text-center">
                 <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-brand-500/20 bg-brand-500/10 text-brand-300">
                   <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} aria-hidden="true">
@@ -1202,7 +1264,7 @@ function rollingMetricValue(title, rows) {
               </div>
             )}
 
-            {(activeTab === 'dashboard' || activeTab === 'raw-data') && !currentRow && (currentUser.role === 'CUSTOMER' || customerViewCompanyId) && (
+            {activeTab === 'dashboard' && analyticsStatus === 'ready' && !currentRow && (currentUser.role === 'CUSTOMER' || customerViewCompanyId) && (
               <div className="codex-surface mx-auto flex max-w-3xl flex-col items-center justify-center py-20">
                 <div className="w-20 h-20 bg-surface-800/80 rounded-full flex items-center justify-center border border-surface-700/50 mb-6 relative">
                   <div className="absolute inset-0 border border-brand-500/30 rounded-full animate-ping opacity-75"></div>
@@ -1210,7 +1272,7 @@ function rollingMetricValue(title, rows) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">Awaiting Data Upload</h3>
+                <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">Awaiting Data</h3>
                 <p className="text-surface-400 text-center max-w-md text-sm leading-relaxed">
                   Your dashboard is ready, but we are currently waiting for your latest analytics data to be processed and uploaded by CPR Analytics.
                 </p>
@@ -1251,8 +1313,10 @@ function rollingMetricValue(title, rows) {
                 rollingMonths={kpis.rollingMonths}
                 reportingPeriod={reportingPeriodLabel}
                 previousPeriod={previousReportingPeriodLabel}
-                dataStatusLabel={dashboardDataStatusLabel}
                 dataStatusTone={dashboardDataStatusTone}
+                consultantReview={dashboardConsultantReview}
+                consultantReviewStatus={dashboardConsultantReviewStatus}
+                onOpenConsultantReview={(period) => handleOpenReview(period || selectedPeriod)}
                 trendData={isMultiMonth ? trendChartData : null}
                 timeframe={chartTimeframe}
                 onTimeframeChange={setChartTimeframe}

@@ -162,7 +162,7 @@ export default function BenchmarkTargetModal({
           {confirmingRemoval ? (
             <div className="mt-2 rounded-2xl border border-danger-500/20 bg-danger-500/5 p-4">
               <p className="text-sm font-semibold text-white">Remove this target?</p>
-              <p className="mt-1 text-xs text-surface-400">The KPI will stay on the dashboard, but it will no longer count towards the Performance Pulse target score.</p>
+              <p className="mt-1 text-xs text-surface-400">The KPI and its trend will stay on the dashboard. Target status will remain hidden until a new target is set.</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <button
                   type="button"

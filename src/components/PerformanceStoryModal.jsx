@@ -16,11 +16,19 @@ function metricStory(item, reportingPeriod) {
       : `${movement > 0 ? 'improved' : 'moved unfavourably'} by ${Math.abs(movement).toFixed(1)}% against the previous period`;
 
   if (item.targetable === false) {
-    return `${period}: ${item.title} ${movementCopy}. This is a reference metric, so it adds context without changing the Performance Pulse.`;
+    return `${period}: ${item.title} ${movementCopy}. This reference metric is best understood through its trend over time.`;
+  }
+
+  if (item.benchmarkStatus === 'loading' || item.benchmarkStatus === 'idle') {
+    return `${period}: ${item.title} ${movementCopy}. Target context is still loading, while the trend is ready to review.`;
+  }
+
+  if (item.benchmarkStatus === 'error') {
+    return `${period}: ${item.title} ${movementCopy}. Target context is temporarily unavailable, while the trend remains ready to review.`;
   }
 
   if (item.benchmark === undefined || item.benchmark === null) {
-    return `${period}: ${item.title} ${movementCopy}. Add a target when you are ready to turn this trend into a clear performance signal.`;
+    return `${period}: ${item.title} ${movementCopy}. No optional target is configured, so the trend remains the primary context.`;
   }
 
   const met = targetIsMet(item);

@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../App';
 import * as authProvider from '../AuthProvider';
@@ -191,6 +191,19 @@ describe('Drawer and dashboard regression coverage', () => {
     expect(screen.getByRole('button', { name: 'Save Review' })).toBeInTheDocument();
   });
 
+  it('shows a neutral loading state until reporting data is ready', async () => {
+    useRole('ADMIN');
+    let resolveAnalytics;
+    dbServices.getAnalytics.mockReturnValueOnce(new Promise(resolve => { resolveAnalytics = resolve; }));
+    render(<App />);
+
+    expect(await screen.findByRole('status', { name: 'Loading monthly dashboard' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Your dashboard is ready for data' })).not.toBeInTheDocument();
+
+    await act(async () => { resolveAnalytics(analytics); });
+    expect(await screen.findByText('Monthly snapshot')).toBeInTheDocument();
+  });
+
   it('lets an administrator inspect a customer workspace and return to administration', async () => {
     useRole('ADMIN');
     render(<App />);
@@ -204,6 +217,11 @@ describe('Drawer and dashboard regression coverage', () => {
     expect(screen.queryByRole('button', { name: 'Data & Imports' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Customer Management' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Set target for/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Consultant Reviews' }));
+    expect(await screen.findByText("Review the consultant's analysis below.")).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save Review' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Close consultant review' }));
 
     fireEvent.click(screen.getByRole('button', { name: 'Return to Admin' }));
     expect((await screen.findAllByRole('heading', { name: 'Customer Management' })).length).toBeGreaterThan(0);
@@ -327,13 +345,13 @@ describe('Drawer and dashboard regression coverage', () => {
     render(<App />);
 
     expect(await screen.findByRole('heading', { name: 'Awaiting Data' })).toBeInTheDocument();
-    expect(screen.queryByText('Performance pulse')).not.toBeInTheDocument();
+    expect(screen.queryByText('Monthly snapshot')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Shop Profile' }));
     expect(await screen.findByRole('heading', { name: company.name })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Consultant Reviews' }));
-    expect((await screen.findAllByText(company.id, { exact: false })).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText(company.name, { exact: false })).length).toBeGreaterThan(0);
   });
 
   it('does not render zero-value dashboard widgets for an empty administrator account', async () => {
@@ -343,7 +361,7 @@ describe('Drawer and dashboard regression coverage', () => {
     render(<App />);
 
     expect(await screen.findByRole('heading', { name: 'Your dashboard is ready for data' })).toBeInTheDocument();
-    expect(screen.queryByText('Performance pulse')).not.toBeInTheDocument();
+    expect(screen.queryByText('Monthly snapshot')).not.toBeInTheDocument();
     expect(screen.queryByLabelText('Bodyshop key performance indicators')).not.toBeInTheDocument();
   });
 
@@ -416,7 +434,9 @@ describe('Drawer and dashboard regression coverage', () => {
   it('keeps consultant review editing and saving available to administrators', async () => {
     useRole('ADMIN');
     render(<App />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Consultant Reviews' }));
+    expect(await screen.findByRole('heading', { name: 'Latest consultant review' })).toBeInTheDocument();
+    expect(await screen.findByText('Keep monitoring cycle time.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'View review' }));
 
     const reviewPeriod = screen.getByLabelText('Consultant review period');
     expect(reviewPeriod).toHaveValue('2026-05');
@@ -447,6 +467,19 @@ describe('Drawer and dashboard regression coverage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove target' }));
     fireEvent.click(screen.getByRole('button', { name: 'Confirm removal' }));
     await waitFor(() => expect(dbServices.deleteBenchmark).toHaveBeenCalledWith(company.id, 'Completed RO'));
+  });
+
+  it('does not present unloaded targets as missing targets', async () => {
+    useRole('ADMIN');
+    let resolveBenchmarks;
+    dbServices.getBenchmarks.mockReturnValueOnce(new Promise(resolve => { resolveBenchmarks = resolve; }));
+    render(<App />);
+
+    expect((await screen.findAllByText('Loading target')).length).toBeGreaterThan(0);
+    expect(screen.queryByText('No target set')).not.toBeInTheDocument();
+
+    await act(async () => { resolveBenchmarks([]); });
+    expect((await screen.findAllByText('No target set')).length).toBeGreaterThan(0);
   });
 
   it('keeps period deletion behind confirmation and refreshes data afterwards', async () => {

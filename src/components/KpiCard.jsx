@@ -7,7 +7,7 @@ function formatTargetGap(value, format) {
   return fmt(value, format === 'currency' ? 'currency' : undefined);
 }
 
-function targetSummary(value, benchmark, benchmarkType, format, targetable) {
+function targetSummary(value, benchmark, benchmarkType, format, targetable, benchmarkStatus) {
   const numericValue = Number(value);
   const numericBenchmark = Number(benchmark);
   const hasBenchmark = benchmark !== undefined && benchmark !== null && Number.isFinite(numericBenchmark);
@@ -17,7 +17,25 @@ function targetSummary(value, benchmark, benchmarkType, format, targetable) {
       status: 'reference',
       label: 'Reference metric',
       detail: null,
-      description: 'Reference metric; it does not change the Performance Pulse.'
+      description: 'Reference metric; optional targets do not apply to this KPI.'
+    };
+  }
+
+  if (benchmarkStatus === 'loading' || benchmarkStatus === 'idle') {
+    return {
+      status: 'loading',
+      label: 'Loading target',
+      detail: null,
+      description: 'The configured target is loading.'
+    };
+  }
+
+  if (benchmarkStatus === 'error') {
+    return {
+      status: 'unavailable',
+      label: 'Target unavailable',
+      detail: null,
+      description: 'The configured target could not be loaded.'
     };
   }
 
@@ -60,6 +78,7 @@ export default function KpiCard({
   isActive,
   onClick,
   benchmark,
+  benchmarkStatus = 'ready',
   benchmarkType,
   targetable = true,
   onSetBenchmark,
@@ -85,7 +104,8 @@ export default function KpiCard({
   const hasVariance = Number.isFinite(variance);
   const isGood = hasVariance && (benchmarkType === 'max' ? variance <= 0 : variance >= 0);
   const movementArrow = variance > 0 ? '↗' : variance < 0 ? '↘' : '→';
-  const target = targetSummary(value, benchmark, benchmarkType, format, targetable);
+  const target = targetSummary(value, benchmark, benchmarkType, format, targetable, benchmarkStatus);
+  const targetControlsReady = benchmarkStatus === 'ready';
   const targetClass = target.status === 'met'
     ? 'bg-success-500/10 text-success-400'
     : target.status === 'attention'
@@ -158,7 +178,8 @@ export default function KpiCard({
         <button
           type="button"
           onClick={(event) => { event.stopPropagation(); onSetBenchmark(title); }}
-          className="absolute right-3 top-3 z-20 rounded-lg p-1.5 text-surface-600 opacity-50 transition-all hover:bg-brand-500/10 hover:text-brand-300 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300/60 group-hover:opacity-100"
+          disabled={!targetControlsReady}
+          className="absolute right-3 top-3 z-20 rounded-lg p-1.5 text-surface-600 opacity-50 transition-all hover:bg-brand-500/10 hover:text-brand-300 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-300/60 group-hover:opacity-100 disabled:cursor-wait disabled:opacity-20"
           aria-label={`Set target for ${title}`}
           title={`Set target for ${title}`}
         >

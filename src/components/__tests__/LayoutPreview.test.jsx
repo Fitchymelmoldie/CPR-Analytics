@@ -96,7 +96,7 @@ describe('Layout preview parity', () => {
     expect(operationalKpiTooltip).not.toHaveClass('backdrop-blur-xl');
     fireEvent.focus(operationalKpiInfo);
     expect(operationalKpiTooltip).toHaveClass('visible');
-    expect(operationalKpiTooltip).toHaveTextContent('These 8 health KPIs contribute to the Performance Pulse.');
+    expect(operationalKpiTooltip).toHaveTextContent('These 8 operational KPIs make up the monthly snapshot.');
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(operationalKpiTooltip).toHaveClass('invisible');
     fireEvent.mouseEnter(operationalKpiInfo.closest('.group'));
@@ -178,7 +178,7 @@ describe('Layout preview parity', () => {
     expect(within(paintStory).getByText('Performance story')).toBeInTheDocument();
     expect(within(paintStory).getByText('Metric detail')).toBeInTheDocument();
     expect(within(paintStory).getByText('3M rolling average')).toBeInTheDocument();
-    expect(within(paintStory).getByText('Pulse treatment')).toBeInTheDocument();
+    expect(within(paintStory).getByText('Metric role')).toBeInTheDocument();
     fireEvent.click(within(paintStory).getByRole('button', { name: 'Close performance story' }));
 
     fireEvent.click(screen.getByRole('button', { name: /View Paint Cost \/ Total Sales performance/i }));
@@ -219,6 +219,7 @@ describe('Layout preview parity', () => {
     expect(screen.getByRole('button', { name: 'Return to Admin' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Data & Imports' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Customer Management' })).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Export data')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Return to Admin' }));
     expect((screen.getAllByRole('heading', { name: 'Customer Management' })).length).toBeGreaterThan(0);
@@ -282,16 +283,28 @@ describe('Layout preview parity', () => {
   it('opens the real consultant review surface in the protected preview', () => {
     render(<LayoutPreview />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Consultant Reviews' }));
+    expect(screen.getByRole('heading', { name: 'Latest consultant review' })).toBeInTheDocument();
+    expect(screen.getByText(/Review paint-material usage by job/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'View review' }));
     const review = screen.getByRole('dialog', { name: 'Consultant Review' });
     expect(within(review).getByLabelText('Consultant review period')).toHaveValue('2026-08');
     expect(within(review).getByLabelText('Trend Analysis').value).toMatch(/Paint sales and completed repair orders/i);
     expect(within(review).getByRole('tab', { name: /Historical Log/i })).toBeInTheDocument();
   });
 
-  it('adds imported metrics through the right-side library without changing the Pulse', () => {
+  it('opens a new consultant review on the historical month being viewed', () => {
     render(<LayoutPreview />);
-    const pulseLabel = screen.getByLabelText(/configured operational targets met/i).getAttribute('aria-label');
+
+    fireEvent.click(screen.getByRole('combobox', { name: 'Reporting period' }));
+    fireEvent.click(screen.getByRole('option', { name: 'May 2026' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add review' }));
+
+    expect(screen.getByLabelText('Consultant review period')).toHaveValue('2026-05');
+  });
+
+  it('adds imported metrics through the right-side library without changing snapshot completeness', () => {
+    render(<LayoutPreview />);
+    const pulseLabel = screen.getByLabelText(/operational KPIs reported/i).getAttribute('aria-label');
     const topBarMetricToggle = screen.getByRole('button', { name: 'Show metric library' });
     expect(topBarMetricToggle.closest('header')).not.toBeNull();
 
@@ -347,12 +360,12 @@ describe('Layout preview parity', () => {
     expect(within(story).getByRole('img', { name: /Completed RO line trend ending May 2026/i })).toBeInTheDocument();
   });
 
-  it('uses only operational KPIs in the no-target reporting fallback', () => {
+  it('keeps monthly snapshot completeness independent from optional targets', () => {
     const items = DASHBOARD_KPI_DEFINITIONS.map(definition => ({
       ...definition,
       value: 1,
       variance: 0,
-      benchmark: undefined
+      benchmark: definition.targetable === false ? undefined : 100
     }));
 
     render(
@@ -368,6 +381,9 @@ describe('Layout preview parity', () => {
     );
 
     expect(screen.getByText('8/8')).toBeInTheDocument();
-    expect(screen.getByLabelText('8 of 8 operational metrics reporting')).toBeInTheDocument();
+    expect(screen.getByText('Monthly snapshot')).toBeInTheDocument();
+    expect(screen.getByText('Aug 2026 at a glance')).toBeInTheDocument();
+    expect(screen.getByLabelText('8 of 8 operational KPIs reported')).toBeInTheDocument();
+    expect(screen.queryByText(/tracked targets/i)).not.toBeInTheDocument();
   });
 });
