@@ -1,16 +1,18 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-
-const allowedOrigins = (Deno.env.get('ALLOWED_ORIGINS') ?? [
+const defaultOrigins = [
   'https://bodyshop-dashboard.vercel.app',
   'http://localhost:5173',
   'http://127.0.0.1:5173',
-]).split(',').map((origin) => origin.trim()).filter(Boolean);
+];
+const configuredOrigins = Deno.env.get('ALLOWED_ORIGINS')
+  ?.split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean) ?? [];
+const allowedOrigins = configuredOrigins.length ? configuredOrigins : defaultOrigins;
 
 const previewOriginPattern = /^https:\/\/bodyshop-dashboard-[a-z0-9-]+-cpr-analytics\.vercel\.app$/;
 const allowedOriginFor = (origin: string | null) => origin && (allowedOrigins.includes(origin) || previewOriginPattern.test(origin))
   ? origin
-  : allowedOrigins[0];
+  : allowedOrigins[0] ?? defaultOrigins[0];
 
 const corsFor = (origin: string | null) => ({
   'Access-Control-Allow-Origin': allowedOriginFor(origin),
@@ -20,7 +22,7 @@ const corsFor = (origin: string | null) => ({
   'Vary': 'Origin',
 });
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   // Handle CORS preflight
   const corsHeaders = corsFor(req.headers.get('origin'));
 
@@ -36,6 +38,7 @@ serve(async (req) => {
   }
 
   try {
+    const { createClient } = await import('npm:@supabase/supabase-js@2.39.3');
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
