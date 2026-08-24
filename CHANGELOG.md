@@ -11,6 +11,11 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Mobile workspace visibility release fix (24 August 2026)**
+  - Removed `visibility` from the workspace drawer's animated properties after live production verification showed that the mobile drawer could retain `visibility: hidden` after receiving its open state.
+  - Kept the existing immediate `visible`/`invisible` accessibility states while limiting motion to transform, width and opacity, so the first tap consistently reveals the navigation without changing desktop behavior.
+  - Added component and real-browser regressions that prevent `visibility` from returning to the transition list and require the 390 x 844 drawer to become visibly interactive on its first tap. The production release was paused for a corrected build and mobile re-verification.
+
 - **Trend-led monthly snapshot hierarchy (23 August 2026)**
   - Reframed the dashboard hero from a target score into a neutral monthly snapshot. The ring now reports operational-data completeness, the headline names the selected reporting month, and one concise prompt makes the existing `3M`, `6M` and `12M` Performance Story discoverable without redesigning it.
   - Kept configured targets as optional secondary context on KPI cards and inside Performance Story. Target copy no longer defines overall performance, and explicit loading/unavailable states prevent asynchronous target data from briefly appearing as `No target set`.

@@ -88,7 +88,7 @@ export default function AppSidebar({
 
       <aside
         id="workspace-sidebar"
-        className={`fixed bottom-0 left-0 top-14 z-50 flex h-[calc(100vh-3.5rem)] w-[272px] flex-col border-r border-white/[0.07] bg-[#111214]/98 shadow-2xl backdrop-blur-xl transition-[transform,width,opacity,visibility] duration-200 lg:inset-y-0 lg:h-screen ${
+        className={`fixed bottom-0 left-0 top-14 z-50 flex h-[calc(100vh-3.5rem)] w-[272px] flex-col border-r border-white/[0.07] bg-[#111214]/98 shadow-2xl backdrop-blur-xl transition-[transform,width,opacity] duration-200 lg:inset-y-0 lg:h-screen ${
           mobileOpen ? 'visible translate-x-0' : 'invisible -translate-x-full'
         } ${collapsed
           ? 'lg:invisible lg:w-0 lg:-translate-x-full lg:border-r-0 lg:opacity-0'

@@ -407,6 +407,8 @@ describe('Drawer and dashboard regression coverage', () => {
     const { container } = render(<App />);
     const sidebar = container.querySelector('aside');
     expect(sidebar).toHaveClass('invisible');
+    expect(sidebar).toHaveClass('transition-[transform,width,opacity]');
+    expect(sidebar).not.toHaveClass('transition-[transform,width,opacity,visibility]');
 
     const mobileWorkspaceToggle = await screen.findByRole('button', { name: 'Open workspace' });
     fireEvent.click(mobileWorkspaceToggle);

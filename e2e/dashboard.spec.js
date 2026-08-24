@@ -23,6 +23,13 @@ test.describe('Dashboard mobile visual smoke', () => {
     });
 
     await page.goto('/?layout-preview=1');
+    const workspaceSidebar = page.locator('#workspace-sidebar');
+    await page.getByRole('button', { name: 'Open workspace' }).click();
+    await expect(workspaceSidebar).toBeVisible();
+    await expect(workspaceSidebar).toHaveCSS('visibility', 'visible');
+    await page.getByRole('button', { name: 'Visual Dashboard', exact: true }).click();
+    await expect(workspaceSidebar).toHaveCSS('visibility', 'hidden');
+
     await page.getByRole('button', { name: /View Completed RO performance/ }).click();
 
     const story = page.getByRole('dialog', { name: 'Completed RO' });
