@@ -494,6 +494,11 @@ describe('Drawer and dashboard regression coverage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Yes, Delete Period' }));
     await waitFor(() => expect(dbServices.deleteAnalyticsPeriod).toHaveBeenCalledWith(company.id, '2026', '05'));
     await waitFor(() => expect(dbServices.getAnalytics.mock.calls.length).toBeGreaterThan(1));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Delete Period?' })).not.toBeInTheDocument());
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete Period' }));
+    expect(screen.getByRole('button', { name: 'Yes, Delete Period' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Deleting...' })).not.toBeInTheDocument();
   });
 
   it('keeps the deferred leaderboard feature out of the active product', async () => {

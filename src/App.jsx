@@ -272,17 +272,35 @@ function rollingMetricValue(title, rows) {
       const [deleteConfirmPeriod, setDeleteConfirmPeriod] = useState(null);
       const [deletePeriodStatus, setDeletePeriodStatus] = useState({ loading: false, error: null });
 
+      const openDeletePeriodConfirmation = (period) => {
+        setDeletePeriodStatus({ loading: false, error: null });
+        setDeleteConfirmPeriod(period);
+      };
+
+      const closeDeletePeriodConfirmation = () => {
+        if (deletePeriodStatus.loading) return;
+        setDeletePeriodStatus({ loading: false, error: null });
+        setDeleteConfirmPeriod(null);
+      };
+
       const executeDeletePeriod = async () => {
         if (!deleteConfirmPeriod || !selectedCompany) return;
         setDeletePeriodStatus({ loading: true, error: null });
         try {
           const [year, month] = deleteConfirmPeriod.split('-');
           await deleteAnalyticsPeriod(selectedCompany, year, month);
+          setDeletePeriodStatus({ loading: false, error: null });
           setDeleteConfirmPeriod(null);
           setSelectedPeriod('');
-          // refresh data
-          const fetched = await getAnalytics(currentUser.role === 'CUSTOMER' ? currentUser.companyId : null);
-          setData(fetched);
+          showAppNotice(`${MONTH_NAMES[parseInt(month)]} ${year} deleted.`, 'success');
+
+          try {
+            const fetched = await getAnalytics(currentUser.role === 'CUSTOMER' ? currentUser.companyId : null);
+            setData(fetched);
+          } catch (refreshError) {
+            console.error(refreshError);
+            showAppNotice('The period was deleted, but the latest data could not be reloaded. Refresh the page to continue.');
+          }
         } catch (err) {
           setDeletePeriodStatus({ loading: false, error: err.message });
         }
@@ -1147,8 +1165,9 @@ function rollingMetricValue(title, rows) {
 
                 <div className="flex justify-center gap-3">
                   <button 
-                    onClick={() => setDeleteConfirmPeriod(null)}
-                    className="px-5 py-2.5 rounded-lg text-sm font-medium text-surface-300 hover:text-white transition-colors border border-surface-700 hover:bg-surface-800"
+                    onClick={closeDeletePeriodConfirmation}
+                    disabled={deletePeriodStatus.loading}
+                    className="px-5 py-2.5 rounded-lg text-sm font-medium text-surface-300 hover:text-white transition-colors border border-surface-700 hover:bg-surface-800 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Cancel
                   </button>
@@ -1350,7 +1369,7 @@ function rollingMetricValue(title, rows) {
                 </div>
                 <div className="flex items-center gap-2">
                   {selectedPeriod && (
-                    <button onClick={() => setDeleteConfirmPeriod(selectedPeriod)} className="codex-button codex-button-danger flex items-center gap-1.5 px-3 py-2 text-xs" title="Delete current period">
+                    <button onClick={() => openDeletePeriodConfirmation(selectedPeriod)} className="codex-button codex-button-danger flex items-center gap-1.5 px-3 py-2 text-xs" title="Delete current period">
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       Delete Period
                     </button>

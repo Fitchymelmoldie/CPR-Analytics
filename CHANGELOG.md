@@ -20,6 +20,13 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **Consecutive reporting-period deletion recovery (25 August 2026)**
+  - Confirmed from live API evidence that the reported period deletions had already returned HTTP 204; the remaining disabled confirmation was a frontend-only stale loading state, not a database failure.
+  - Reset the deletion state after every successful period removal and whenever a new confirmation opens, so deleting one month cannot leave the next month disabled on `Deleting...`.
+  - Kept the confirmation modal locked only while a request is genuinely active, added a clear success notice, and separated a successful deletion from a later refresh failure so the UI never reports an already-completed deletion as failed.
+  - Added a regression that completes one confirmed deletion, reopens the next confirmation and requires its delete action to be enabled without a stale loading label.
+  - All 80 Vitest tests, the Vite production build, lint with no errors and one existing Fast Refresh advisory, and all 8 Chromium journeys passed. Diagnosis and regression testing did not delete any additional live reporting period.
+
 - **Data-entry-only Full Month Editor (21 August 2026)**
   - Removed previous-month, movement and reporting-status columns from the visual Preview's Full Month Editor. Those comparisons belong in the dashboard and Performance Story, not beside raw import values.
   - The editor now presents only `Metric` and `Value`, matching the authenticated editor's direct input grid and keeping Data & Imports focused on entry, correction and saving.
