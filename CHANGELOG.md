@@ -2,6 +2,15 @@
 
 All notable changes to the CPR Analytics Dashboard prototype will be documented in this file.
 
+## Production hotfix — 25 August 2026
+
+- Promoted the clean `c6af943` source tree to `https://bodyshop-dashboard.vercel.app` as deployment `dpl_F1yS8XRoGQ8rLqHmLwdWqDCgHsaj` (`READY`, target `production`) after verifying protected Preview `dpl_4fUfPEKSXLpDKToywU9nhqBbCzhA`.
+- Confirmed from live API evidence that the reported period deletions had already returned HTTP 204; the remaining disabled confirmation was a frontend-only stale loading state, not a database failure.
+- Reset deletion state after every successful period removal and whenever a new confirmation opens, so deleting one month cannot leave the next month disabled on `Deleting...`.
+- Kept the confirmation modal locked only while a request is genuinely active, added a clear success notice, and separated a successful deletion from a later refresh failure so the UI never reports an already-completed deletion as failed.
+- Added a regression that completes one confirmed deletion, reopens the next confirmation and requires its delete action to be enabled without a stale loading label.
+- Final gates: all 80 Vitest tests passed; the Vite production build passed; lint completed with no errors and one existing Fast Refresh advisory; all 8 Chromium journeys passed in 9.1 seconds; the protected Preview secure root, deployed bundle and Data & Imports geometry passed; and the live production confirmation opened enabled and was cancelled without deleting another period. Vercel error and HTTP 500 scans returned no entries.
+
 ## Production release — 24 August 2026
 
 - Promoted the clean `fd80154` source tree to `https://bodyshop-dashboard.vercel.app` as deployment `dpl_J3NLqNJQXq5WBKWNmFEBqwENRqQn` (`READY`, target `production`) after publishing the release sequence `d00acfc`, `b0d9617` and `fd80154` to GitHub.
@@ -19,13 +28,6 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 - Published the verified release branch to GitHub as `origin/agent/bodyshop-audit-hardening` after explicit release authorization.
 
 ## [Unreleased]
-
-- **Consecutive reporting-period deletion recovery (25 August 2026)**
-  - Confirmed from live API evidence that the reported period deletions had already returned HTTP 204; the remaining disabled confirmation was a frontend-only stale loading state, not a database failure.
-  - Reset the deletion state after every successful period removal and whenever a new confirmation opens, so deleting one month cannot leave the next month disabled on `Deleting...`.
-  - Kept the confirmation modal locked only while a request is genuinely active, added a clear success notice, and separated a successful deletion from a later refresh failure so the UI never reports an already-completed deletion as failed.
-  - Added a regression that completes one confirmed deletion, reopens the next confirmation and requires its delete action to be enabled without a stale loading label.
-  - All 80 Vitest tests, the Vite production build, lint with no errors and one existing Fast Refresh advisory, and all 8 Chromium journeys passed. Diagnosis and regression testing did not delete any additional live reporting period.
 
 - **Data-entry-only Full Month Editor (21 August 2026)**
   - Removed previous-month, movement and reporting-status columns from the visual Preview's Full Month Editor. Those comparisons belong in the dashboard and Performance Story, not beside raw import values.

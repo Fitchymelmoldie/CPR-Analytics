@@ -1,17 +1,18 @@
 # Current Handoff
 
-Last updated: 24 August 2026, 10:34 PM AEST
+Last updated: 25 August 2026, 1:08 PM AEST
 
 This document is the authoritative current-state snapshot. Historical implementation and Preview details belong in `CHANGELOG.md`.
 
 ## Release status
 
-- Stage: production release complete. The verified source, Supabase Edge Functions and Vercel production deployment are live and have passed post-deployment browser checks.
+- Stage: production hotfix complete. The reporting-period deletion recovery is live and has passed source, Preview and post-deployment production checks.
 - Working branch: `agent/bodyshop-audit-hardening`.
-- Released source commit: `fd80154` (`fix: restore mobile workspace visibility`), following `d00acfc` and `b0d9617`; all three source commits are published on `origin/agent/bodyshop-audit-hardening`.
+- Released source commit: `c6af943` (`fix: reset reporting period deletion state`), published on `origin/agent/bodyshop-audit-hardening`.
 - Working-tree state: only generated Playwright output and user-owned Preview evidence remain outside the release commits by design.
-- Production: `https://bodyshop-dashboard.vercel.app`, deployment `dpl_J3NLqNJQXq5WBKWNmFEBqwENRqQn`, `READY`, target `production`, deployed from the verified clean `fd80154` source tree.
-- Latest protected Preview: `https://bodyshop-dashboard-9qbu58o3u-cpr-analytics.vercel.app/?layout-preview=1`, deployment `dpl_ASU5mMhHC7nStKEmYytvzKSQaCra`, `READY`, target `preview`, HTTP 200 and `X-Robots-Tag: noindex`.
+- Production: `https://bodyshop-dashboard.vercel.app`, deployment `dpl_F1yS8XRoGQ8rLqHmLwdWqDCgHsaj`, `READY`, target `production`, promoted from the verified clean `c6af943` source Preview.
+- Latest protected Preview: `https://bodyshop-dashboard-cp8b0hrlf-cpr-analytics.vercel.app/?layout-preview=1`, deployment `dpl_4fUfPEKSXLpDKToywU9nhqBbCzhA`, `READY`, target `preview`.
+- Current production hotfix: successful reporting-period deletion now clears its loading state before the next confirmation can open. Consecutive month deletion therefore presents an enabled confirmation instead of a stale disabled `Deleting...` action; a successful deletion is also distinguished from a later data-refresh failure.
 - Current production release: the dashboard is now a neutral monthly snapshot rather than a target score. It reports KPI completeness, directs users into the existing multi-month Performance Story, keeps targets optional, adds a compact Latest Consultant Review entry point, and distinguishes loading from genuinely missing data or targets. Historical review creation opens the month being viewed, and the customer-view role boundary is consistent across authenticated and protected-demo routes.
 - Production release baseline: Data & Imports offers bulk CSV import and Quick KPI Entry for one metric/month, missing values remain visibly incomplete, Gamified Leaderboards is deferred, and the site-wide content hierarchy avoids repeated instructional copy. These production features remain on the deployment above.
 - Earlier review follow-up: the entire product uses one Codex-native visual and interaction system across Customer Management, Data & Imports, profile, reviews, authentication, dialogs and KPI reporting. KPI reordering is deterministic on pointer, touch and keyboard. KPI charts use clean adaptive Y scales, year-aware X labels, directional external goal keys and one compact target-aware tooltip that previews on hover/focus and pins on click/tap; browser-native duplicate tooltips have been removed. The plot uses one stable crosshair and continuous nearest-month hover regions, eliminating the arrow/hand flicker and dead zones between points.
@@ -102,6 +103,15 @@ Both show `Building` until three months are available. Daily budget is a calcula
 
 ## Verification evidence
 
+Reporting-period deletion hotfix gate:
+
+- Live diagnosis: the reported month deletions returned HTTP 204 and the database reflected them; the stuck `Deleting...` control was a frontend-only stale loading state. No additional production reporting period was deleted during diagnosis or verification.
+- Vitest: all 8 files and 80 tests passed, including a regression that completes one deletion and requires the next confirmation to reopen enabled.
+- Vite production build: passed. Lint completed with no errors and one existing Fast Refresh advisory in `AuthProvider.jsx`.
+- Playwright: all 8 Chromium journeys passed in 9.1 seconds with the protected demo flag correctly enabled, including the `390 x 844` mobile smoke journey.
+- Protected Preview `dpl_4fUfPEKSXLpDKToywU9nhqBbCzhA` was `READY`, target `preview`; its secure root exposed only login, its deployed bundle contained the recovery path, and Data & Imports had zero desktop overflow.
+- Live production `dpl_F1yS8XRoGQ8rLqHmLwdWqDCgHsaj` is `READY`, target `production`. The authenticated confirmation opens enabled with no stale `Deleting...` label, and was cancelled without sending a delete request. Production bundle verification passed and Vercel error/HTTP 500 scans returned no entries.
+
 Current production release gate:
 
 - Vitest: all 8 files and 80 tests passed, including neutral snapshot completeness with configured targets, analytics loading, target loading, current/historical review routing and customer-view parity.
@@ -145,9 +155,9 @@ Protected Preview `dpl_C7Zow3v7edU2DaJWC445bwWL67ti` returned HTTP 200 through a
 
 ## Post-release state
 
-1. The verified production source sequence through `fd80154` is published on `origin/agent/bodyshop-audit-hardening`; this handoff and the changelog are the final documentation sync.
-2. Production is live at `https://bodyshop-dashboard.vercel.app` as `dpl_J3NLqNJQXq5WBKWNmFEBqwENRqQn` (`READY`, target `production`).
-3. The earlier protected review candidate remains available at `https://bodyshop-dashboard-9qbu58o3u-cpr-analytics.vercel.app/?layout-preview=1` as `dpl_ASU5mMhHC7nStKEmYytvzKSQaCra` (`READY`, target `preview`); it is no longer the release source of truth.
+1. The verified production source sequence through `c6af943` is published on `origin/agent/bodyshop-audit-hardening`; this handoff and the changelog are the final hotfix documentation sync.
+2. Production is live at `https://bodyshop-dashboard.vercel.app` as `dpl_F1yS8XRoGQ8rLqHmLwdWqDCgHsaj` (`READY`, target `production`).
+3. The protected hotfix Preview remains available at `https://bodyshop-dashboard-cp8b0hrlf-cpr-analytics.vercel.app/?layout-preview=1` as `dpl_4fUfPEKSXLpDKToywU9nhqBbCzhA` (`READY`, target `preview`).
 4. Supabase is `ACTIVE_HEALTHY`; `invite-user` version 16 and `delete-user` version 6 are live with JWT verification. Safe production checks made no user-data changes.
 5. The 80-test, build, lint, dependency-audit, 8-scenario browser, Vercel, Supabase, desktop and mobile checks are recorded in `CHANGELOG.md`.
 
