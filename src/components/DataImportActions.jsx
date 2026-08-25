@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { ANALYTICS_INPUT_FIELDS } from '../services/db';
+import { isSupportedAnalyticsImportFile } from '../utils/analyticsImport';
 import { MONTH_NAMES, parseNum } from '../utils/metrics';
 import PillSelect from './PillSelect';
 
@@ -251,7 +252,7 @@ function QuickKpiEntry({ companyId, companyName, selectedPeriod, latestPeriod, r
             {isUpdate
               ? 'Only this KPI will change.'
               : isNewPeriod
-                ? 'This starts the month. Add other KPIs later or use CSV.'
+                ? 'This starts the month. Add other KPIs later or import a spreadsheet.'
                 : 'Only this KPI will be added.'}
           </p>
         </div>
@@ -276,16 +277,22 @@ export default function DataImportActions({ companyId, companyName, selectedPeri
   const fileInputRef = useRef(null);
   const [dragOver, setDragOver] = useState(false);
   const [fileError, setFileError] = useState('');
+  const [importing, setImporting] = useState(false);
   const latestPeriod = periods[periods.length - 1] || '';
 
-  const submitFile = (file) => {
-    if (!file) return;
-    if (!file.name.toLowerCase().endsWith('.csv') && file.type !== 'text/csv') {
-      setFileError('Choose a CSV file exported from your spreadsheet.');
+  const submitFile = async (file) => {
+    if (!file || disabled || importing) return;
+    if (!isSupportedAnalyticsImportFile(file)) {
+      setFileError('Choose a CSV or Excel (.xlsx) file.');
       return;
     }
     setFileError('');
-    onFile(file);
+    setImporting(true);
+    try {
+      await onFile(file);
+    } finally {
+      setImporting(false);
+    }
   };
 
   return (
@@ -305,7 +312,7 @@ export default function DataImportActions({ companyId, companyName, selectedPeri
             ref={fileInputRef}
             id="file-input"
             type="file"
-            accept=".csv,text/csv"
+            accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             className="hidden"
             onChange={event => { submitFile(event.target.files?.[0]); event.target.value = ''; }}
           />
@@ -315,18 +322,18 @@ export default function DataImportActions({ companyId, companyName, selectedPeri
             </span>
             <div>
               <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-surface-500">Multiple values</p>
-              <h2 id="bulk-import-title" className="mt-1 text-base font-semibold text-white">Import CSV spreadsheet</h2>
+              <h2 id="bulk-import-title" className="mt-1 text-base font-semibold text-white">Import spreadsheet</h2>
             </div>
           </div>
 
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            disabled={disabled}
+            disabled={disabled || importing}
             className="mt-5 flex min-h-36 flex-1 flex-col items-center justify-center rounded-xl border border-dashed border-white/[0.09] bg-black/10 px-6 py-7 text-center transition-colors hover:border-white/[0.16] hover:bg-white/[0.02] disabled:cursor-not-allowed disabled:opacity-45"
           >
-            <strong className="text-sm font-semibold text-white">{dragOver ? 'Drop CSV to import' : 'Choose CSV file'}</strong>
-            <span className="mt-1.5 text-xs leading-relaxed text-surface-500">CSV only · drag and drop supported</span>
+            <strong className="text-sm font-semibold text-white">{importing ? 'Importing…' : dragOver ? 'Drop file to import' : 'Choose spreadsheet'}</strong>
+            <span className="mt-1.5 text-xs leading-relaxed text-surface-500">CSV or Excel (.xlsx) · first worksheet</span>
           </button>
           <p className={`mt-3 min-h-5 text-xs ${fileError ? 'text-danger-400' : 'text-surface-500'}`} role={fileError ? 'alert' : undefined}>{fileError || 'Existing months update by company and month.'}</p>
         </article>

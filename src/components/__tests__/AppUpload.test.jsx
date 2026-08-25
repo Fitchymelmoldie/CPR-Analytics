@@ -4,6 +4,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import App from '../../App';
 import * as authProvider from '../AuthProvider';
 import * as dbServices from '../../services/db';
+import { readSheet } from 'read-excel-file/browser';
+
+vi.mock('read-excel-file/browser', () => ({
+  readSheet: vi.fn()
+}));
 
 // Mock the dependencies
 vi.mock('../AuthProvider', () => ({
@@ -62,14 +67,14 @@ describe('Upload Pipeline Integration', () => {
   it('renders upload zone for Admin when there is no data', async () => {
     render(<App />);
     fireEvent.click(await screen.findByRole('button', { name: /^Data & Imports$/i }));
-    expect(await screen.findByRole('heading', { name: /Import CSV spreadsheet/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /Import spreadsheet/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Quick KPI entry/i })).toBeInTheDocument();
   });
 
   it('shows an in-app error when required CSV columns are missing', async () => {
     const { container } = render(<App />);
     fireEvent.click(await screen.findByRole('button', { name: /^Data & Imports$/i }));
-    await screen.findByRole('heading', { name: /Import CSV spreadsheet/i });
+    await screen.findByRole('heading', { name: /Import spreadsheet/i });
     
     const fileInput = container.querySelector('#file-input');
     
@@ -110,7 +115,7 @@ describe('Upload Pipeline Integration', () => {
 
     const { container } = render(<App />);
     fireEvent.click(await screen.findByRole('button', { name: /^Data & Imports$/i }));
-    await screen.findByRole('heading', { name: /Import CSV spreadsheet/i });
+    await screen.findByRole('heading', { name: /Import spreadsheet/i });
     
     const fileInput = container.querySelector('#file-input');
     
@@ -125,6 +130,33 @@ describe('Upload Pipeline Integration', () => {
     
     // The upload completes without leaving the new Data & Imports workspace.
     expect(await screen.findByRole('heading', { name: /Data & Imports/i })).toBeInTheDocument();
+  });
+
+  it('uploads the first worksheet from a valid Excel file', async () => {
+    dbServices.uploadAnalytics.mockResolvedValue(true);
+    readSheet.mockResolvedValue([
+      ['Company Id', 'Company Name', 'Year', 'Month', 'Total Sales', 'Paint Sales', 'Paint Labour Costs', 'Completed RO'],
+      [123, 'Test Co', 2025, 2, 6000, 1200, 550, 11]
+    ]);
+
+    const { container } = render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /^Data & Imports$/i }));
+    await screen.findByRole('heading', { name: /Import spreadsheet/i });
+
+    const file = new File(['workbook'], 'monthly-data.xlsx', {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    });
+    fireEvent.change(container.querySelector('#file-input'), { target: { files: [file] } });
+
+    await waitFor(() => expect(dbServices.uploadAnalytics).toHaveBeenCalledTimes(1));
+    expect(readSheet).toHaveBeenCalledWith(file);
+    expect(dbServices.uploadAnalytics.mock.calls[0][0][0]).toMatchObject({
+      'Company Id': '123',
+      'Company Name': 'Test Co',
+      Year: 2025,
+      Month: 2,
+      'Total Sales': 6000
+    });
   });
 
   it('adds one KPI value for a selected reporting month', async () => {

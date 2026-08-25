@@ -75,14 +75,14 @@ export const ANALYTICS_INPUT_FIELDS = Object.freeze(
 );
 
 /**
- * Upload parsed CSV data to Supabase
- * @param {Array<Object>} csvData - Array of objects parsed from CSV by PapaParse
+ * Upload normalized spreadsheet data to Supabase.
+ * @param {Array<Object>} spreadsheetData - Rows parsed from CSV or Excel.
  */
-export const uploadAnalytics = async (csvData) => {
-  if (!csvData || csvData.length === 0) return;
+export const uploadAnalytics = async (spreadsheetData) => {
+  if (!spreadsheetData || spreadsheetData.length === 0) return;
 
   // Convert React UI keys to Database snake_case keys
-  const rows = csvData.map(row => {
+  const rows = spreadsheetData.map(row => {
     const dbRow = {};
     for (const [key, value] of Object.entries(row)) {
       if (KEY_TO_DB[key]) {
@@ -96,8 +96,8 @@ export const uploadAnalytics = async (csvData) => {
   // We extract unique companies from the upload payload
   const uniqueCompanies = [...new Map(rows.map(r => [r.company_id, {
     id: r.company_id,
-    name: csvData.find(c => c['Company Id'] === r.company_id)?.['Company Name'] || r.company_id,
-    state: csvData.find(c => c['Company Id'] === r.company_id)?.['State'] || ''
+    name: spreadsheetData.find(c => c['Company Id'] === r.company_id)?.['Company Name'] || r.company_id,
+    state: spreadsheetData.find(c => c['Company Id'] === r.company_id)?.['State'] || ''
   }])).values()];
 
   if (uniqueCompanies.length > 0) {

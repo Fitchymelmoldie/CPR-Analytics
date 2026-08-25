@@ -305,7 +305,7 @@ test.describe('Dashboard release-candidate interactions', () => {
 
     const workspaceChecks = [
       ['Shop Profile', 'Boyle Smash Repairs'],
-      ['Data & Imports', 'Import CSV spreadsheet'],
+      ['Data & Imports', 'Import spreadsheet'],
       ['Customer Management', 'Customer Management'],
     ];
     for (const [navigationName, headingName] of workspaceChecks) {

@@ -257,7 +257,7 @@ function DataPreview({ onNotice }) {
         selectedPeriod="2026-08"
         periods={PREVIEW_PERIODS}
         rows={previewRows}
-        onFile={() => onNotice('CSV import is disabled in this visual preview.')}
+        onFile={() => onNotice('Spreadsheet import is disabled in this visual preview.')}
         onQuickSave={async ({ metricKey, period }) => onNotice(`${metricKey} is ready to save for ${period} in the authenticated app.`)}
       />
       <section className="codex-surface overflow-hidden">

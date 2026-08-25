@@ -29,6 +29,13 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 
 ## [Unreleased]
 
+- **CSV and Excel bulk import (25 August 2026)**
+  - Extended Data & Imports so consultants can upload either the existing CSV template or a modern Excel `.xlsx` workbook; Excel imports read the first worksheet and then use the same required-column validation and Supabase company/month upsert as CSV.
+  - Replaced format-specific upload wording with one spreadsheet action, added a clear in-progress state, and retained Quick KPI Entry for single-value updates.
+  - Normalized spreadsheet headings and company identifiers, rejected unsupported, empty, oversized, duplicate-heading and over-limit files before any database write, and capped imports at 10 MB / 5,000 data rows.
+  - Added Excel-path integration coverage that verifies workbook rows reach the existing analytics upload service without changing the database schema, RLS policies or Edge Functions.
+  - Local gates: all 81 Vitest tests passed; the Vite production build passed; lint completed with no errors and one existing Fast Refresh advisory; the production dependency audit found zero vulnerabilities; and `git diff --check` passed. Direct browser checks at `1280 x 720` and `390 x 844` confirmed the CSV/Excel picker, accepted file types, first-worksheet disclosure, zero horizontal overflow and no console warnings/errors. The Playwright runner launched the journeys but stalled twice, including with one isolated worker, so it is not recorded as a pass.
+
 - **Data-entry-only Full Month Editor (21 August 2026)**
   - Removed previous-month, movement and reporting-status columns from the visual Preview's Full Month Editor. Those comparisons belong in the dashboard and Performance Story, not beside raw import values.
   - The editor now presents only `Metric` and `Value`, matching the authenticated editor's direct input grid and keeping Data & Imports focused on entry, correction and saving.

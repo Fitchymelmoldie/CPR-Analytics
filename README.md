@@ -20,7 +20,7 @@ CPR Analytics is a React dashboard for collision-repair businesses and their con
 - Tailwind CSS 4
 - Supabase Auth, Postgres, Row Level Security and Edge Functions
 - Chart.js and React Chart.js 2
-- Papa Parse for CSV ingestion
+- Papa Parse for CSV ingestion and `read-excel-file` for Excel `.xlsx` ingestion
 - Vitest and Testing Library
 - Playwright for browser smoke tests
 - Vercel for protected Preview and production hosting

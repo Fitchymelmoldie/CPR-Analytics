@@ -17,6 +17,7 @@ import CustomerManagement from './components/CustomerManagement';
 import { useAuth } from './components/AuthProvider';
 import { uploadAnalytics, upsertAnalyticsValue, getAnalytics, updateShopProfile, deleteAnalyticsPeriod, getCompanies, getConsultantReviews, saveConsultantReview, getLeaderboardGroups, createLeaderboardGroup, deleteLeaderboardGroup, getBenchmarks, upsertBenchmark, deleteBenchmark, getDashboardKpiLayout, upsertDashboardKpiLayout } from './services/db';
 import { FEATURE_FLAGS } from './utils/featureFlags';
+import { parseAnalyticsImportFile } from './utils/analyticsImport';
 
 const PAGE_META = {
   dashboard: { title: 'Visual Dashboard', description: '' },
@@ -529,39 +530,18 @@ function rollingMetricValue(title, rows) {
         }
       }, [currentUserRole, currentUserCompanyId]);
 
-      // CSV parsing
-      const handleFile = useCallback((file) => {
+      const handleFile = useCallback(async (file) => {
         if (!file) return;
-        Papa.parse(file, {
-          header: true,
-          skipEmptyLines: true,
-          dynamicTyping: true,
-          complete: (results) => {
-            if (results.errors && results.errors.length > 0) {
-              const errs = results.errors.map(e => e.message).join('\\n');
-              showAppNotice('CSV parsing errors: ' + errs);
-            }
-            if (results.data && results.data.length > 0) {
-              const requiredCols = ['Company Id', 'Company Name', 'Year', 'Month', 'Total Sales', 'Paint Sales', 'Paint Labour Costs', 'Completed RO'];
-              const firstRow = results.data[0];
-              const missingCols = requiredCols.filter(col => !(col in firstRow));
-              if (missingCols.length > 0) {
-                showAppNotice('Missing required columns: ' + missingCols.join(', '));
-                return;
-              }
-
-              uploadAnalytics(results.data).then(() => {
-                  return getAnalytics(currentUserRole === 'CUSTOMER' ? currentUserCompanyId : null);
-              }).then(fetchedData => {
-                 setData(fetchedData);
-                 showAppNotice('CSV data imported successfully.', 'success');
-              }).catch(err => {
-                 console.error(err);
-                 showAppNotice('Upload failed: ' + err.message);
-              });
-            }
-          },
-        });
+        try {
+          const { rows, formatLabel } = await parseAnalyticsImportFile(file);
+          await uploadAnalytics(rows);
+          const fetchedData = await getAnalytics(currentUserRole === 'CUSTOMER' ? currentUserCompanyId : null);
+          setData(fetchedData);
+          showAppNotice(`${formatLabel} data imported successfully.`, 'success');
+        } catch (err) {
+          console.error(err);
+          showAppNotice(`Upload failed: ${err.message || 'The spreadsheet could not be imported.'}`);
+        }
       }, [currentUserRole, currentUserCompanyId, showAppNotice]);
 
       const handleQuickKpiSave = useCallback(async ({ period, metricKey, value }) => {
@@ -1276,7 +1256,7 @@ function rollingMetricValue(title, rows) {
                   </svg>
                 </div>
                 <h2 className="text-xl font-bold text-white">Your dashboard is ready for data</h2>
-                <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-surface-400">Import a CSV or add individual KPI values from Data & Imports to populate the dashboard and trends.</p>
+                <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-surface-400">Import a CSV or Excel file, or add individual KPI values from Data & Imports to populate the dashboard and trends.</p>
                 <button type="button" onClick={() => setActiveTab('raw-data')} className="codex-button codex-button-primary mt-6 px-4 py-2.5 text-xs">
                   Go to Data & Imports
                 </button>
