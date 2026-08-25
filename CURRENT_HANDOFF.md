@@ -1,22 +1,23 @@
 # Current Handoff
 
-Last updated: 25 August 2026, 1:08 PM AEST
+Last updated: 25 August 2026, 2:24 PM AEST
 
 This document is the authoritative current-state snapshot. Historical implementation and Preview details belong in `CHANGELOG.md`.
 
 ## Release status
 
-- Stage: production hotfix complete. The reporting-period deletion recovery is live and has passed source, Preview and post-deployment production checks.
+- Stage: Excel bulk-import production feature complete. CSV and modern Excel `.xlsx` files are live through the same validated analytics import path.
 - Working branch: `agent/bodyshop-audit-hardening`.
-- Released source commit: `c6af943` (`fix: reset reporting period deletion state`), published on `origin/agent/bodyshop-audit-hardening`.
+- Released source commit: `1bd416e` (`feat: support Excel analytics imports`), published on `origin/agent/bodyshop-audit-hardening`.
 - Working-tree state: only generated Playwright output and user-owned Preview evidence remain outside the release commits by design.
-- Production: `https://bodyshop-dashboard.vercel.app`, deployment `dpl_F1yS8XRoGQ8rLqHmLwdWqDCgHsaj`, `READY`, target `production`, promoted from the verified clean `c6af943` source Preview.
-- Latest protected Preview: `https://bodyshop-dashboard-cp8b0hrlf-cpr-analytics.vercel.app/?layout-preview=1`, deployment `dpl_4fUfPEKSXLpDKToywU9nhqBbCzhA`, `READY`, target `preview`.
+- Production: `https://bodyshop-dashboard.vercel.app`, deployment `dpl_65pg1N8aYEKvuDdaM7qcXdnukcA7`, `READY`, target `production`, promoted from the verified clean `1bd416e` source Preview.
+- Latest protected Preview: `https://bodyshop-dashboard-lwdku3fq6-cpr-analytics.vercel.app/?layout-preview=1`, deployment `dpl_GvqdaeZXdRMpHT4M1ko2d6CPoX7U`, `READY`, target `preview`.
+- Current production feature: Data & Imports accepts the existing CSV template and modern Excel `.xlsx` workbooks. Excel reads the first worksheet, normalizes headings/company identifiers, applies the same required-column validation and then reuses the existing Supabase company/month upsert. Unsupported, empty, oversized, duplicate-heading and over-limit files are rejected before a database write.
 - Current production hotfix: successful reporting-period deletion now clears its loading state before the next confirmation can open. Consecutive month deletion therefore presents an enabled confirmation instead of a stale disabled `Deleting...` action; a successful deletion is also distinguished from a later data-refresh failure.
 - Current production release: the dashboard is now a neutral monthly snapshot rather than a target score. It reports KPI completeness, directs users into the existing multi-month Performance Story, keeps targets optional, adds a compact Latest Consultant Review entry point, and distinguishes loading from genuinely missing data or targets. Historical review creation opens the month being viewed, and the customer-view role boundary is consistent across authenticated and protected-demo routes.
-- Production release baseline: Data & Imports offers bulk CSV import and Quick KPI Entry for one metric/month, missing values remain visibly incomplete, Gamified Leaderboards is deferred, and the site-wide content hierarchy avoids repeated instructional copy. These production features remain on the deployment above.
+- Production release baseline: Data & Imports offers bulk CSV/Excel import and Quick KPI Entry for one metric/month, missing values remain visibly incomplete, Gamified Leaderboards is deferred, and the site-wide content hierarchy avoids repeated instructional copy. These production features remain on the deployment above.
 - Earlier review follow-up: the entire product uses one Codex-native visual and interaction system across Customer Management, Data & Imports, profile, reviews, authentication, dialogs and KPI reporting. KPI reordering is deterministic on pointer, touch and keyboard. KPI charts use clean adaptive Y scales, year-aware X labels, directional external goal keys and one compact target-aware tooltip that previews on hover/focus and pins on click/tap; browser-native duplicate tooltips have been removed. The plot uses one stable crosshair and continuous nearest-month hover regions, eliminating the arrow/hand flicker and dead zones between points.
-- Production was promoted and aliased only after the local test/build/lint gates, Supabase audit, Vercel inspection, desktop/mobile smoke checks and hosted browser checks were green.
+- Production was promoted after the unit/integration tests, build, lint, dependency audit, Supabase/Vercel health checks and direct desktop/mobile browser checks were green. The Playwright runner limitation for this release is recorded explicitly below rather than being treated as a pass.
 
 Do not make another production deployment without explicit approval.
 
@@ -35,10 +36,10 @@ Do not make another production deployment without explicit approval.
 ### Administration and supporting workspaces
 
 - Customer Management is a dense administrative index with search, result count, stable actions and a right-side customer account inspector. Technical identity, assignment, workspace access and the existing delete actions are progressively disclosed without depending on hover-only discovery.
-- Data & Imports presents two primary monthly-update paths: bulk CSV import and Quick KPI Entry with a month picker, KPI selector, current-value disclosure and a one-field-only save. The Full Month Editor remains available underneath for broad review and correction.
+- Data & Imports presents two primary monthly-update paths: bulk CSV/Excel spreadsheet import and Quick KPI Entry with a month picker, KPI selector, current-value disclosure and a one-field-only save. Excel `.xlsx` imports read the first worksheet. The Full Month Editor remains available underneath for broad review and correction.
 - Gamified Leaderboards is deferred behind `FEATURE_FLAGS.leaderboards = false`; its code and data structures are preserved, but it is absent from active navigation and Preview journeys.
 - Shop Profile, Consultant Reviews, login, password setup, target editing, reporting-period creation, confirmations, notifications and empty/error states share the same surface, form and dialog language.
-- KPI calculations, CSV parsing, Supabase service interfaces, permissions, roles, saved layouts and persistence contracts are unchanged by the design pass.
+- KPI calculations, spreadsheet parsing, Supabase service interfaces, permissions, roles, saved layouts and persistence contracts remain separated so CSV and Excel feed the same normalized upload contract.
 
 ### KPI experience
 
@@ -102,6 +103,15 @@ Both show `Building` until three months are available. Daily budget is a calcula
 - Live Supabase advisors report no RLS/security-policy findings. Three unused-index notices are informational only and the indexes remain in place while the new tables accumulate representative traffic.
 
 ## Verification evidence
+
+Excel bulk-import production feature gate:
+
+- Source and delivery: `1bd416e` was committed and pushed to `origin/agent/bodyshop-audit-hardening`; protected Preview `dpl_GvqdaeZXdRMpHT4M1ko2d6CPoX7U` was built from a clean detached worktree at that exact commit and promoted to production deployment `dpl_65pg1N8aYEKvuDdaM7qcXdnukcA7`.
+- Vitest: all 8 files and 81 tests passed, including a workbook-path regression that reads first-sheet rows, normalizes a numeric company identifier and sends the rows to the existing upload service.
+- Vite production build: passed. Lint completed with no errors and one existing Fast Refresh advisory in `AuthProvider.jsx`; `git diff --check` passed; and `npm audit --omit=dev --audit-level=high` found zero vulnerabilities.
+- Direct local, protected Preview and live production browser checks confirmed the accepted `.csv`/`.xlsx` extensions, visible first-worksheet rule, desktop layout and `390 x 844` mobile layout with no horizontal overflow or browser warnings/errors. The authenticated production Data & Imports screen exposed the same updated control; no workbook was submitted during verification, so no customer analytics were changed.
+- The Playwright runner launched all 8 journeys but stalled, then repeated the stall with the one directly affected journey and one worker. It is explicitly not recorded as a pass; equivalent focused UI evidence was completed through the supported browser instead.
+- Vercel error-level and HTTP 500 scans returned no entries after promotion. Supabase remained `ACTIVE_HEALTHY`, live API reads returned HTTP 200, and this release made no database-schema, migration, RLS-policy or Edge Function changes.
 
 Reporting-period deletion hotfix gate:
 

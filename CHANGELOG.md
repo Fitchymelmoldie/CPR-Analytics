@@ -2,6 +2,15 @@
 
 All notable changes to the CPR Analytics Dashboard prototype will be documented in this file.
 
+## Production feature — Excel bulk import — 25 August 2026
+
+- Promoted the verified `1bd416e` source tree to `https://bodyshop-dashboard.vercel.app` as deployment `dpl_65pg1N8aYEKvuDdaM7qcXdnukcA7` (`READY`, target `production`) after validating protected Preview `dpl_GvqdaeZXdRMpHT4M1ko2d6CPoX7U`.
+- Extended Data & Imports so consultants can upload either the existing CSV template or a modern Excel `.xlsx` workbook; Excel imports read the first worksheet and then use the same required-column validation and Supabase company/month upsert as CSV.
+- Replaced format-specific upload wording with one spreadsheet action, added a clear in-progress state, and retained Quick KPI Entry for single-value updates.
+- Normalized spreadsheet headings and company identifiers, rejected unsupported, empty, oversized, duplicate-heading and over-limit files before any database write, and capped imports at 10 MB / 5,000 data rows.
+- Added Excel-path integration coverage that verifies workbook rows reach the existing analytics upload service without changing the database schema, RLS policies or Edge Functions.
+- Final gates: all 81 Vitest tests passed; the Vite production build passed; lint completed with no errors and one existing Fast Refresh advisory; the production dependency audit found zero vulnerabilities; and `git diff --check` passed. Protected Preview and production checks at desktop and `390 x 844` confirmed the CSV/Excel picker, accepted file types, first-worksheet disclosure, zero horizontal overflow and no console warnings/errors. Vercel error and HTTP 500 scans returned no entries, and Supabase remained `ACTIVE_HEALTHY` with successful API reads. The Playwright runner launched the journeys but stalled twice, including with one isolated worker, so it is not recorded as a pass.
+
 ## Production hotfix — 25 August 2026
 
 - Promoted the clean `c6af943` source tree to `https://bodyshop-dashboard.vercel.app` as deployment `dpl_F1yS8XRoGQ8rLqHmLwdWqDCgHsaj` (`READY`, target `production`) after verifying protected Preview `dpl_4fUfPEKSXLpDKToywU9nhqBbCzhA`.
@@ -28,13 +37,6 @@ All notable changes to the CPR Analytics Dashboard prototype will be documented 
 - Published the verified release branch to GitHub as `origin/agent/bodyshop-audit-hardening` after explicit release authorization.
 
 ## [Unreleased]
-
-- **CSV and Excel bulk import (25 August 2026)**
-  - Extended Data & Imports so consultants can upload either the existing CSV template or a modern Excel `.xlsx` workbook; Excel imports read the first worksheet and then use the same required-column validation and Supabase company/month upsert as CSV.
-  - Replaced format-specific upload wording with one spreadsheet action, added a clear in-progress state, and retained Quick KPI Entry for single-value updates.
-  - Normalized spreadsheet headings and company identifiers, rejected unsupported, empty, oversized, duplicate-heading and over-limit files before any database write, and capped imports at 10 MB / 5,000 data rows.
-  - Added Excel-path integration coverage that verifies workbook rows reach the existing analytics upload service without changing the database schema, RLS policies or Edge Functions.
-  - Local gates: all 81 Vitest tests passed; the Vite production build passed; lint completed with no errors and one existing Fast Refresh advisory; the production dependency audit found zero vulnerabilities; and `git diff --check` passed. Direct browser checks at `1280 x 720` and `390 x 844` confirmed the CSV/Excel picker, accepted file types, first-worksheet disclosure, zero horizontal overflow and no console warnings/errors. The Playwright runner launched the journeys but stalled twice, including with one isolated worker, so it is not recorded as a pass.
 
 - **Data-entry-only Full Month Editor (21 August 2026)**
   - Removed previous-month, movement and reporting-status columns from the visual Preview's Full Month Editor. Those comparisons belong in the dashboard and Performance Story, not beside raw import values.
